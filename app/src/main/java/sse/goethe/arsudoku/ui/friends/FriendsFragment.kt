@@ -1,4 +1,4 @@
-package sse.goethe.arsudoku.ui.history
+package sse.goethe.arsudoku.ui.friends
 
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -17,39 +17,28 @@ import com.baoyz.swipemenulistview.SwipeMenuCreator
 import com.baoyz.swipemenulistview.SwipeMenuItem
 import com.baoyz.swipemenulistview.SwipeMenuListView
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.android.synthetic.main.nav_header_main.*
 import sse.goethe.arsudoku.R
 
-class HistoryFragment : Fragment() {
+class FriendsFragment : Fragment() {
 
-    private lateinit var historyViewModel: HistoryViewModel
-    private val history = ArrayList<String>()
-    private lateinit var userEmail: String
+    private lateinit var friendsViewModel: FriendsViewModel
+    private val users = ArrayList<String>()  // Transfer to viewModel in production version
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        historyViewModel =
-            ViewModelProviders.of(this).get(HistoryViewModel::class.java)
-        val root = inflater.inflate(R.layout.fragment_history, container, false)
-
-        val textView: TextView = root.findViewById(R.id.text_history)
-
-        historyViewModel.text.observe(this, Observer {
+        friendsViewModel =
+            ViewModelProviders.of(this).get(FriendsViewModel::class.java)
+        val root = inflater.inflate(R.layout.fragment_friends, container, false)
+        val textView: TextView = root.findViewById(R.id.text_friends)
+        friendsViewModel.text.observe(this, Observer {
             textView.text = it
-            System.out.println(it)
         })
-
-        val listViewHistory : SwipeMenuListView = root.findViewById(R.id.swipeMenuHistory)
-
-        // Get firebase instance
+        val listView : SwipeMenuListView = root.findViewById(R.id.swipeMenu)
         val db = FirebaseFirestore.getInstance()
-
-        // Create list adapter for SwipeMenu
-        val adapter = ArrayAdapter(root.context, android.R.layout.simple_list_item_1, history)
-        // Create SwipeMenu
+        val adapter = ArrayAdapter(root.context, android.R.layout.simple_list_item_1, users)
         val creator = SwipeMenuCreator { menu ->
             // create "open" item
             val openItem = SwipeMenuItem(
@@ -91,45 +80,38 @@ class HistoryFragment : Fragment() {
             deleteItem.setIcon(R.drawable.ic_menu_send)
             // add to menu
             menu.addMenuItem(deleteItem)
-        }
-        listViewHistory.setMenuCreator(creator)
-        listViewHistory.setAdapter(adapter)
+        }          // set creator
 
+        listView.setMenuCreator(creator)
+        listView.setAdapter(adapter)
 
-        // Set database listener for history data
-        db.collection("users").document("nils.gormsen@googlemail.com").collection("games")
+        // Set database listener for friend data
+        db.collection("users")
             .addSnapshotListener { value, e ->
                 if (e != null) {
                     Log.w("fail", "Listen failed.", e)
                     return@addSnapshotListener
                 }
-                history.clear()
+                users.clear()
 
                 for (doc in value!!) {
-                    doc.getString("date")?.let {
-                        history.add(it)
+                    doc.getString("first")?.let {
+                        users.add(it)
                         adapter.notifyDataSetChanged()
                     }
                 }
-                Log.d("success", "Current games in history: $history")
+                Log.d("success", "Current friends in friends: $users")
             }
 
-
         // Set action for menu swipe buttons
-        listViewHistory.setOnMenuItemClickListener(object : SwipeMenuListView.OnMenuItemClickListener {
+        listView.setOnMenuItemClickListener(object : SwipeMenuListView.OnMenuItemClickListener {
             override
             fun onMenuItemClick(position: Int, menu: SwipeMenu, index: Int): Boolean {
                 when (index) {
                     0 -> {
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
-                        db.collection("cities").document("DC")
-                            .collection("games").document(history.get(index))
-                            .delete()
-                            .addOnSuccessListener { Log.d("success", history.get(index)) }
-                            .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
-
+                        users.add("element")
                         adapter.notifyDataSetChanged()
-
 
                     }
                     1 -> {
@@ -144,7 +126,9 @@ class HistoryFragment : Fragment() {
         })
 
 
+
+
+
         return root
     }
 }
-

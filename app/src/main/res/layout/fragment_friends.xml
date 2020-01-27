@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/text_slideshow"
+        android:id="@+id/text_friends"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -16,4 +16,11 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.baoyz.swipemenulistview.SwipeMenuListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/swipeMenu">
+    </com.baoyz.swipemenulistview.SwipeMenuListView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

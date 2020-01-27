@@ -1,7 +1,6 @@
 package sse.goethe.arsudoku
 
 import android.os.Bundle
-import android.util.Log
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import androidx.navigation.findNavController
@@ -14,9 +13,6 @@ import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import android.view.Menu
-import com.google.firebase.firestore.FirebaseFirestore
-
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -43,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_history, R.id.nav_slideshow,
+                R.id.nav_home, R.id.nav_history, R.id.nav_friends,
                 R.id.nav_tools, R.id.nav_share, R.id.nav_send
             ), drawerLayout
         )

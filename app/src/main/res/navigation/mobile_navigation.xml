@@ -18,10 +18,10 @@
         tools:layout="@layout/fragment_history" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="sse.goethe.arsudoku.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_friends"
+        android:name="sse.goethe.arsudoku.ui.friends.FriendsFragment"
+        android:label="@string/menu_friends"
+        tools:layout="@layout/fragment_friends" />
 
     <fragment
         android:id="@+id/nav_tools"

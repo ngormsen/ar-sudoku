@@ -10,4 +10,5 @@ class HistoryViewModel : ViewModel() {
         value = "This is history...."
     }
     val text: LiveData<String> = _text
+
 }
