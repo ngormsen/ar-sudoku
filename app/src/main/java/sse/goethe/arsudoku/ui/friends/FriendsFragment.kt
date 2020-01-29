@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -16,6 +17,8 @@ import com.baoyz.swipemenulistview.SwipeMenu
 import com.baoyz.swipemenulistview.SwipeMenuCreator
 import com.baoyz.swipemenulistview.SwipeMenuItem
 import com.baoyz.swipemenulistview.SwipeMenuListView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import sse.goethe.arsudoku.R
 
@@ -32,6 +35,40 @@ class FriendsFragment : Fragment() {
         friendsViewModel =
             ViewModelProviders.of(this).get(FriendsViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_friends, container, false)
+
+        val fab: FloatingActionButton = root.findViewById(R.id.fab)
+        fab.setOnClickListener { view ->
+
+            val dialogFragment = FriendDialog()
+            val bundle = Bundle()
+            bundle.putBoolean("notAlertDialog", true)
+            dialogFragment.arguments = bundle
+            val ft = (activity as AppCompatActivity).supportFragmentManager.beginTransaction()
+            val prev = (activity as AppCompatActivity).supportFragmentManager.findFragmentByTag("dialog")
+            if (prev != null)
+            {
+                ft.remove(prev)
+            }
+            ft.addToBackStack(null)
+            dialogFragment.show(ft, "dialog")
+
+//            // Creates dialog fragment to add new friends
+//            val dialogFragment = FriendDialog()
+//
+//            val ft = (activity as AppCompatActivity).supportFragmentManager.beginTransaction()
+//            val prev = (activity as AppCompatActivity).supportFragmentManager.findFragmentByTag("dialog")
+//            if (prev != null)
+//            {
+//                ft.remove(prev)
+//            }
+//            ft.addToBackStack(null)
+//            dialogFragment.show(ft, "dialog")
+//
+//            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                .setAction("Action", null).show()
+        }
+
+
         val textView: TextView = root.findViewById(R.id.text_friends)
         friendsViewModel.text.observe(this, Observer {
             textView.text = it
@@ -85,8 +122,11 @@ class FriendsFragment : Fragment() {
         listView.setMenuCreator(creator)
         listView.setAdapter(adapter)
 
+
+
         // Set database listener for friend data
-        db.collection("users")
+        db.collection("users").document("nils.gormsen@googlemail.com")
+            .collection("friends")
             .addSnapshotListener { value, e ->
                 if (e != null) {
                     Log.w("fail", "Listen failed.", e)
@@ -95,7 +135,7 @@ class FriendsFragment : Fragment() {
                 users.clear()
 
                 for (doc in value!!) {
-                    doc.getString("first")?.let {
+                    doc.getString("email")?.let {
                         users.add(it)
                         adapter.notifyDataSetChanged()
                     }
