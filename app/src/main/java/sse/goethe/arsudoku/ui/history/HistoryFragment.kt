@@ -17,7 +17,6 @@ import com.baoyz.swipemenulistview.SwipeMenuCreator
 import com.baoyz.swipemenulistview.SwipeMenuItem
 import com.baoyz.swipemenulistview.SwipeMenuListView
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.android.synthetic.main.nav_header_main.*
 import sse.goethe.arsudoku.R
 
 class HistoryFragment : Fragment() {
@@ -51,46 +50,49 @@ class HistoryFragment : Fragment() {
         val adapter = ArrayAdapter(root.context, android.R.layout.simple_list_item_1, history)
         // Create SwipeMenu
         val creator = SwipeMenuCreator { menu ->
-            // create "open" item
-            val openItem = SwipeMenuItem(
-                root.context
-            )
-            // set item background
-            openItem.background = ColorDrawable(
-                Color.rgb(
-                    0xC9, 0xC9,
-                    0xCE
-                )
-            )
-            // set item width
-            openItem.width = 170
-            // set item title
-            openItem.title = "Open"
-            // set item title fontsize
-            openItem.titleSize = 18
-            // set item title font color
-            openItem.titleColor = Color.WHITE
-            // add to menu
-            menu.addMenuItem(openItem)
-
-            // create "delete" item
+            // create "Delete" item
             val deleteItem = SwipeMenuItem(
-//                root.getApplicationContext<Context>()
                 root.context
             )
             // set item background
             deleteItem.background = ColorDrawable(
                 Color.rgb(
-                    0xF9,
-                    0x3F, 0x25
+                    0xF9, 0x3F,
+                    0x25
                 )
             )
             // set item width
             deleteItem.width = 170
-            // set a icon
-            deleteItem.setIcon(R.drawable.ic_menu_send)
+            // set item title
+            deleteItem.title = "Delete"
+//            // set a icon
+//            deleteItem.setIcon(R.drawable.ic_menu_send)
+
+            // set item title fontsize
+            deleteItem.titleSize = 18
+            // set item title font color
+            deleteItem.titleColor = Color.BLACK
             // add to menu
             menu.addMenuItem(deleteItem)
+
+            // create "Send" item
+            val sendItem = SwipeMenuItem(
+//                root.getApplicationContext<Context>()
+                root.context
+            )
+            // set item background
+            sendItem.background = ColorDrawable(
+                Color.rgb(
+                    75,
+                    219, 87
+                )
+            )
+            // set item width
+            sendItem.width = 170
+            // set a icon
+            sendItem.setIcon(R.drawable.ic_menu_send)
+            // add to menu
+            menu.addMenuItem(sendItem)
         }
         listViewHistory.setMenuCreator(creator)
         listViewHistory.setAdapter(adapter)
@@ -122,10 +124,10 @@ class HistoryFragment : Fragment() {
                 when (index) {
                     0 -> {
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
-                        db.collection("cities").document("DC")
-                            .collection("games").document(history.get(index))
+                        db.collection("users").document("nils.gormsen@googlemail.com")
+                            .collection("games").document(history[position])
                             .delete()
-                            .addOnSuccessListener { Log.d("success", history.get(index)) }
+                            .addOnSuccessListener { Log.d("success", history[position]) }
                             .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
 
                         adapter.notifyDataSetChanged()
