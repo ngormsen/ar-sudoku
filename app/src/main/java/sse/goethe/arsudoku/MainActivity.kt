@@ -11,35 +11,41 @@ import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.TextView
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
+    private var globalUser: User = User("Hello", "world@gmail.com")
+    private lateinit var navView: NavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
 
+
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
-        val navView: NavigationView = findViewById(R.id.nav_view)
+        navView= findViewById(R.id.nav_view)
         val navController = findNavController(R.id.nav_host_fragment)
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.nav_home, R.id.nav_history, R.id.nav_friends,
-                R.id.nav_tools, R.id.nav_login, R.id.nav_send
+                R.id.nav_tools, R.id.nav_login, R.id.nav_logout
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-
+        setGlobalUser(User("name", "email"))
 
     }
 
@@ -49,8 +55,53 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle presses on the action bar menu items
+        when (item.itemId) {
+            R.id.action_settings -> {
+                println("Hello logout")
+                setGlobalUser(User("name", "email"))
+//                firebase.auth().signOut().then(function() {
+//                    // Sign-out successful.
+//                }).catch(function(error) {
+//                    // An error happened.
+//                });
+
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    fun setHeaderCredentials(user:User){
+        // Get header access
+        val headerView : View = navView.getHeaderView(0)
+        val navUserName : TextView = headerView.findViewById(R.id.headerName)
+        val navUserEmail : TextView = headerView.findViewById(R.id.headerEmail)
+
+        navUserName.text = user.getName()
+        navUserEmail.text = user.getEmail()
+
+    }
+
+     fun navigateHome() {
+        val navController = findNavController(R.id.nav_host_fragment)
+        return navController.navigate(R.id.nav_home)
+    }
+
+    fun setGlobalUser(user: User){
+        globalUser = user
+        setHeaderCredentials(user)
+    }
+
+    fun getGlobalUser(): User{
+        return globalUser
     }
 }

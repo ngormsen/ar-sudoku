@@ -1,5 +1,6 @@
 package sse.goethe.arsudoku.ui.friends
 
+import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -9,6 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -20,6 +23,7 @@ import com.baoyz.swipemenulistview.SwipeMenuListView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
+import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
 
 class FriendsFragment : Fragment() {
@@ -84,14 +88,14 @@ class FriendsFragment : Fragment() {
             // set item background
             openItem.background = ColorDrawable(
                 Color.rgb(
-                    0xC9, 0xC9,
-                    0xCE
+                    0xF9, 0x3F,
+                    0x25
                 )
             )
             // set item width
             openItem.width = 170
             // set item title
-            openItem.title = "Open"
+            openItem.title = "Delete"
             // set item title fontsize
             openItem.titleSize = 18
             // set item title font color
@@ -107,8 +111,8 @@ class FriendsFragment : Fragment() {
             // set item background
             deleteItem.background = ColorDrawable(
                 Color.rgb(
-                    0xF9,
-                    0x3F, 0x25
+                    75,
+                    219, 87
                 )
             )
             // set item width
@@ -123,9 +127,10 @@ class FriendsFragment : Fragment() {
         listView.setAdapter(adapter)
 
 
+        val activity = activity as MainActivity?
 
         // Set database listener for friend data
-        db.collection("users").document("nils.gormsen@googlemail.com")
+        db.collection("users").document(activity!!.getGlobalUser().getEmail())
             .collection("friends")
             .addSnapshotListener { value, e ->
                 if (e != null) {
@@ -149,9 +154,15 @@ class FriendsFragment : Fragment() {
             fun onMenuItemClick(position: Int, menu: SwipeMenu, index: Int): Boolean {
                 when (index) {
                     0 -> {
+                        val activity = activity as MainActivity?
+
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
-                        users.add("element")
-                        adapter.notifyDataSetChanged()
+                        db.collection("users").document(activity!!.getGlobalUser().getEmail())
+                            .collection("friends").document(users[position])
+                            .delete()
+                            .addOnSuccessListener { Log.d("success", "success") }
+                            .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
+                         adapter.notifyDataSetChanged()  // Results in a bug that prevents menu from closing
 
                     }
                     1 -> {
@@ -161,13 +172,12 @@ class FriendsFragment : Fragment() {
                 }// open
                 // delete
                 // false : close the menu; true : not close the menu
+
                 return false
+
             }
+
         })
-
-
-
-
 
         return root
     }

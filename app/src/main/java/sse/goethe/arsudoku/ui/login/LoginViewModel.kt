@@ -3,34 +3,28 @@ package sse.goethe.arsudoku.ui.login
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.protobuf.ListValue
+import sse.goethe.arsudoku.User
 
 class LoginViewModel : ViewModel() {
+
+    private val _user = MutableLiveData<User>().apply {
+        value = User("NA", "NA")
+    }
 
     private val _text = MutableLiveData<String>().apply {
         value = ""
     }
 
-    private val _userEmail = MutableLiveData<String>().apply{
-        value = ""
-    }
-
-    private val _userName = MutableLiveData<String>().apply {
-        value = ""
-    }
     val text: LiveData<String> = _text
-    val userEmail :LiveData<String> = _userEmail
-    val userName: LiveData<String> = _userName
+    val user:LiveData<User> = _user
 
-    fun setUserName(name: String){
-        _userName.apply {
-            value = name
-        }
-    }
 
-    fun setUserEmail(email: String){
-        _userEmail.apply {
-            value = email
+    fun setUser(user: User){
+        _user.apply {
+            value=user
         }
     }
 
 }
+//System.out.println("User data:"+ activity!!.getGlobalUser().getName())

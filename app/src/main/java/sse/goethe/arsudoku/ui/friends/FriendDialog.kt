@@ -14,6 +14,7 @@ import android.widget.EditText
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
+import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
 
 //https://blog.mindorks.com/implementing-dialog-fragment-in-android
@@ -64,7 +65,8 @@ class FriendDialog : DialogFragment() {
                 val game = hashMapOf(
                     "email" to editText.text.toString()
                 )
-                db.collection("users").document("nils.gormsen@googlemail.com")
+                val activity = activity as MainActivity?
+                db.collection("users").document(activity!!.getGlobalUser().getEmail())
                     .collection("friends").document(editText.text.toString())
                     .set(game)
                     .addOnSuccessListener { Log.d("success", "DocumentSnapshot successfully written!") }

@@ -1,5 +1,8 @@
 package sse.goethe.arsudoku.ui.history
 
+import android.content.ContentValues.TAG
+import android.content.Context
+import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -9,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -17,22 +21,29 @@ import com.baoyz.swipemenulistview.SwipeMenuCreator
 import com.baoyz.swipemenulistview.SwipeMenuItem
 import com.baoyz.swipemenulistview.SwipeMenuListView
 import com.google.firebase.firestore.FirebaseFirestore
+import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
+import sse.goethe.arsudoku.ui.friends.FriendsViewModel
+import java.util.*
+import kotlin.collections.ArrayList
 
 class HistoryFragment : Fragment() {
 
     private lateinit var historyViewModel: HistoryViewModel
+    private lateinit var friendsViewModel: FriendsViewModel
     private val history = ArrayList<String>()
-    private lateinit var userEmail: String
+    private val users = ArrayList<String>()  // Transfer to viewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
         historyViewModel =
             ViewModelProviders.of(this).get(HistoryViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_history, container, false)
+        val activity = activity as MainActivity?
 
         val textView: TextView = root.findViewById(R.id.text_history)
 
@@ -99,7 +110,7 @@ class HistoryFragment : Fragment() {
 
 
         // Set database listener for history data
-        db.collection("users").document("nils.gormsen@googlemail.com").collection("games")
+        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("games")
             .addSnapshotListener { value, e ->
                 if (e != null) {
                     Log.w("fail", "Listen failed.", e)
@@ -123,19 +134,22 @@ class HistoryFragment : Fragment() {
             fun onMenuItemClick(position: Int, menu: SwipeMenu, index: Int): Boolean {
                 when (index) {
                     0 -> {
+                        val activity = activity as MainActivity?
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
-                        db.collection("users").document("nils.gormsen@googlemail.com")
+                        db.collection("users").document(activity!!.getGlobalUser().getEmail())
                             .collection("games").document(history[position])
                             .delete()
-                            .addOnSuccessListener { Log.d("success", history[position]) }
+
+                            .addOnSuccessListener {                              adapter.notifyDataSetChanged()
+                            }
                             .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
 
-                        adapter.notifyDataSetChanged()
 
 
                     }
                     1 -> {
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
+                        showFriendList(root.context, history[position])
 
                     }
                 }// open
@@ -148,5 +162,101 @@ class HistoryFragment : Fragment() {
 
         return root
     }
+
+
+    fun showFriendList(context: Context, item: String){
+        val activity = activity as MainActivity?
+        val builder = AlertDialog.Builder(context)
+        val db = FirebaseFirestore.getInstance()
+        val selectedItems = ArrayList<Int>() // Where we track the selected items
+//        var users = ArrayList<String>()
+        var users = arrayOf("test@gmail.com", "test2@gmail.com", "hello@gmail.com")
+
+//        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("friends")
+//            .get()
+//            .addOnSuccessListener { documents ->
+//                for (document in documents) {
+//                    Log.d("Data", "${document.id} => ${document.data}")
+//                    users.add(document.data.get("email" ).toString())
+//                }
+////                System.out.println(users.size)
+////                System.out.println(users.toArray().toString())
+////                System.out.println(users.toTypedArray())
+//
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.w(TAG, "Error getting documents: ", exception)
+//            }
+
+//        val userArray = arra
+//        val userArray = arrayOfNulls<String>(users.size)
+//        for ((index, value) in someList.withIndex()){
+//            println("$index: $value")
+//            users.add(index, value)
+//        }
+
+//        val array = arrayOfNulls<String>(users.size)
+//        users.toArray(array)
+//        var userArray = arrayOf(Arrays.toString(array))
+
+//        var someList = arrayListOf<String>("Hello", "Again")
+//        var userArray = Array<String>(users.size, )
+//        val array = arrayOfNulls<String>(users.size)
+////        println(users.size)
+////        println(array.size)
+//        println(array.toString())
+//
+//        for ((index, value) in users.withIndex()){
+//            println("$index: $value")
+//            array.set(index, value.toString())
+//        }
+//        println(array.toString())
+//        var userArray = users.toTypedArray()
+//        println(array.toCollection())
+
+        val array = Array(users.size) {
+            users[it]
+        }
+        builder.setTitle("Send to a friend:")
+//            .setMessage("Login not successful! Please input valid data.")
+
+            .setItems(array,
+                DialogInterface.OnClickListener { dialog, which ->
+                    System.out.println("Send " + item + " to friend: " + users.get(which))
+                    val gameData = hashMapOf(
+                        "date" to item
+                    )
+                    db.collection("users").document(users.get(which)).collection("games").document(item)
+                        .set(gameData)
+                        .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
+                        .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+
+                    // The 'which' argument contains the index position
+                    // of the selected item
+                })
+
+//            .setCancelable(false)
+//            .setPositiveButton("OK",
+//                DialogInterface.OnClickListener { dialog, which ->
+//
+//                    //                    Toast.makeText(
+////                        context,
+////                        "Selected Option: Continue",
+////                        Toast.LENGTH_SHORT
+////                    ).show()
+//                })
+////                                    .setNegativeButton("No",
+////                                        DialogInterface.OnClickListener { dialog, which ->
+////                                            Toast.makeText(
+////                                                root.context,
+////                                                "Selected Option: No",
+////                                                Toast.LENGTH_SHORT
+////                                            ).show()
+////                                        })
+//        //Creating dialog box
+        val dialog = builder.create()
+        dialog.show()
+    }
+
 }
 
