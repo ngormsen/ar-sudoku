@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "360631963403",
+    "firebase_url": "https://arsudokusolver-f47ca.firebaseio.com",
+    "project_id": "arsudokusolver-f47ca",
+    "storage_bucket": "arsudokusolver-f47ca.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:360631963403:android:25940ad04dd64a24961c0e",
+        "android_client_info": {
+          "package_name": "sse.goethe.arsudoku"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "360631963403-7pd3efse825usi134i3s3mu8ddphheci.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "sse.goethe.arsudoku",
+            "certificate_hash": "f3c7e5bd8ca8c3cdc399422a6493e3b21c24ae78"
+          }
+        },
+        {
+          "client_id": "360631963403-3k1j82vqd00ggnv9ke7kdvh7v37918f9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuBcUPADopkMtAypkir2DoDc3BPdgRUo4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "360631963403-3k1j82vqd00ggnv9ke7kdvh7v37918f9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
