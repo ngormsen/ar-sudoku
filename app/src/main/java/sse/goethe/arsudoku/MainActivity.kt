@@ -33,7 +33,6 @@ class MainActivity : AppCompatActivity() {
 
     // variable for results
 
-
     /* for digit classifier class*/
     //private lateinit var photoImage: Bitmap
     //private lateinit var classifier: DigitClassifier
