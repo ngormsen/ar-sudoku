@@ -15,15 +15,19 @@ class Recognition {
     * Variables and Values
     *++++++++++++++++++++++++++++++++++++++++ */
     /* Sudokus 4 edge coordinates */
-    private var sudokuEdgeCoordinates: Array<Array<Int>>
-        get() { return sudokuEdgeCoordinates }
 
-    private var sudokuMidCoordinates: Array<Int>
+    var sudokuEdgeCoordinates: Array<Array<Int>>
+        get() { return sudokuEdgeCoordinates }
+        private set
+
+    var sudokuMidCoordinates: Array<Int>
         get() { return sudokuMidCoordinates}
+        private set
 
     /* 81 dim array with classes 0..19 */
-    private var sudokuPredictedDigits: Array<Int>
+    var sudokuPredictedDigits: Array<Int>
         get() { return sudokuMidCoordinates }
+        private set
 
     /* This cropped Sudoku blocks will go to the classifier */
     private lateinit var croppedSudokuBlocks: Array<Bitmap>
