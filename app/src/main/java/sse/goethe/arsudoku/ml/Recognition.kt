@@ -10,12 +10,11 @@ package sse.goethe.arsudoku.ml
 import android.graphics.Bitmap
 
 class Recognition {
-
     /*+++++++++++++++++++++++++++++++++++++++
     * Variables and Values
     *++++++++++++++++++++++++++++++++++++++++ */
-    /* Sudokus 4 edge coordinates */
 
+    /* Sudokus 4 edge coordinates */
     var sudokuEdgeCoordinates: Array<Array<Int>>
         get() { return sudokuEdgeCoordinates }
         private set
@@ -26,7 +25,7 @@ class Recognition {
 
     /* 81 dim array with classes 0..19 */
     var sudokuPredictedDigits: Array<Int>
-        get() { return sudokuMidCoordinates }
+        get() { return sudokuPredictedDigits }
         private set
 
     /* This cropped Sudoku blocks will go to the classifier */

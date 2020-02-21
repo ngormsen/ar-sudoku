@@ -161,7 +161,6 @@ class DigitClassifier(private val context: Context) {
 
         private const val OUTPUT_CLASSES_COUNT = 10
     }
-
 }
 
 /*
