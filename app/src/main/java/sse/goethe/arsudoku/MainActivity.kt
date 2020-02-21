@@ -26,6 +26,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val solver = Sudoku( arrayOf(
+            intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
+            intArrayOf(0, 6, 0, 2, 1, 0, 0, 0, 4),
+            intArrayOf(9, 0, 2, 0, 0, 6, 0, 1, 3),
+            intArrayOf(0, 0, 0, 4, 0, 0, 1, 8, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 5, 7, 0, 0, 2, 0, 0, 0),
+            intArrayOf(7, 3, 0, 6, 0, 0, 2, 0, 1),
+            intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
+            intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
+        ))
+
+        println(solver.solve())
 
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
