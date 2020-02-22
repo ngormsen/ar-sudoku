@@ -74,6 +74,106 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         return false // Backtracking
     }
 
+    /**
+     * Search for the field with the lowest number of possibilities regarding the three major
+     * constraints (row, column & grid) in constant time (for fixed n). Returns the field's
+     * indices as well as it's value or zero if all fields are filled.
+     *
+     * The function traverses the Sudoku left-to-right & top-to-bottom (reading order) and returns
+     * the first encountered minimum if there are multiple.
+     *
+     * @author Manuel Stoeckel
+     * @param current The sudoku in its current state with empty fields.
+     * @return A Triple(indexRow, indexColumn, value)
+     */
+    fun hint(current: Array<IntArray>): Triple<Int, Int, Int> {
+        var min = 10
+        var indexRow = -1
+        var indexColumn = -1
+        for (j in 0 until n) {
+            for (i in 0 until n) {
+                if (current[i][j] == 0) {
+                    val localMin = getMinPossibilities(current, i, j)
+
+                    if (localMin < min) {
+                        // Early stopping if there is only one possible number
+                        if (localMin == 1) {
+                            return Triple(indexRow, indexColumn, sudoku[indexRow][indexColumn])
+                        }
+                        min = localMin
+                        indexRow = i
+                        indexColumn = j
+                    }
+                }
+            }
+        }
+        val value: Int
+        if (indexColumn >= 0 && indexRow >= 0) {
+            value = sudoku[indexRow][indexColumn]
+            print(min.toString() + " -> ") // FIXME: remove
+        } else {
+            value = 0
+        }
+        return Triple(indexRow, indexColumn, value)
+    }
+
+    /**
+     * Returns the minimum number of possibilities across row, column and grid constraints for a
+     * given sudoku state and column & row indices.
+     *
+     * @author Manuel Stoeckel
+     * @param current The current sudoku state
+     * @param i The row index
+     * @param j The column index
+     * @return The minimum number of possibilities
+     */
+    private fun getMinPossibilities(current: Array<IntArray>, i: Int, j: Int): Int {
+        val rowPossibilities = getRowPossibilities(current, i)
+        val columnPossibilities = getColumnPossibilities(current, j)
+        val gridPossibilities = getGridPossibilities(current, i, j)
+
+        val localMin = intArrayOf(
+            rowPossibilities.size,
+            columnPossibilities.size,
+            gridPossibilities.size
+        ).min()
+
+        return localMin!!
+    }
+
+    fun getRowPossibilities(current: Array<IntArray>, row: Int): HashSet<Int> {
+        val ret = HashSet<Int>()
+        ret.addAll(current[row].asIterable())
+        return getDiff(ret)
+    }
+
+    fun getColumnPossibilities(current: Array<IntArray>, col: Int): HashSet<Int> {
+        val ret = HashSet<Int>()
+        for (i in 0 until n) {
+            ret.add(current[i][col])
+        }
+        return getDiff(ret)
+    }
+
+    fun getGridPossibilities(current: Array<IntArray>, row: Int, col: Int): HashSet<Int> {
+        val gridOffsetRow = Math.floorMod(row, 3) * 3
+        val gridOffsetColumn = Math.floorMod(col, 3) * 3
+
+        val ret = HashSet<Int>()
+        for (i in gridOffsetRow until gridOffsetRow + 3) {
+            for (j in gridOffsetColumn until gridOffsetColumn + 3) {
+                ret.add(current[i][j])
+            }
+        }
+        return getDiff(ret)
+    }
+
+    fun getDiff(set: HashSet<Int>): HashSet<Int> {
+        val numbers = HashSet<Int>(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
+        numbers.removeAll(set)
+        return numbers
+    }
+
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
