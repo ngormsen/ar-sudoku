@@ -210,7 +210,7 @@ class Sudoku(private val sudoku: Array<IntArray>) {
      * @param occurringNumbers The set of occurring numbers
      * @return The remaining possible numbers as a new HashSet(Int)
      */
-    fun getRemainingPossible(occurringNumbers: HashSet<Int>): HashSet<Int> {
+    private fun getRemainingPossible(occurringNumbers: HashSet<Int>): HashSet<Int> {
         val remainingNumbers = HashSet<Int>(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
         remainingNumbers.removeAll(occurringNumbers)
         return remainingNumbers
