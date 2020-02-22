@@ -8,9 +8,12 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         }
         for (i in 0 until n) {
             for (j in 0 until n) {
-                print(sudoku[i][j].toString() + " ")
+                print(sudoku[i][j].toString())
+                if (Math.floorMod(j, 3) == 2 && j < n - 1)
+                    print(" ")
             }
             println()
+            if (Math.floorMod(i, 3) == 2 && i < n - 1) println()
         }
     }
 

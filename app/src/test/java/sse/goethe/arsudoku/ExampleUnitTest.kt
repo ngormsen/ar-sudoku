@@ -48,11 +48,11 @@ class ExampleUnitTest {
             for (i in 0 until 9) {
                 for (j in 0 until 9) {
                     print(current[i][j].toString())
-                    if (Math.floorMod(j, 3) == 2)
+                    if (Math.floorMod(j, 3) == 2 && j < 8)
                         print(" ")
                 }
                 println()
-                if (Math.floorMod(i, 3) == 2) {
+                if (Math.floorMod(i, 3) == 2 && i < 8) {
                     println()
                 }
             }
