@@ -77,7 +77,7 @@ class Sudoku(private val sudoku: Array<IntArray>) {
     /**
      * Search for the field with the lowest number of possibilities regarding the three major
      * constraints (row, column & grid) in constant time (for fixed n). Returns the field's
-     * indices as well as it's value or zero if all fields are filled.
+     * indices and as it's value or zero if all fields are filled.
      *
      * The function traverses the Sudoku left-to-right & top-to-bottom (reading order) and returns
      * the first encountered minimum if there are multiple.
@@ -90,88 +90,87 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         var min = 10
         var indexRow = -1
         var indexColumn = -1
-        for (j in 0 until n) {
-            for (i in 0 until n) {
+        for (i in 0 until n) {
+            for (j in 0 until n) {
                 if (current[i][j] == 0) {
-                    val localMin = getMinPossibilities(current, i, j)
+                    val localMin = getCellPossibilityCount(current, i, j)
 
                     if (localMin < min) {
+                        min = localMin
+                        indexRow = i
+                        indexColumn = j
+
                         // Early stopping if there is only one possible number
                         if (localMin == 1) {
                             return Triple(indexRow, indexColumn, sudoku[indexRow][indexColumn])
                         }
-                        min = localMin
-                        indexRow = i
-                        indexColumn = j
                     }
                 }
             }
         }
-        val value: Int
-        if (indexColumn >= 0 && indexRow >= 0) {
-            value = sudoku[indexRow][indexColumn]
-            print(min.toString() + " -> ") // FIXME: remove
-        } else {
-            value = 0
-        }
+        val value = (if (indexColumn >= 0 && indexRow >= 0) sudoku[indexRow][indexColumn] else 0)
         return Triple(indexRow, indexColumn, value)
     }
 
     /**
-     * Returns the minimum number of possibilities across row, column and grid constraints for a
-     * given sudoku state and column & row indices.
+     * Returns the number of possibilities across row, column and grid constraints for a
+     * given sudoku state and cell.
      *
      * @author Manuel Stoeckel
      * @param current The current sudoku state
-     * @param i The row index
-     * @param j The column index
+     * @param row The row index
+     * @param col The column index
      * @return The minimum number of possibilities
      */
-    private fun getMinPossibilities(current: Array<IntArray>, i: Int, j: Int): Int {
-        val rowPossibilities = getRowPossibilities(current, i)
-        val columnPossibilities = getColumnPossibilities(current, j)
-        val gridPossibilities = getGridPossibilities(current, i, j)
+    private fun getCellPossibilityCount(current: Array<IntArray>, row: Int, col: Int): Int {
+        val gridOffsetRow = Math.floorDiv(row, 3) * 3
+        val gridOffsetColumn = Math.floorDiv(col, 3) * 3
 
-        val localMin = intArrayOf(
-            rowPossibilities.size,
-            columnPossibilities.size,
-            gridPossibilities.size
-        ).min()
+        val occurringNumbers = HashSet<Int>()
 
-        return localMin!!
-    }
+        // Add numbers that occur in the current row and column
+        occurringNumbers.addAll(getRowNumbers(current, row))
+        occurringNumbers.addAll(getColumnNumbers(current, col))
 
-    fun getRowPossibilities(current: Array<IntArray>, row: Int): HashSet<Int> {
-        val ret = HashSet<Int>()
-        ret.addAll(current[row].asIterable())
-        return getDiff(ret)
-    }
-
-    fun getColumnPossibilities(current: Array<IntArray>, col: Int): HashSet<Int> {
-        val ret = HashSet<Int>()
-        for (i in 0 until n) {
-            ret.add(current[i][col])
-        }
-        return getDiff(ret)
-    }
-
-    fun getGridPossibilities(current: Array<IntArray>, row: Int, col: Int): HashSet<Int> {
-        val gridOffsetRow = Math.floorMod(row, 3) * 3
-        val gridOffsetColumn = Math.floorMod(col, 3) * 3
-
-        val ret = HashSet<Int>()
+        // Add numbers, that occur in the current minor grid
         for (i in gridOffsetRow until gridOffsetRow + 3) {
             for (j in gridOffsetColumn until gridOffsetColumn + 3) {
-                ret.add(current[i][j])
+                occurringNumbers.add(current[i][j])
             }
         }
-        return getDiff(ret)
+
+        /*
+        TODO: Add constraint for numbers that may not occur in other cells of the minor grid but
+         this one, as they appear in conjugate rows and columns which intersect the current grid.
+        */
+
+        return getRemainingPossible(occurringNumbers).size
     }
 
-    fun getDiff(set: HashSet<Int>): HashSet<Int> {
-        val numbers = HashSet<Int>(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
-        numbers.removeAll(set)
-        return numbers
+    private fun getRowNumbers(current: Array<IntArray>, row: Int): HashSet<Int> {
+        val occurringNumbers = HashSet<Int>()
+        occurringNumbers.addAll(current[row].asIterable())
+        return occurringNumbers
+    }
+
+    private fun getColumnNumbers(current: Array<IntArray>, col: Int): HashSet<Int> {
+        val occurringNumbers = HashSet<Int>()
+        for (i in 0 until n) {
+            occurringNumbers.add(current[i][col])
+        }
+        return occurringNumbers
+    }
+
+    /**
+     * Returns the remaining possible numbers for a given set of occurring numbers
+     *
+     * @param occurringNumbers The set of occurring numbers
+     * @return The remaining possible numbers as a new HashSet(Int)
+     */
+    fun getRemainingPossible(occurringNumbers: HashSet<Int>): HashSet<Int> {
+        val remainingNumbers = HashSet<Int>(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
+        remainingNumbers.removeAll(occurringNumbers)
+        return remainingNumbers
     }
 
     companion object {

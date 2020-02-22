@@ -9,6 +9,7 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+    private val verbose = true
     @Test
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
@@ -27,13 +28,6 @@ class ExampleUnitTest {
             intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
             intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
         )
-        for (i in 0 until 9) {
-            for (j in 0 until 9) {
-                print(current[i][j].toString() + " ")
-            }
-            println()
-        }
-        println()
         val sudoku = Sudoku(
             arrayOf(
                 intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
@@ -48,8 +42,19 @@ class ExampleUnitTest {
             )
         )
         sudoku.solve()
-        println()
-        println(sudoku.hint(current))
+        val hint = sudoku.hint(current)
+        if (verbose) {
+            println()
+            for (i in 0 until 9) {
+                for (j in 0 until 9) {
+                    print(current[i][j].toString() + " ")
+                }
+                println()
+            }
+            println()
+            println(hint)
+        }
+        assert(setOf(Triple(2, 0, 4), Triple(2, 6, 5)).contains(hint))
     }
 
 }
