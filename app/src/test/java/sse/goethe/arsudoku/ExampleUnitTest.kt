@@ -47,7 +47,7 @@ class ExampleUnitTest {
             println()
             for (i in 0 until 9) {
                 for (j in 0 until 9) {
-                    print(current[i][j].toString())
+                    print(if (current[i][j] > 0) current[i][j].toString() else "_")
                     if (Math.floorMod(j, 3) == 2 && j < 8)
                         print(" ")
                 }
