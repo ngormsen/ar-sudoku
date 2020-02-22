@@ -120,11 +120,16 @@ class Sudoku(private val sudoku: Array<IntArray>) {
      * @param current The current sudoku state
      * @param row The row index
      * @param col The column index
+     * Default: true
      * @return The minimum number of possibilities
      */
-    private fun getCellPossibilityCount(current: Array<IntArray>, row: Int, col: Int): Int {
-        val gridOffsetRow = Math.floorDiv(row, 3) * 3
-        val gridOffsetColumn = Math.floorDiv(col, 3) * 3
+    private fun getCellPossibilityCount(
+        current: Array<IntArray>,
+        row: Int,
+        col: Int
+    ): Int {
+        val offsetRow = Math.floorDiv(row, 3) * 3
+        val offsetColumn = Math.floorDiv(col, 3) * 3
 
         val occurringNumbers = HashSet<Int>()
 
@@ -133,18 +138,24 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         occurringNumbers.addAll(getColumnNumbers(current, col))
 
         // Add numbers, that occur in the current minor grid
-        for (i in gridOffsetRow until gridOffsetRow + 3) {
-            for (j in gridOffsetColumn until gridOffsetColumn + 3) {
+        for (i in offsetRow until offsetRow + 3) {
+            for (j in offsetColumn until offsetColumn + 3) {
                 occurringNumbers.add(current[i][j])
             }
         }
 
-        /*
-        TODO: Add constraint for numbers that may not occur in other cells of the minor grid but
-         this one, as they appear in conjugate rows and columns which intersect the current grid.
-        */
+        val remainingPossible = getRemainingPossible(occurringNumbers)
 
-        return getRemainingPossible(occurringNumbers).size
+        // Get the set of numbers that occur in all conjugate rows and columns.
+        // If this set is not empty, filter the remaining possible numbers for them.
+        if (remainingPossible.size > 1) {
+            val conjugates = getConjugateNumbers(current, row, offsetRow, col, offsetColumn)
+
+            if (conjugates.isNotEmpty() && remainingPossible.intersect(conjugates).isNotEmpty())
+                remainingPossible.retainAll(conjugates)
+        }
+
+        return remainingPossible.size
     }
 
     private fun getRowNumbers(current: Array<IntArray>, row: Int): HashSet<Int> {
@@ -159,6 +170,35 @@ class Sudoku(private val sudoku: Array<IntArray>) {
             occurringNumbers.add(current[i][col])
         }
         return occurringNumbers
+    }
+
+    private fun getConjugateNumbers(
+        current: Array<IntArray>,
+        row: Int,
+        gridOffsetRow: Int,
+        col: Int,
+        gridOffsetColumn: Int
+    ): HashSet<Int> {
+        var c = true
+        val conjugateOccurring = HashSet<Int>()
+        for (i in gridOffsetRow until gridOffsetRow + 3) {
+            if (i != row) {
+                if (c) {
+                    conjugateOccurring.addAll(getRowNumbers(current, i))
+                    c = false
+                } else {
+                    conjugateOccurring.retainAll(getRowNumbers(current, i))
+                }
+            }
+        }
+
+        for (j in gridOffsetColumn until gridOffsetColumn + 3) {
+            if (j != col) {
+                conjugateOccurring.retainAll(getColumnNumbers(current, j))
+            }
+        }
+        conjugateOccurring.remove(0)
+        return conjugateOccurring
     }
 
     /**

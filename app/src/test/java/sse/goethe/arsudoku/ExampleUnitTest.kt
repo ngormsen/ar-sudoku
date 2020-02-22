@@ -47,14 +47,25 @@ class ExampleUnitTest {
             println()
             for (i in 0 until 9) {
                 for (j in 0 until 9) {
-                    print(current[i][j].toString() + " ")
+                    print(current[i][j].toString())
+                    if (Math.floorMod(j, 3) == 2)
+                        print(" ")
                 }
                 println()
+                if (Math.floorMod(i, 3) == 2) {
+                    println()
+                }
             }
             println()
             println(hint)
         }
-        assert(setOf(Triple(2, 0, 4), Triple(2, 6, 5)).contains(hint))
+        assert(
+            setOf(
+                Triple(2, 0, 4),
+                Triple(2, 6, 5),
+                Triple(5, 8, 3)
+            ).contains(hint)
+        )
     }
 
 }
