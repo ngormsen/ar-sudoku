@@ -1,6 +1,7 @@
 package sse.goethe.arsudoku
 
 import android.os.Bundle
+import android.util.Log
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -12,15 +13,26 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
+import android.view.SurfaceView
 import android.view.View
 import android.widget.TextView
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_home.*
+import org.opencv.android.BaseLoaderCallback
+import org.opencv.android.CameraBridgeViewBase
+import org.opencv.android.LoaderCallbackInterface
+import org.opencv.android.OpenCVLoader
+import org.opencv.core.Mat
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private var globalUser: User = User("Hello", "world@gmail.com")
     private lateinit var navView: NavigationView
+
+    val TAG = MainActivity::class.java.simpleName
+    var  mOpenCvCameraView : CameraBridgeViewBase? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +72,14 @@ class MainActivity : AppCompatActivity() {
 
         setGlobalUser(User("name", "email"))
 
+
+
+
+        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
+        mOpenCvCameraView?.apply {
+            visibility = SurfaceView.VISIBLE
+            setCvCameraViewListener(this@MainActivity)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -116,5 +136,58 @@ class MainActivity : AppCompatActivity() {
 
     fun getGlobalUser(): User{
         return globalUser
+    }
+
+
+
+    private val mLoaderCallback = object : BaseLoaderCallback(this) {
+        override fun onManagerConnected(status: Int) {
+            when (status) {
+                LoaderCallbackInterface.SUCCESS -> {
+                    Log.i(TAG, "OpenCV loaded successfully")
+                    mOpenCvCameraView?.enableView()
+                }
+                else -> {
+                    super.onManagerConnected(status)
+                }
+            }
+        }
+    }
+
+    public override fun onResume() {
+        super.onResume()
+        if(!OpenCVLoader.initDebug()){
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, mLoaderCallback)
+        }else{
+            Log.d(TAG, "OpenCV library found inside package. Using it!")
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
+        }
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mOpenCvCameraView?.disableView()
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mOpenCvCameraView?.disableView()
+    }
+
+    override fun onCameraViewStarted(width: Int, height: Int) {
+
+    }
+
+    override fun onCameraViewStopped() {
+
+    }
+
+    override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
+        if(inputFrame == null){
+            Log.e(TAG, "Input frame is null!!")
+        }
+        return inputFrame!!.gray()
     }
 }
