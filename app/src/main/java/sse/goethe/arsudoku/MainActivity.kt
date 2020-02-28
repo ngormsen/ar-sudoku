@@ -2,6 +2,7 @@ package sse.goethe.arsudoku
 
 import android.os.Bundle
 import android.util.Log
+import android.view.*
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -11,10 +12,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import android.view.Menu
-import android.view.MenuItem
-import android.view.SurfaceView
-import android.view.View
 import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -188,6 +185,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         if(inputFrame == null){
             Log.e(TAG, "Input frame is null!!")
         }
-        return inputFrame!!.gray()
+        return inputFrame!!.rgba()
     }
 }
