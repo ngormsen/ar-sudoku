@@ -1,7 +1,6 @@
 package sse.goethe.arsudoku
 import android.content.Context
-import sse.goethe.arsudoku.ml.DigitClassifier
-import sse.goethe.arsudoku.ml.Result
+import sse.goethe.arsudoku.ml.Recognition
 import android.os.Bundle
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -28,18 +27,10 @@ import java.io.InputStream
 
 class MainActivity : AppCompatActivity() {
 
-    //load image for test as Bitmap
-
-
-    // variable for results
-
-    /* for digit classifier class*/
-    //private lateinit var photoImage: Bitmap
-    //private lateinit var classifier: DigitClassifier
-    private var digitClassifier = DigitClassifier(this)
-
-
     private lateinit var appBarConfiguration: AppBarConfiguration
+
+    /* Instance of Recognition Class */
+    var recognition = Recognition(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,22 +58,9 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        /* SOME TESTS FOR CLASSIFIER CLASS */
-        //resul.click()
-        //classifier = DigitClassifier(assets) //assets returns AssetManager object
-        //println("SOME INTs: " + classifier.results)
 
-        /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        * Set up the digit classifier
-        * author: David Machajewski
-        *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-        digitClassifier.initializeInterpreter()
 
-        /* test with a bitmap */
-        var testbitmap: Bitmap = digitClassifier.getBitmapFromAsset(this, "mnist_7.PNG")
-
-        var predictedClass: String = digitClassifier.classify(testbitmap)
-        Log.d(TAG, "The predicted class is: " + predictedClass)
+        Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
 
     }
 
@@ -103,12 +81,12 @@ class MainActivity : AppCompatActivity() {
 
 
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    * functions for using the DigitClassifier
+    * functions for using the DigitClassifier from RecognitonClass
     * author: David Machajewski
     *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
     override fun onDestroy() {
-        digitClassifier.close()
+        recognition.close()
         super.onDestroy()
     }
 

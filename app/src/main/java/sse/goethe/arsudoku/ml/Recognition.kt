@@ -6,13 +6,25 @@
  *
  */
 package sse.goethe.arsudoku.ml
-
+import sse.goethe.arsudoku.ml.ComputerVision
+import sse.goethe.arsudoku.ml.DigitClassifier
+import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
+import sse.goethe.arsudoku.MainActivity
 
-class Recognition {
+/**
+ * The Recognition Class instantiate the DigitClassifier
+ * and the OpenCV Module and manages their interaction and
+ * their dependence to the stream of the camera.
+ */
+class Recognition(private val context: Context) {
     /*+++++++++++++++++++++++++++++++++++++++
     * Variables and Values
     *++++++++++++++++++++++++++++++++++++++++ */
+
+    private var digitClassifier = DigitClassifier(context)
+
 
     /* Sudokus 4 edge coordinates */
     var sudokuEdgeCoordinates: Array<Array<Int>>
@@ -20,20 +32,20 @@ class Recognition {
         private set
 
     var sudokuMidCoordinates: Array<Int>
-        get() { return sudokuMidCoordinates}
+        get() { return sudokuMidCoordinates }
         private set
 
-    /* 81 dim array with classes 0..19 */
-    var sudokuPredictedDigits: Array<Int>
-        get() { return sudokuPredictedDigits }
-        private set
+    /* 81 dim array with classes 0..19
+       0 = empty field, 1-9 machine written, 10 - 18 hand written */
+    var sudokuPredictedDigits: Array<Array<Int>>
+    var sudokuFieldIsHandwritten: Array<Array<Int>>
 
     /* This cropped Sudoku blocks will go to the classifier */
     private lateinit var croppedSudokuBlocks: Array<Bitmap>
 
     /* DEFINE AS WELL */
-    // Instance of DigitClassifier
-    // Array of cropped Bitmaps
+        // Instance of DigitClassifier
+        // Array of cropped Bitmaps
 
     init {
         // x1 top left corner, x2 top right corner, x3 bottom left ...
@@ -42,53 +54,63 @@ class Recognition {
 
         sudokuMidCoordinates = arrayOf( 950, 1750 )
 
-        /* 0 = empty field, 1-9 machine written, 10 - 18 hand written */
-        sudokuPredictedDigits = arrayOf(    5, 0, 0, 3, 0, 1, 0, 0, 7,
-                                            0, 1, 0, 4, 0, 6, 0, 9, 0,
-                                            0, 0, 8, 0, 5, 0, 4, 0, 0,
-                                            1, 7, 0, 0, 0, 0, 0, 5, 9,
-                                            0, 0, 6, 0, 0, 0, 7, 0, 0,
-                                            4, 2, 0, 0, 0, 0, 0, 8, 3,
-                                            0, 0, 4, 0, 2, 0, 3, 0, 0,
-                                            0, 8, 0, 7, 0, 5, 0, 2, 0,
-                                            2, 0, 0, 9, 0, 4, 0, 0, 5   )
+        /* initialize sudokuPredictedDigits array with 0 */
+        /*
+        for (i in 0..8) {
+            var tmp = arrayOf<Int>()
+            for (j in 0..8) { tmp += 0 }
+            this.sudokuPredictedDigits += tmp
+        }
+        */
 
+        sudokuPredictedDigits = arrayOf(
+                                    arrayOf(5, 0, 0, 3, 0, 1, 0, 0, 7),
+                                    arrayOf(0, 1, 0, 4, 0, 6, 0, 9, 0),
+                                    arrayOf(0, 0, 8, 0, 5, 0, 4, 0, 0),
+                                    arrayOf(1, 7, 0, 0, 0, 0, 0, 5, 9),
+                                    arrayOf(0, 0, 6, 0, 0, 0, 7, 0, 0),
+                                    arrayOf(4, 2, 0, 0, 0, 0, 0, 8, 3),
+                                    arrayOf(0, 0, 4, 0, 2, 0, 3, 0, 0),
+                                    arrayOf(0, 8, 0, 7, 0, 5, 0, 2, 0),
+                                    arrayOf(2, 0, 0, 9, 0, 4, 0, 0, 5) )
+        /* -1 = False if it is machine printed
+        *  1 = True if it is hand written
+        *  0 = empty if it is an empty field */
+        sudokuFieldIsHandwritten = arrayOf(
+            arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -17),
+            arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
+            arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
+            arrayOf(-1, -1, 0, 0, 0, 0, 0, -1, -1),
+            arrayOf(0, 0, -1, 0, 0, 0, -1, 0, 0),
+            arrayOf(-1, -1, 0, 0, 0, 0, 0, -1, -1),
+            arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
+            arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
+            arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1) )
 
+        /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        * Set up the digit classifier
+        *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+        //digitClassifier.initializeInterpreter()
+        /* test with a bitmap */
+        //var testbitmap: Bitmap = digitClassifier.getBitmapFromAsset(context, "mnist_7.PNG")
         // Initialize Interpreter from DigitClassifier
+
+        //var predictedClass: String = digitClassifier.classify(testbitmap)
+        //Log.d(Recognition.TAG, "The predicted class is: " + predictedClass)
+
     }
 
     /** ++++++++++++++++++++++++++++++++++++
      * CLASS FUNCTIONS
      +++++++++++++++++++++++++++++++++++++++*/
 
-    private fun cropSudoku() {
-        // Get Sudoku from Stream
-        // convert into Bitmap
-        // and crop with some OCV functions
-        // croppedSudokuBlocks = ...
+    fun close(){
+        digitClassifier.close()
     }
 
-    private fun calculateSudokuMid() {
-        // take the 4 edge coordinates
-        // and calculate the midpoint
-        // (x1, y1), (x2, y2), (x3, y3), (x4, y4)
-        // (x2 - x1) / 2 and
-        // (y1 - y3) / 2
-        // sudokuMidCoordinates
+    companion object {
+        // just to use for Log's
+        private const val TAG = "Recognition"
     }
-
-    private fun calculateSudokuDigitCells() {
-        // just calculates the array position of
-        // a digit to the 2 dim cell positions
-        // within the sudoku 81x81 field
-
-        // use modulo: e.g.
-        // 10 mod 9 = 1
-        // 11 mod 9 = 2 ... for column number
-        // for row number just divide
-        // the array position by 9,
-        // and if it is floating point number
-        // then round up.
-    }
-
 }
