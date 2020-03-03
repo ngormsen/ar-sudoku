@@ -38,8 +38,10 @@ class FriendsFragment : Fragment() {
     ): View? {
         friendsViewModel =
             ViewModelProviders.of(this).get(FriendsViewModel::class.java)
+
         val root = inflater.inflate(R.layout.fragment_friends, container, false)
 
+        // Implements button to add friends
         val fab: FloatingActionButton = root.findViewById(R.id.fab)
         fab.setOnClickListener { view ->
 
@@ -72,14 +74,18 @@ class FriendsFragment : Fragment() {
 //                .setAction("Action", null).show()
         }
 
-
-        val textView: TextView = root.findViewById(R.id.text_friends)
-        friendsViewModel.text.observe(this, Observer {
-            textView.text = it
-        })
+//
+//        val textView: TextView = root.findViewById(R.id.text_friends)
+//        friendsViewModel.text.observe(this, Observer {
+//            textView.text = it
+//        })
+        // Creates the SwipeMenu
         val listView : SwipeMenuListView = root.findViewById(R.id.swipeMenu)
+        // Get access to the database
         val db = FirebaseFirestore.getInstance()
+        // The adapter provides the items for the SwipeMenu
         val adapter = ArrayAdapter(root.context, android.R.layout.simple_list_item_1, users)
+        // Configures the SwipeMenu
         val creator = SwipeMenuCreator { menu ->
             // create "open" item
             val openItem = SwipeMenuItem(
@@ -123,10 +129,11 @@ class FriendsFragment : Fragment() {
             menu.addMenuItem(deleteItem)
         }          // set creator
 
+        // Attaches the Creator and Adapter to the Swipe Menu
         listView.setMenuCreator(creator)
         listView.setAdapter(adapter)
 
-
+        // Access the MainActivity
         val activity = activity as MainActivity?
 
         // Set database listener for friend data
