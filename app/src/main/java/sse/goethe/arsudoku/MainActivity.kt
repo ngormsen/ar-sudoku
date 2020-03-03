@@ -128,15 +128,15 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     * author: David Machajewski
     *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-    override fun onDestroy() {
-        recognition.close()
-        super.onDestroy()
-    }
+//    override fun onDestroy() {
+//        recognition.close()
+//        super.onDestroy()
+//    }
 
 
     companion object {
         // just to use it for Log's
-        private const val TAG = "MainActivity"
+        private const val TAG = "MainActivity"}
     fun setHeaderCredentials(user:User){
         // Get header access
         val headerView : View = navView.getHeaderView(0)
@@ -223,3 +223,4 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return inputFrame!!.rgba()
     }
 }
+
