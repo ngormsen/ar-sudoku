@@ -49,6 +49,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         println(solver.solve())
 
+        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
+        mOpenCvCameraView?.apply {
+            visibility = SurfaceView.VISIBLE
+            setCvCameraViewListener(this@MainActivity)
+        }
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -72,11 +77,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
 
-        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
-        mOpenCvCameraView?.apply {
-            visibility = SurfaceView.VISIBLE
-            setCvCameraViewListener(this@MainActivity)
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -121,7 +121,13 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     }
 
-     fun navigateHome() {
+    fun stopCamera(){
+        mOpenCvCameraView?.disableView()
+        println("Camera stopped")
+    }
+
+
+    fun navigateHome() {
         val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigate(R.id.nav_home)
     }
@@ -180,6 +186,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     override fun onCameraViewStopped() {
 
     }
+
 
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
         if(inputFrame == null){
