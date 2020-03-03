@@ -1,5 +1,6 @@
 package sse.goethe.arsudoku
-
+import android.content.Context
+import sse.goethe.arsudoku.ml.Recognition
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -12,6 +13,15 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import android.view.Menu
+import android.content.res.AssetManager
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.IOException
+import java.io.InputStream
 import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -21,7 +31,6 @@ import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Mat
 
-
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -30,6 +39,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     val TAG = MainActivity::class.java.simpleName
     var  mOpenCvCameraView : CameraBridgeViewBase? = null
+
+    /* Instance of Recognition Class */
+    var recognition = Recognition(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,10 +84,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+
+
+        Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
         setGlobalUser(User("name", "email"))
-
-
-
 
     }
 
@@ -110,6 +122,21 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
+
+    /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    * functions for using the DigitClassifier from RecognitonClass
+    * author: David Machajewski
+    *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+    override fun onDestroy() {
+        recognition.close()
+        super.onDestroy()
+    }
+
+
+    companion object {
+        // just to use it for Log's
+        private const val TAG = "MainActivity"
     fun setHeaderCredentials(user:User){
         // Get header access
         val headerView : View = navView.getHeaderView(0)
@@ -175,6 +202,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     }
 
     override fun onDestroy() {
+        recognition.close()
         super.onDestroy()
         mOpenCvCameraView?.disableView()
     }
