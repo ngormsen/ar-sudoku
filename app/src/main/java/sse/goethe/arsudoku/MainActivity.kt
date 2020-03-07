@@ -24,12 +24,19 @@ import java.io.IOException
 import java.io.InputStream
 import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.fragment_home.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
+
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame // test function onCameraFrame
+
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
-import org.opencv.core.Mat
+import org.opencv.core.*
+//import org.opencv.imgproc.Imgproc.findContours
+import org.opencv.imgproc.Imgproc
+
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -67,6 +74,14 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             setCvCameraViewListener(this@MainActivity)
         }
 
+        /* ############################################
+        *  RECOGNIZE SUDOKU TEST
+        *  ############################################ */
+
+
+
+
+        // #########################################################################################
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
@@ -89,7 +104,77 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
         setGlobalUser(User("name", "email"))
 
+
     }
+
+    // THIS IS A FUNCTION TO TEST OPENCV AND BELONGS TO THE OPENVISION PART
+    // IF IT IS WORKING
+
+    // implementation of interface CvCameraViewFrame !
+
+    /*
+    interface CvCameraViewFrame {
+        fun rgba(): Mat
+        fun gray(): Mat
+    }
+
+    fun onRunningFrame( frame: CvCameraViewFrame ): Mat {
+        // greyscale the frame
+        var inpFrame = frame.gray()
+        // apply adaptive threshold
+        Imgproc.adaptiveThreshold(inpFrame, inpFrame, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 10.0)
+
+        var contours = ArrayList<MatOfPoint>() // destination for findContours()
+        var hierarchy = Mat() //
+
+        Imgproc.findContours(inpFrame, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
+
+        hierarchy.release() // for deallocation
+
+        var biggest = MatOfPoint2f()
+        var max_area = 0.0
+        var approxContour = Mat() // holds the approximated contour
+
+        // approx. contours by polygons
+        for (contour in contours) {
+            var area = Imgproc.contourArea(contour)
+            if (area > 100) {
+                var tmp: MatOfPoint2f = MatOfPoint2f(contour)
+                var peri = Imgproc.arcLength(tmp, true)
+                var approx: MatOfPoint2f = MatOfPoint2f()
+                Imgproc.approxPolyDP(tmp, approx, 0.02 * peri, true)
+                if ( (area > max_area) && (approx.total() == 4L) ) {
+                    biggest = approx
+                    max_area = area
+                }
+            }
+        }
+
+        // find surrounding box now
+        var displayMat: Mat = frame.rgba()
+        var points: Array<Point> = biggest.toArray()
+        var cropped: Mat = Mat()
+        var t: Int = 3
+
+        if (points.size >= 4) {
+            // draw surrounding box
+            Imgproc.line(displayMat, Point(points[0].x, points[0].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 2 )
+            Imgproc.line(displayMat, Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Scalar(255.0,0.0,0.0), 2 )
+            Imgproc.line(displayMat, Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Scalar(255.0,0.0,0.0), 2 )
+            Imgproc.line(displayMat, Point(points[3].x, points[3].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 2 )
+
+            // crop the image
+            var r: Rect = Rect( Point(points[0].x - t, points[0].y - t), Point(points[2].x + t, points[2].y + t) )
+            if (displayMat.width() > 1 && displayMat.height() > 1) {
+                cropped = Mat(displayMat, r)
+            }
+        }
+        return displayMat
+    }
+    */
+
+
+    // +++++++++++++++++++++++++++++++++++++
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
