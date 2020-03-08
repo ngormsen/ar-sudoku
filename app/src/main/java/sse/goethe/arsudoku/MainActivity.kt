@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Camera
 import java.io.IOException
 import java.io.InputStream
 import android.widget.TextView
@@ -49,6 +50,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     /* Instance of Recognition Class */
     var recognition = Recognition(this)
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -302,10 +305,116 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
+        // This method is invoked when delivery of the frame needs to be done.
+        // The returned values - is a modified frame which needs to be displayed on the screen
         if(inputFrame == null){
             Log.e(TAG, "Input frame is null!!")
         }
-        return inputFrame!!.rgba()
+
+        // init matrices and apply adaptiveThreshold
+        // create List for contours and use findContours function
+        // for each contour use contourArea()
+            // approximate with polygons
+            // determine max area
+
+        // find the outer box
+        // draw lines with Core.line(...)
+        // crop img
+
+        // return displayMat
+
+        Log.d("FRAME:", "onCameraFrame() Method")
+
+        // TEST OF APPLYING ADAPTIVE THRESHOLD TO THE CAMERA FRAMES
+
+        var outputFrame: Mat = Mat()
+        if (inputFrame != null) {
+            //Imgproc.adaptiveThreshold(inputFrame.gray(), outputFrame, 255.0,1,1,11,2.0)
+            outputFrame = analyzeFrame(inputFrame)
+        }
+        return outputFrame!! // comment the other return then
+
+
+        //return inputFrame!!.rgba()
+        //return inputFrame!!.gray()
     }
+
+    fun analyzeFrame(frame: CvCameraViewFrame ): Mat {
+
+        var grayMat: Mat = frame.gray()
+        var blurMat: Mat = Mat()
+        Imgproc.GaussianBlur(grayMat, blurMat, Size(5.0,5.0), 0.0)
+        var thresh: Mat = Mat()
+        Imgproc.adaptiveThreshold(blurMat, thresh, 255.0,1,1,11,2.0)
+
+        var contours = ArrayList<MatOfPoint>() // destination for findContours()
+        var hierarchy = Mat() //
+
+        Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
+        hierarchy.release() // for deallocation
+
+        var biggest: MatOfPoint2f = MatOfPoint2f()
+        var max_area = 0.0
+
+        for (contour in contours) {
+            var area = Imgproc.contourArea(contour) //
+            if (area > 100) {
+                var m: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
+                m.fromList(contour.toList())
+
+
+
+                var peri = Imgproc.arcLength(m, true)
+                var approx: MatOfPoint2f = MatOfPoint2f()
+                Imgproc.approxPolyDP(m, approx, 0.02 * peri, true)
+
+                if (area > max_area && approx.total() == 4L) {
+                    biggest = approx
+                    max_area = area
+                }
+            }
+        }
+
+        // Find the outer box
+        var displayMat: Mat = frame.rgba()
+        var points: Array<Point> = biggest.toArray()
+
+        var cropped = Mat()
+        var t = 3
+        if (points.size >= 4) {
+            // Draw surrounding box
+            Imgproc.line(displayMat, Point(points[0].x, points[0].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 2 )
+            Imgproc.line(displayMat, Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Scalar(255.0,0.0,0.0), 2 )
+            Imgproc.line(displayMat, Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Scalar(255.0,0.0,0.0), 2 )
+            Imgproc.line(displayMat, Point(points[3].x, points[3].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 2 )
+
+            var R: Rect = Rect( Point(points[0].x - t, points[0].y - t), Point(points[2].x + t, points[2].y + t) )
+            if (displayMat.width() > 1 && displayMat.height() > 1) {
+                cropped = Mat(displayMat, R)
+            }
+        }
+
+        return displayMat
+    }
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
