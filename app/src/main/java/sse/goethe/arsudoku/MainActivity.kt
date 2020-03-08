@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     /* Instance of Recognition Class */
     var recognition = Recognition(this)
 
-
+    var frameCounter = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -305,6 +305,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
+        this.frameCounter += 1
         // This method is invoked when delivery of the frame needs to be done.
         // The returned values - is a modified frame which needs to be displayed on the screen
         if(inputFrame == null){
@@ -330,9 +331,19 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         var outputFrame: Mat = Mat()
         if (inputFrame != null) {
             //Imgproc.adaptiveThreshold(inputFrame.gray(), outputFrame, 255.0,1,1,11,2.0)
-            outputFrame = analyzeFrame(inputFrame)
+            //
+            // TODO: Call the function each X-th frame where X > 50? frame
+            // X < 10 will cause threadng problems
+            //
+            if (this.frameCounter > 50 ) {
+                outputFrame = analyzeFrame(inputFrame)
+                return outputFrame
+            } else { return inputFrame!!.rgba()}
+
+        } else {
+            return inputFrame!!.rgba()
         }
-        return outputFrame!! // comment the other return then
+        //return outputFrame!! // comment the other return then
 
 
         //return inputFrame!!.rgba()
