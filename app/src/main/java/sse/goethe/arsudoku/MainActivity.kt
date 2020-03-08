@@ -332,11 +332,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         if (inputFrame != null) {
             //Imgproc.adaptiveThreshold(inputFrame.gray(), outputFrame, 255.0,1,1,11,2.0)
             //
-            // TODO: Call the function each X-th frame where X > 50? frame
+            // TODO: Call the function each X-th frame where X > k? frame
             // X < 10 will cause threadng problems
             //
-            if (this.frameCounter > 50 ) {
+            if (this.frameCounter > 25 ) { // k = 25 for now
                 outputFrame = analyzeFrame(inputFrame)
+                this.frameCounter = 0
                 return outputFrame
             } else { return inputFrame!!.rgba()}
 
