@@ -19,12 +19,15 @@ import sse.goethe.arsudoku.MainActivity
  * their dependence to the stream of the camera.
  */
 class Recognition(private val context: Context) {
-    /*+++++++++++++++++++++++++++++++++++++++
-    * Variables and Values
-    *++++++++++++++++++++++++++++++++++++++++ */
 
     private var digitClassifier = DigitClassifier(context)
 
+    /**
+     * Use this instance of ComputerVision Class in MainActivity
+     * to get access to the analyzeFrame() function
+     *
+     * */
+    var covi = ComputerVision()
 
     /* Sudokus 4 edge coordinates */
     var sudokuEdgeCoordinates: Array<Array<Int>>
@@ -98,7 +101,6 @@ class Recognition(private val context: Context) {
 
         //var predictedClass: String = digitClassifier.classify(testbitmap)
         //Log.d(Recognition.TAG, "The predicted class is: " + predictedClass)
-
     }
 
     /** ++++++++++++++++++++++++++++++++++++

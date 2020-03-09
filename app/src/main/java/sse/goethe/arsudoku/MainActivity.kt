@@ -84,7 +84,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
 
-
         // #########################################################################################
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -419,9 +418,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             var R: Rect = Rect( Point(points[0].x - t, points[0].y - t), Point(points[2].x + t, points[2].y + t) )
             if (displayMat.width() > 1 && displayMat.height() > 1) {
                 cropped = Mat(displayMat, R)
+                // TODO: CONVERT Mat TO Bitmap AND USE IT FOR DigitClassifier
             }
         }
-
         return displayMat
     }
 
