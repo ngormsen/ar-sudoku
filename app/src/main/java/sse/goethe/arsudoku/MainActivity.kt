@@ -37,6 +37,7 @@ import org.opencv.android.OpenCVLoader
 import org.opencv.core.*
 //import org.opencv.imgproc.Imgproc.findContours
 import org.opencv.imgproc.Imgproc
+import kotlin.math.abs
 
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
@@ -326,16 +327,14 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         Log.d("FRAME:", "onCameraFrame() Method")
 
-        // TEST OF APPLYING ADAPTIVE THRESHOLD TO THE CAMERA FRAMES
 
-        var outputFrame: Mat = Mat()
+        var outputFrame: Mat
         if (inputFrame != null) {
             //Imgproc.adaptiveThreshold(inputFrame.gray(), outputFrame, 255.0,1,1,11,2.0)
-            //
+
             // TODO: Call the function each X-th frame where X > k? frame
             // X < 10 will cause threadng problems
-            //
-            if (this.frameCounter > 25 ) { // k = 25 for now
+            if (this.frameCounter > 0 ) { // k = 25 for now
                 outputFrame = analyzeFrame(inputFrame)
                 this.frameCounter = 0
                 return outputFrame
@@ -346,12 +345,20 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
         //return outputFrame!! // comment the other return then
 
-
         //return inputFrame!!.rgba()
         //return inputFrame!!.gray()
     }
 
+    /**
+     * Analyses each k-th frame for the biggest square
+     * */
     fun analyzeFrame(frame: CvCameraViewFrame ): Mat {
+
+        // OUTER SQUARE NO MATTER IF ITS A SUDOKU OR OTHER TYPE OF SQUARE
+        // CAN BE RECOGNIZED NOW.
+        // TODO: IMPLEMENT A HEURISTIC TO DETERMINE IF IT IS A SUDOKU OR NOT
+        // WHAT IS HAPPENING IF THERE IS NOT A SUDOKU WITHIN SCREEN
+
 
         var grayMat: Mat = frame.gray()
         var blurMat: Mat = Mat()
@@ -362,6 +369,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         var contours = ArrayList<MatOfPoint>() // destination for findContours()
         var hierarchy = Mat() //
 
+        // TODO: WHAT IF IT IS NOT POSSIBLE TO FIND A CONTOUR? -> Use try, catch
         Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
         hierarchy.release() // for deallocation
 
@@ -373,8 +381,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             if (area > 100) {
                 var m: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
                 m.fromList(contour.toList())
-
-
 
                 var peri = Imgproc.arcLength(m, true)
                 var approx: MatOfPoint2f = MatOfPoint2f()
@@ -393,12 +399,22 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         var cropped = Mat()
         var t = 3
-        if (points.size >= 4) {
+        if (points.size == 4) { // TODO: ELSE ? ...
+
+            // TODO: WE HAVE TO DETERMINE WHICH COORDINATE IS "TOP LEFT", "TOP RIGHT", ...
+
+            Log.d("MainActivity", "Point: x " + points[0].x + " y: " + points[0].y)
+            Log.d("MainActivity", "Point: x " + points[1].x + " y: " + points[1].y)
+            Log.d("MainActivity", "Point: x " + points[2].x + " y: " + points[2].y)
+            Log.d("MainActivity", "Point: x " + points[3].x + " y: " + points[3].y)
             // Draw surrounding box
-            Imgproc.line(displayMat, Point(points[0].x, points[0].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 2 )
-            Imgproc.line(displayMat, Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Scalar(255.0,0.0,0.0), 2 )
-            Imgproc.line(displayMat, Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Scalar(255.0,0.0,0.0), 2 )
-            Imgproc.line(displayMat, Point(points[3].x, points[3].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 2 )
+            var xDiff = abs(points[2].x - points[1].x )/9
+            var yDiff = abs(points[2].y - points[3].y )/9
+
+            Imgproc.line(displayMat, Point(points[0].x, points[0].y), Point(points[1].x, points[1].y), Scalar(255.0,0.0,0.0), 3 ) // oben rechts -> unten rechts
+            Imgproc.line(displayMat, Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Scalar(255.0,0.0,0.0), 3 ) // oben links -> oben rechts
+            Imgproc.line(displayMat, Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Scalar(255.0,0.0,0.0), 3 ) // oben links -> unten links
+            Imgproc.line(displayMat, Point(points[3].x, points[3].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 3 ) // unten links -> unten rechts
 
             var R: Rect = Rect( Point(points[0].x - t, points[0].y - t), Point(points[2].x + t, points[2].y + t) )
             if (displayMat.width() > 1 && displayMat.height() > 1) {
