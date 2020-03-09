@@ -11,6 +11,7 @@ import sse.goethe.arsudoku.ml.DigitClassifier
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import org.opencv.core.Point
 import sse.goethe.arsudoku.MainActivity
 
 /**
@@ -29,13 +30,16 @@ class Recognition(private val context: Context) {
      * */
     var covi = ComputerVision()
 
-    /* Sudokus 4 edge coordinates */
+    /** Sudokus 4 edge coordinates */
     var sudokuEdgeCoordinates: Array<Array<Int>>
         get() { return sudokuEdgeCoordinates }
         private set
 
-    var sudokuMidCoordinates: Array<Int>
-        get() { return sudokuMidCoordinates }
+    /**
+     * 81 coords
+     * */
+    var sudokuCellMidCoordinates: Array<Point>
+        get() { return sudokuCellMidCoordinates }
         private set
 
     /* 81 dim array with classes 0..19
@@ -55,7 +59,7 @@ class Recognition(private val context: Context) {
         sudokuEdgeCoordinates = arrayOf(    arrayOf(700, 2000), arrayOf(1200,2000),
                                             arrayOf(700, 1500), arrayOf(1200, 1500) )
 
-        sudokuMidCoordinates = arrayOf( 950, 1750 )
+        sudokuCellMidCoordinates = Array(81) { Point(1.0,1.0) }
 
         /* initialize sudokuPredictedDigits array with 0 */
         /*
@@ -76,7 +80,8 @@ class Recognition(private val context: Context) {
                                     arrayOf(0, 0, 4, 0, 2, 0, 3, 0, 0),
                                     arrayOf(0, 8, 0, 7, 0, 5, 0, 2, 0),
                                     arrayOf(2, 0, 0, 9, 0, 4, 0, 0, 5) )
-        /* -1 = False if it is machine printed
+
+        /** -1 = False if it is machine printed
         *  1 = True if it is hand written
         *  0 = empty if it is an empty field */
         sudokuFieldIsHandwritten = arrayOf(
@@ -103,11 +108,21 @@ class Recognition(private val context: Context) {
         //Log.d(Recognition.TAG, "The predicted class is: " + predictedClass)
     }
 
-    /** ++++++++++++++++++++++++++++++++++++
-     * CLASS FUNCTIONS
-     +++++++++++++++++++++++++++++++++++++++*/
+    /**
+     * The classify function classifies a machine or handwritten digit or
+     * a empty field into 19 classes.
+     *
+     * Input: cropped Bitmap of a Sudoku cell
+     * Output: classified digit
+     *
+     * */
+    fun classify(bitmap: Bitmap) {
+        // TODO: CREATE RETURN TO digitClassifier.classify() and save output within Recognition Class
+        digitClassifier.classify( bitmap )
+        // sudoku Predicted digits ...
+    }
 
-    fun close(){
+    fun close() {
         digitClassifier.close()
     }
 
