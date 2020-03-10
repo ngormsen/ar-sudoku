@@ -3,7 +3,6 @@
  * @author Christopher Wiesner
  * date: 19.02.2020
  *
- *
  */
 package sse.goethe.arsudoku.ml
 import sse.goethe.arsudoku.ml.ComputerVision
@@ -37,6 +36,7 @@ class Recognition(private val context: Context) {
 
     /**
      * 81 coords
+     *
      * */
     var sudokuCellMidCoordinates: Array<Point>
         get() { return sudokuCellMidCoordinates }
@@ -109,6 +109,17 @@ class Recognition(private val context: Context) {
     }
 
     /**
+     *
+     * */
+    private fun classifyAll() {
+    // TODO: finish this function .. save results in variable and create wrapper for whole process
+        for (sudokuBlock in croppedSudokuBlocks) {
+            classify( sudokuBlock )
+        }
+
+    }
+
+    /**
      * The classify function classifies a machine or handwritten digit or
      * a empty field into 19 classes.
      *
@@ -116,7 +127,7 @@ class Recognition(private val context: Context) {
      * Output: classified digit
      *
      * */
-    fun classify(bitmap: Bitmap) {
+    private fun classify(bitmap: Bitmap) {
         // TODO: CREATE RETURN TO digitClassifier.classify() and save output within Recognition Class
         digitClassifier.classify( bitmap )
         // sudoku Predicted digits ...

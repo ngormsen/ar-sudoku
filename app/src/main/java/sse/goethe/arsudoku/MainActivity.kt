@@ -82,8 +82,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         *  RECOGNIZE SUDOKU TEST
         *  ############################################ */
 
-
-
         // #########################################################################################
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -337,7 +335,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 outputFrame = analyzeFrame(inputFrame)
                 this.frameCounter = 0
                 return outputFrame
-            } else { return inputFrame!!.rgba()}
+            } else { return inputFrame!!.rgba() }
 
         } else {
             return inputFrame!!.rgba()
@@ -414,6 +412,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             Imgproc.line(displayMat, Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Scalar(255.0,0.0,0.0), 3 ) // oben links -> oben rechts
             Imgproc.line(displayMat, Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Scalar(255.0,0.0,0.0), 3 ) // oben links -> unten links
             Imgproc.line(displayMat, Point(points[3].x, points[3].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 3 ) // unten links -> unten rechts
+
+            Imgproc.putText(displayMat, "5", Point(points[1].x-5, points[1].y-5), 1 , 1.5, Scalar(100.0, 100.0, 100.0), 2, 1, false)
 
             var R: Rect = Rect( Point(points[0].x - t, points[0].y - t), Point(points[2].x + t, points[2].y + t) )
             if (displayMat.width() > 1 && displayMat.height() > 1) {
