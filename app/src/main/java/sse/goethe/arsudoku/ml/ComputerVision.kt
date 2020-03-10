@@ -8,14 +8,32 @@ package sse.goethe.arsudoku.ml
 import android.graphics.Bitmap
 import android.util.Log
 import org.opencv.android.CameraBridgeViewBase
+import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.sin
+import kotlin.math.tan
 
 /**
  * The ComputerVision class ...
  *
  * Use it in MainActivity.kt. Especially in onCameraFrame()
+ *
+ *
+ * todo
+ * 1. preprocessing                              Done
+ * 2. finding corners/intersections
+ * 2.1 sudokuCellMidCoordinates
+ * 2.2 sudokuEdgeCoordinates
+ * 3. cropping
+ * 3.1 croppedSudokuBlocks: Array<Bitmap>
+ * 4. Miscellaneous
+ * 4.1 convertMatToBitmap
+ * 4.2 viability check
+ * 5. Known Bugs
+ * 5.1 With completely black picture, no contour can be found, results in null array and crash
  *
  */
 class ComputerVision {
@@ -31,6 +49,157 @@ class ComputerVision {
     /**###############################################################
      * class functions
      *################################################################*/
+
+    public fun lineDetection(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
+        /**
+         * 1. Canny Edge Detection
+         * 2. Hough Transform
+         * 3. Join Lines..??
+         * 4. Check for Sudoku
+         * 5. Find Intersections
+         */
+        val img = preprocessing(frame)
+        var fra = Mat.zeros(frame.gray().size(), frame.gray().type())
+        var canny: Mat = Mat()
+        Imgproc.Canny(img, canny, 100.0, 200.0)
+        var lines: Mat = Mat()
+        Imgproc.HoughLines(canny, lines, 1.0, PI/180, 200)
+        for (i in 0..lines.rows()-1){
+            drawLine(lines.get(i,0), fra)
+        }
+        return fra
+    }
+
+    /* helper because man opencv cant even draw the lines it calculates
+    * https://aishack.in/tutorials/sudoku-grabber-opencv-detection/
+    */
+    private fun drawLine(line: DoubleArray, img: Mat) {
+        val color = Scalar(255.0, 0.0, 0.0)
+        if(line[1]!=0.0) {
+            val m = -1/tan(line[1]);
+
+            val c = line[0]/sin(line[1]);
+
+            Imgproc.line(img, Point(0.0, c), Point(img.size().width, m*img.size().width+c), color, 1)
+        }
+        else {
+            Imgproc.line(img, Point(line[0], 0.0), Point(line[0], img.size().height), color, 1)
+        }
+    }
+
+    /* find largest contour in the frame*/
+    public fun contourDetection(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
+
+        // We do contour detection in this function. This is the most simple and only works when
+        // the Sudoku is the single largest entity on the screen. Has no viability check.
+
+        // OUTER SQUARE NO MATTER IF ITS A SUDOKU OR OTHER TYPE OF Shape
+        // CAN BE RECOGNIZED NOW.
+        // TODO: IMPLEMENT A HEURISTIC TO DETERMINE IF IT IS A SUDOKU OR NOT
+        // WHAT IS HAPPENING IF THERE IS NOT A SUDOKU WITHIN SCREEN
+
+
+        // Preprocessing:
+
+        val img = preprocessing(frame)
+
+        var contours = ArrayList<MatOfPoint>() // destination for findContours()
+
+        // TODO: WHAT IF IT IS NOT POSSIBLE TO FIND A CONTOUR? -> Use try, catch
+        var hierarchy: Mat = Mat()
+        Imgproc.findContours(img, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
+        hierarchy.release()
+
+        var biggest: MatOfPoint = MatOfPoint()
+        var max_area = 0.0
+
+        for (contour in contours){
+            if (Imgproc.contourArea(contour) > max_area){
+                biggest = contour
+                max_area = Imgproc.contourArea(contour)
+            }
+        }
+
+        var displayMat = Mat.zeros(frame.rgba().size(), frame.rgba().type())
+        Imgproc.drawContours(displayMat, mutableListOf(biggest), 0, Scalar(0.0, 255.0, 0.0), 2)
+
+
+        val Corners = find4Corners(biggest)
+        for (p in Corners) {
+            Imgproc.circle(
+                displayMat,
+                Point(p.x.toDouble(), p.y.toDouble()),
+                50,
+                Scalar(255.0, 0.0, 0.0),
+                50
+            )
+
+        }
+
+
+        //Imgproc.circle(displayMat, Point(biggest.get(0, 0)[0].toDouble(), biggest.get(0, 0)[1].toDouble()), 50, Scalar(255.0, 0.0, 0.0), 50)
+        Log.d("Circle", "${biggest.get(0, 0)[0]}, ${biggest.get(0, 0)[1]}")
+        return displayMat
+    }
+
+    /**
+     *
+     * Helper, that returns the 4 top/bottom left/right corners
+     *
+     * */
+    private fun find4Corners(contour: MatOfPoint): List<Point>{
+        Log.d("Corner", "${contour.get(0, 0)[0]}")
+
+        var r: Point = Point(0.0, 0.0)//top-right
+        var l: Point = Point(0.0, 0.0)//top-right
+        var b: Point = Point(0.0, 0.0)//top-right
+        var t: Point = Point(0.0, 0.0)//top-right
+
+        var maxx = Double.MIN_VALUE
+        var maxy = Double.MIN_VALUE
+        var minx = Double.MAX_VALUE
+        var miny = Double.MAX_VALUE
+        for (p in 0..contour.rows()-1){
+            Log.d("dddddddd", "${contour.cols()}, ${contour.rows()}")
+            val x = contour.get(p, 0)[0] //x
+            val y = contour.get(p, 0)[1] //y
+
+            if(x<minx){
+                minx=x
+                l = Point(x, y)
+            }
+            if(x>maxx){
+                maxx=x
+                r = Point(x, y)
+            }
+            if(y<miny){
+                miny=y
+                t = Point(x, y)
+            }
+            if(y>maxy){
+                maxy=y
+                b = Point(x, y)
+            }
+        }
+
+        return listOf(r, l, b, t)
+    }
+
+    /* Image Preprocessing */
+    private fun preprocessing(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat{
+
+        var grayMat: Mat = frame.gray()
+        var blurMat: Mat = Mat()
+        Imgproc.GaussianBlur(grayMat, blurMat, Size(9.0,9.0), 0.0)
+        var threshMat: Mat = Mat()
+        Imgproc.adaptiveThreshold(blurMat, threshMat, 255.0,1,1,11,2.0)
+        var morphedMat: Mat = Mat()
+        val core = Imgproc.getStructuringElement(0, Size(2.0, 2.0))
+        Imgproc.morphologyEx(threshMat, morphedMat, 2, core)
+        var dilatedMat: Mat = Mat()
+        Imgproc.dilate(morphedMat, dilatedMat, core)
+        return dilatedMat
+    }
 
     /**
      * The analyzeFrame function searches the biggest square (sudoku)
@@ -159,7 +328,9 @@ class ComputerVision {
      * Use this function in analyzeFrame()
      * */
     private fun convertMatToBitmap(frameMat: Mat): Bitmap {
-        return bitmap
+        var bmp: Bitmap = Bitmap.createBitmap(frameMat.cols(), frameMat.rows(), Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(frameMat, bmp)
+        return bmp
     }
 
     /**

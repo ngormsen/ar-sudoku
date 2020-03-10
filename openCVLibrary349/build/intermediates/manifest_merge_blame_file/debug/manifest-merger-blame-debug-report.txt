@@ -6,8 +6,8 @@
 6
 7    <uses-sdk
 8        android:minSdkVersion="24"
-8-->C:\Users\Natalia\projects\android-apps\sudokusolver_v3\ar-sudoku\openCVLibrary349\src\main\AndroidManifest.xml
+8-->/Users/christopherwiesner/StudioProjects/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml
 9        android:targetSdkVersion="29" />
-9-->C:\Users\Natalia\projects\android-apps\sudokusolver_v3\ar-sudoku\openCVLibrary349\src\main\AndroidManifest.xml
+9-->/Users/christopherwiesner/StudioProjects/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml
 10
 11</manifest>
