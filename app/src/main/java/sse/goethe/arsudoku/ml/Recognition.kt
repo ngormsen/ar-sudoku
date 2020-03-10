@@ -10,49 +10,40 @@ import sse.goethe.arsudoku.ml.DigitClassifier
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import org.opencv.android.CameraBridgeViewBase
 import org.opencv.core.Point
 import sse.goethe.arsudoku.MainActivity
+import java.lang.IllegalStateException
 
 /**
  * The Recognition Class instantiate the DigitClassifier
  * and the OpenCV Module and manages their interaction and
  * their dependence to the stream of the camera.
  */
-class Recognition(private val context: Context) {
+class Recognition(context: Context) {
 
     private var digitClassifier = DigitClassifier(context)
+    private var computerVision = ComputerVision()
 
-    /**
-     * Use this instance of ComputerVision Class in MainActivity
-     * to get access to the analyzeFrame() function
-     *
-     * */
-    var covi = ComputerVision()
-
-    /** Sudokus 4 edge coordinates */
-    var sudokuEdgeCoordinates: Array<Array<Int>>
+    var sudokuEdgeCoordinates: Array<Array<Int>> // Sudokus 4 edges
         get() { return sudokuEdgeCoordinates }
         private set
-
-    /**
-     * 81 coords
-     *
-     * */
-    var sudokuCellMidCoordinates: Array<Point>
+    var sudokuCellMidCoordinates: Array<Point> // 81 coords
         get() { return sudokuCellMidCoordinates }
         private set
 
-    /* 81 dim array with classes 0..19
-       0 = empty field, 1-9 machine written, 10 - 18 hand written */
+    /**
+     * 81 dim array with classes 0..19
+     * 0 = empty field, 1-9 machine written, 10 - 18 hand written
+     * */
     var sudokuPredictedDigits: Array<Array<Int>>
+        get(){ return sudokuPredictedDigits }
+        private set
     var sudokuFieldIsHandwritten: Array<Array<Int>>
+        get() { return sudokuFieldIsHandwritten }
+        private set
 
-    /* This cropped Sudoku blocks will go to the classifier */
     private lateinit var croppedSudokuBlocks: Array<Bitmap>
-
-    /* DEFINE AS WELL */
-        // Instance of DigitClassifier
-        // Array of cropped Bitmaps
 
     init {
         // x1 top left corner, x2 top right corner, x3 bottom left ...
@@ -60,15 +51,6 @@ class Recognition(private val context: Context) {
                                             arrayOf(700, 1500), arrayOf(1200, 1500) )
 
         sudokuCellMidCoordinates = Array(81) { Point(1.0,1.0) }
-
-        /* initialize sudokuPredictedDigits array with 0 */
-        /*
-        for (i in 0..8) {
-            var tmp = arrayOf<Int>()
-            for (j in 0..8) { tmp += 0 }
-            this.sudokuPredictedDigits += tmp
-        }
-        */
 
         sudokuPredictedDigits = arrayOf(
                                     arrayOf(5, 0, 0, 3, 0, 1, 0, 0, 7),
@@ -81,19 +63,21 @@ class Recognition(private val context: Context) {
                                     arrayOf(0, 8, 0, 7, 0, 5, 0, 2, 0),
                                     arrayOf(2, 0, 0, 9, 0, 4, 0, 0, 5) )
 
-        /** -1 = False if it is machine printed
-        *  1 = True if it is hand written
-        *  0 = empty if it is an empty field */
+        /**
+         * -1 = False if it is machine printed
+         *  1 = True if it is hand written
+         *  0 = empty if it is an empty field
+         * */
         sudokuFieldIsHandwritten = arrayOf(
-            arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -17),
-            arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
-            arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
-            arrayOf(-1, -1, 0, 0, 0, 0, 0, -1, -1),
-            arrayOf(0, 0, -1, 0, 0, 0, -1, 0, 0),
-            arrayOf(-1, -1, 0, 0, 0, 0, 0, -1, -1),
-            arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
-            arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
-            arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1) )
+                                    arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -17),
+                                    arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
+                                    arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
+                                    arrayOf(-1, -1, 0, 0, 0, 0, 0, -1, -1),
+                                    arrayOf(0, 0, -1, 0, 0, 0, -1, 0, 0),
+                                    arrayOf(-1, -1, 0, 0, 0, 0, 0, -1, -1),
+                                    arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
+                                    arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
+                                    arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1) )
 
         /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         * Set up the digit classifier
@@ -109,14 +93,18 @@ class Recognition(private val context: Context) {
     }
 
     /**
+     * The run() function is the final wrapper function which
+     * combines the recognition and inference logic.
+     *
+     * More description: ...
+     *
+     * Input:
+     * Output:
      *
      * */
-    private fun classifyAll() {
-    // TODO: finish this function .. save results in variable and create wrapper for whole process
-        for (sudokuBlock in croppedSudokuBlocks) {
-            classify( sudokuBlock )
-        }
-
+    fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
+        computerVision.analyzeFrame(frame)
+        classifyAll()
     }
 
     /**
@@ -127,10 +115,28 @@ class Recognition(private val context: Context) {
      * Output: classified digit
      *
      * */
-    private fun classify(bitmap: Bitmap) {
-        // TODO: CREATE RETURN TO digitClassifier.classify() and save output within Recognition Class
-        digitClassifier.classify( bitmap )
-        // sudoku Predicted digits ...
+    private fun classifyAll() {
+        if (croppedSudokuBlocks.size != 81) {
+            throw IllegalStateException(" croppedSudokuBlock has not size 81 yet. ")
+        }
+
+        for (sudokuBlock in croppedSudokuBlocks) {
+            var tmpDigit = digitClassifier.classify(sudokuBlock)
+            addToResultMatrix(tmpDigit)
+            // TODO: as well save if it is machine printed or hand written
+        }
+    }
+
+    /**
+     * The addToResultMatrix add a class infered by classify()
+     * to the sudokuPredictedDigit Matrix.
+     *
+     * Input:
+     * Output:
+     *
+     * */
+    private fun addToResultMatrix(tmpDigit: Int) {
+        // TODO: finish addToResultMatrix, maybe rename it.
     }
 
     fun close() {
@@ -138,7 +144,6 @@ class Recognition(private val context: Context) {
     }
 
     companion object {
-        // just to use for Log's
         private const val TAG = "Recognition"
     }
 }

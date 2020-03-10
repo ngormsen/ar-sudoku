@@ -60,6 +60,11 @@ class DigitClassifier(private val context: Context) {
 
     }
 
+    /**
+     * The loadModelFile() function...
+     * Input:
+     * Output:
+     * */
     @Throws(IOException::class)
     fun loadModelFile(assetManager: AssetManager): ByteBuffer {
         /*
@@ -149,6 +154,13 @@ class DigitClassifier(private val context: Context) {
         return output.indices.maxBy { output[it] } ?: -1
     }
 
+    /**
+     * The getBitmapFromAsset() function ...
+     *
+     * Input:
+     * Output:
+     *
+     * */
     fun getBitmapFromAsset(context: Context, filename: String) : Bitmap{
         val astMng: AssetManager = context.assets
         val inpstr: InputStream
