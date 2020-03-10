@@ -1,6 +1,5 @@
 /**
  * @author Christopher Wiesner
- * and David Machajewski
  * date: 29.02.2020
  */
 package sse.goethe.arsudoku.ml
