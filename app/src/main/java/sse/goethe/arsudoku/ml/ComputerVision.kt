@@ -120,69 +120,25 @@ class ComputerVision {
             }
         }
 
-        var displayMat = Mat.zeros(frame.rgba().size(), frame.rgba().type())
+        var displayMat = frame.gray()
         Imgproc.drawContours(displayMat, mutableListOf(biggest), 0, Scalar(0.0, 255.0, 0.0), 2)
 
-
-        val Corners = find4Corners(biggest)
-        for (p in Corners) {
-            Imgproc.circle(
-                displayMat,
-                Point(p.x.toDouble(), p.y.toDouble()),
-                50,
-                Scalar(255.0, 0.0, 0.0),
-                50
-            )
-
+        var approx: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
+        approx.fromList(biggest.toList())
+        var d = 0.0
+        while(approx.toArray().size>4) {
+            d++
+            var x: MatOfPoint2f = MatOfPoint2f()
+            x.fromList(biggest.toList())
+            Imgproc.approxPolyDP(x, approx, d,true);
+            Log.d("approxPolyDP", "${approx.toArray().size}, $d") // TODO: remove this line
         }
 
 
-        //Imgproc.circle(displayMat, Point(biggest.get(0, 0)[0].toDouble(), biggest.get(0, 0)[1].toDouble()), 50, Scalar(255.0, 0.0, 0.0), 50)
-        Log.d("Circle", "${biggest.get(0, 0)[0]}, ${biggest.get(0, 0)[1]}")
+        for(point in approx.toArray()){
+            Imgproc.circle(displayMat, point, 50, Scalar(255.0, 0.0, 0.0), 50)
+        }
         return displayMat
-    }
-
-    /**
-     *
-     * Helper, that returns the 4 top/bottom left/right corners
-     *
-     * */
-    private fun find4Corners(contour: MatOfPoint): List<Point>{
-        Log.d("Corner", "${contour.get(0, 0)[0]}")
-
-        var r: Point = Point(0.0, 0.0)//top-right
-        var l: Point = Point(0.0, 0.0)//top-right
-        var b: Point = Point(0.0, 0.0)//top-right
-        var t: Point = Point(0.0, 0.0)//top-right
-
-        var maxx = Double.MIN_VALUE
-        var maxy = Double.MIN_VALUE
-        var minx = Double.MAX_VALUE
-        var miny = Double.MAX_VALUE
-        for (p in 0..contour.rows()-1){
-            Log.d("dddddddd", "${contour.cols()}, ${contour.rows()}")
-            val x = contour.get(p, 0)[0] //x
-            val y = contour.get(p, 0)[1] //y
-
-            if(x<minx){
-                minx=x
-                l = Point(x, y)
-            }
-            if(x>maxx){
-                maxx=x
-                r = Point(x, y)
-            }
-            if(y<miny){
-                miny=y
-                t = Point(x, y)
-            }
-            if(y>maxy){
-                maxy=y
-                b = Point(x, y)
-            }
-        }
-
-        return listOf(r, l, b, t)
     }
 
     /* Image Preprocessing */
