@@ -332,7 +332,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             // TODO: Call the function each X-th frame where X > k? frame
             // X < 10 will cause threadng problems
             if (this.frameCounter > 0 ) { // k = 25 for now
-                outputFrame = recognition.covi.contourDetection(inputFrame)
+                outputFrame = recognition.computerVision.contourDetection(inputFrame)
                 this.frameCounter = 0
                 return outputFrame
             } else { return inputFrame!!.rgba() }
