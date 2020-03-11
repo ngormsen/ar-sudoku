@@ -35,6 +35,7 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame // test functio
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.*
+import org.opencv.imgcodecs.Imgcodecs
 //import org.opencv.imgproc.Imgproc.findContours
 import org.opencv.imgproc.Imgproc
 import kotlin.math.abs
@@ -335,6 +336,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 outputFrame = recognition.computerVision.contourDetection(inputFrame)
                 this.frameCounter = 0
                 return outputFrame
+
             } else { return inputFrame!!.rgba() }
 
         } else {
