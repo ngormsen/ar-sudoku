@@ -92,14 +92,7 @@ class ComputerVision {
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.
 
-        // OUTER SQUARE NO MATTER IF ITS A SUDOKU OR OTHER TYPE OF Shape
-        // CAN BE RECOGNIZED NOW.
-        // TODO: IMPLEMENT A HEURISTIC TO DETERMINE IF IT IS A SUDOKU OR NOT
-        // WHAT IS HAPPENING IF THERE IS NOT A SUDOKU WITHIN SCREEN
-
-
         // Preprocessing:
-
         val img = preprocessing(frame)
 
         var contours = ArrayList<MatOfPoint>() // destination for findContours()
@@ -132,6 +125,10 @@ class ComputerVision {
             Imgproc.approxPolyDP(x, approx, d,true);
             Log.d("approxPolyDP", "${approx.toArray().size}, $d") // TODO: remove this line
         }
+
+        //if(approx.toArray().size == 4) { //might be less than 4
+            //approx = sortPointsArray(approx)
+        //}
 
 
         for(point in approx.toArray()){
@@ -249,11 +246,14 @@ class ComputerVision {
      *
      * This function is used in analyzeFrame()
      *
-     * Input: Array<Points>
-     * Output: Array<Points> // sorted
+     * Input: MatOfPoint2f
+     * Output: MatOfPoint2f // sorted
      *
      * */
-    private fun sortPointsArray(coordArray: Array<Point>): Array<Point> {
+    private fun sortPointsArray(coordArray: MatOfPoint2f): MatOfPoint2f {
+        // 1. sort by y-pos
+        // 2. sort each half by x-pos
+        //Log.d("an arrayyyyy", "${coordArray.toArray()}")
         return coordArray
     }
 

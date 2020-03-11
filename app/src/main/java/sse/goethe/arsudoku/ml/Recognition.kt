@@ -23,7 +23,7 @@ import java.lang.IllegalStateException
 class Recognition(context: Context) {
 
     private var digitClassifier = DigitClassifier(context)
-    var covi = ComputerVision()
+    var computerVision = ComputerVision()
 
     var sudokuEdgeCoordinates: Array<Array<Int>> // Sudokus 4 edges
         get() { return sudokuEdgeCoordinates }
@@ -69,7 +69,7 @@ class Recognition(context: Context) {
          *  0 = empty if it is an empty field
          * */
         sudokuFieldIsHandwritten = arrayOf(
-                                    arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -17),
+                                    arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1),
                                     arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
                                     arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
                                     arrayOf(-1, -1, 0, 0, 0, 0, 0, -1, -1),
@@ -103,8 +103,7 @@ class Recognition(context: Context) {
      *
      * */
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
-        // TODO: anstelle von analyzeFrame dann die contourDetection()
-        covi.analyzeFrame(frame)
+        computerVision.analyzeFrame(frame)
         classifyAll()
     }
 
