@@ -24,7 +24,7 @@ import kotlin.math.tan
  * todo
  * 1. preprocessing                              Done
  * 2. finding corners/intersections
- * 2.1 sudokuCellMidCoordinates
+ * 2.1 sudokuCellMidCoordinates (+ tilt of sudoku maybe?)
  * 2.2 sudokuEdgeCoordinates
  * 3. cropping
  * 3.1 croppedSudokuBlocks: Array<Bitmap>
