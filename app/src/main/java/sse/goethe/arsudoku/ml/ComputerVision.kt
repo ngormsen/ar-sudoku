@@ -123,15 +123,15 @@ class ComputerVision {
             var x: MatOfPoint2f = MatOfPoint2f()
             x.fromList(biggest.toList())
             Imgproc.approxPolyDP(x, approx, d,true);
-            Log.d("approxPolyDP", "${approx.toArray().size}, $d") // TODO: remove this line
+        }
+        if(approx.toArray().size == 4) { //might be less than 4 // todo correct array casting
+            approx = sortPointsArray(approx)
         }
 
-        //if(approx.toArray().size == 4) { //might be less than 4
-            //approx = sortPointsArray(approx)
-        //}
-
-
+        var i = 0
         for(point in approx.toArray()){
+            i++
+            Imgproc.putText(displayMat, "$i", point, 0, 1.0, Scalar(255.0, 0.0, 0.0))
             Imgproc.circle(displayMat, point, 50, Scalar(255.0, 0.0, 0.0), 50)
         }
         return displayMat
@@ -244,17 +244,31 @@ class ComputerVision {
      * Third coordinate: Bottom left
      * Fourth coordinate Bottom right
      *
-     * This function is used in analyzeFrame()
+     * This entire function looks like cancer, because I feel like I'm still doing typing
+     * in kotlin wrong...
      *
      * Input: MatOfPoint2f
      * Output: MatOfPoint2f // sorted
      *
      * */
-    private fun sortPointsArray(coordArray: MatOfPoint2f): MatOfPoint2f {
+    private fun sortPointsArray(coordMat: MatOfPoint2f): MatOfPoint2f {
+        var coordList = coordMat.toList()
+
         // 1. sort by y-pos
-        // 2. sort each half by x-pos
-        //Log.d("an arrayyyyy", "${coordArray.toArray()}")
-        return coordArray
+        coordList.sortBy{it.y}
+
+        // 2. split into upper and lower half
+        var firstHalf = coordList.slice(0..1).toMutableList()
+        var secondHalf = coordList.slice(2..3).toMutableList()
+
+        // 3. sort each half by x-pos
+        firstHalf.sortBy{it.x}
+        secondHalf.sortBy{it.x}
+
+        // 4. merge back together for final result
+        val r: MatOfPoint2f = MatOfPoint2f()
+        r.fromList(firstHalf + secondHalf)
+        return r
     }
 
     /**
