@@ -11,6 +11,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import org.opencv.android.CameraBridgeViewBase
+import org.opencv.core.Mat
 import org.opencv.core.Point
 import sse.goethe.arsudoku.MainActivity
 import java.lang.IllegalStateException
@@ -24,6 +25,9 @@ class Recognition(context: Context) {
 
     private var digitClassifier = DigitClassifier(context)
     var computerVision = ComputerVision()
+    var sudokuIsExistent: Boolean = false // For Kelvin
+    // The whole squared Sudoku
+    lateinit var sudokuSquare: Mat // For Kelvin
 
     var sudokuEdgeCoordinates: Array<Array<Int>> // Sudokus 4 edges
         get() { return sudokuEdgeCoordinates }
@@ -37,9 +41,7 @@ class Recognition(context: Context) {
      * 0 = empty field, 1-9 machine written, 10 - 18 hand written
      * */
     var sudokuPredictedDigits: Array<Array<Int>>
-
     var sudokuFieldIsHandwritten: Array<Array<Int>>
-
 
     private lateinit var croppedSudokuBlocks: Array<Bitmap>
 
@@ -66,8 +68,9 @@ class Recognition(context: Context) {
          *  1 = True if it is hand written
          *  0 = empty if it is an empty field
          * */
+        // TODO: -17 WEG MACHEN
         sudokuFieldIsHandwritten = arrayOf(
-                                    arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -17),
+                                    arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1),
                                     arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
                                     arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
                                     arrayOf(-1, -1, 0, 0, 0, 0, 0, -1, -1),
