@@ -116,7 +116,7 @@ class ComputerVision {
         }
 
         var displayMat = frame.gray()
-        Imgproc.drawContours(displayMat, mutableListOf(biggest), 0, Scalar(0.0, 255.0, 0.0), 2)
+        //Imgproc.drawContours(displayMat, mutableListOf(biggest), 0, Scalar(0.0, 255.0, 0.0), 2)
 
         var approx: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
         approx.fromList(biggest.toList())
@@ -136,8 +136,8 @@ class ComputerVision {
         var i = 0
         for(point in approx.toArray()){
             i++
-            Imgproc.putText(displayMat, "$i", point, 0, 1.0, Scalar(255.0, 0.0, 0.0))
-            Imgproc.circle(displayMat, point, 50, Scalar(255.0, 0.0, 0.0), 50)
+            //Imgproc.putText(displayMat, "$i", point, 0, 1.0, Scalar(255.0, 0.0, 0.0))
+            //Imgproc.circle(displayMat, point, 50, Scalar(255.0, 0.0, 0.0), 50)
         }
         return displayMat
     }
@@ -245,11 +245,12 @@ class ComputerVision {
      * with only the sudoku in it
      */
     fun cropImage(image: Mat, srcCoords: MatOfPoint2f): Mat{
+        val DerBreite = 360.0
         // destination vertices
         val dstCoords: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
-        dstCoords.fromList(listOf(Point(0.0,0.0), Point(0.0,180.0), Point(180.0, 0.0), Point(180.0, 0.0)))
+        dstCoords.fromList(listOf(Point(0.0,0.0), Point(0.0,DerBreite), Point(DerBreite, 0.0), Point(DerBreite, 0.0)))
         // the destination buffer
-        val dst = Mat.zeros(180, 180, CV_8UC3);
+        val dst = Mat.zeros(DerBreite.toInt(), DerBreite.toInt(), CV_8UC3);
         // create the perspective transform
         val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
@@ -259,15 +260,17 @@ class ComputerVision {
     fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
         val DerBreite = 360
         // destination vertices
-        val dstCoords: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
-        dstCoords.fromList(listOf(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
+        var dstCoords: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
+        dstCoords = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
         // the destination buffer
-        //val dst = Mat.zeros(180, 180, CV_8UC3);
+        val dst = Mat.zeros(image.size(), CV_8UC3);
         // create the perspective transform
         val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
-        Imgproc.warpPerspective(image, image, perspectiveTransform, image.size(), INTER_LINEAR, BORDER_CONSTANT)
-        return image
+        Imgproc.warpPerspective(image, dst, perspectiveTransform, image.size(), INTER_LINEAR, BORDER_CONSTANT)
+        val r = Rect(srcCoords.toList()[0], srcCoords.toList()[3])
+        val wowi = Mat(dst, r)
+        return dst
     }
 
     /**
