@@ -9,7 +9,10 @@ import android.util.Log
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.Utils
 import org.opencv.core.*
+import org.opencv.core.Core.BORDER_CONSTANT
+import org.opencv.core.CvType.CV_8UC3
 import org.opencv.imgproc.Imgproc
+import org.opencv.imgproc.Imgproc.INTER_LINEAR
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
@@ -124,8 +127,10 @@ class ComputerVision {
             x.fromList(biggest.toList())
             Imgproc.approxPolyDP(x, approx, d,true);
         }
+
         if(approx.toArray().size == 4) { //might be less than 4 // todo correct array casting
             approx = sortPointsArray(approx)
+            displayMat = cropImage(displayMat, approx)
         }
 
         var i = 0
@@ -233,6 +238,36 @@ class ComputerVision {
         //
 
         return displayMat
+    }
+
+    /**
+     * This function takes an Image and returns a cropped Image
+     * with only the sudoku in it
+     */
+    fun cropImage(image: Mat, srcCoords: MatOfPoint2f): Mat{
+        // destination vertices
+        val dstCoords: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
+        dstCoords.fromList(listOf(Point(0.0,0.0), Point(0.0,180.0), Point(180.0, 0.0), Point(180.0, 0.0)))
+        // the destination buffer
+        val dst = Mat.zeros(180, 180, CV_8UC3);
+        // create the perspective transform
+        val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
+        // apply to the image
+        Imgproc.warpPerspective(image, dst, perspectiveTransform, dst.size(), INTER_LINEAR, BORDER_CONSTANT)
+        return dst
+    }
+    fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
+        val DerBreite = 180
+        // destination vertices
+        val dstCoords: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
+        dstCoords.fromList(listOf(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
+        // the destination buffer
+        //val dst = Mat.zeros(180, 180, CV_8UC3);
+        // create the perspective transform
+        val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
+        // apply to the image
+        Imgproc.warpPerspective(image, image, perspectiveTransform, image.size(), INTER_LINEAR, BORDER_CONSTANT)
+        return image
     }
 
     /**
