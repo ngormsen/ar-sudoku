@@ -130,7 +130,7 @@ class ComputerVision {
 
         if(approx.toArray().size == 4) { //might be less than 4 // todo correct array casting
             approx = sortPointsArray(approx)
-            displayMat = cropImage(displayMat, approx)
+            displayMat = cropImageOn(displayMat, approx)
         }
 
         var i = 0
@@ -257,7 +257,7 @@ class ComputerVision {
         return dst
     }
     fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
-        val DerBreite = 180
+        val DerBreite = 360
         // destination vertices
         val dstCoords: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
         dstCoords.fromList(listOf(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
