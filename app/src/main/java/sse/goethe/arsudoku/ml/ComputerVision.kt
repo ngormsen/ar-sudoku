@@ -42,6 +42,8 @@ class ComputerVision {
 
     /* values and variables */
     private lateinit var bitmap: Bitmap
+    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 32  // the width and height of one Sudoku number square
+    private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
 
     /* init is called once if class is instantiated */
     init {
@@ -244,13 +246,11 @@ class ComputerVision {
      * This function takes an Image and returns a cropped Image
      * with only the sudoku in it
      */
-    fun cropImage(image: Mat, srcCoords: MatOfPoint2f): Mat{
-        val DerBreite = 360.0
+    fun cropImage(image: Mat, srcCoords: MatOfPoint2f): Mat{val derBreite = 360.0
         // destination vertices
-        val dstCoords: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
-        dstCoords.fromList(listOf(Point(0.0,0.0), Point(0.0,DerBreite), Point(DerBreite, 0.0), Point(DerBreite, 0.0)))
+        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
         // the destination buffer
-        val dst = Mat.zeros(DerBreite.toInt(), DerBreite.toInt(), CV_8UC3);
+        val dst = Mat.zeros(CROPPEDSUDOKUSIZE, CROPPEDSUDOKUSIZE, CV_8UC3) // TODO: not 100% sure about the type here...
         // create the perspective transform
         val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
@@ -258,18 +258,19 @@ class ComputerVision {
         return dst
     }
     fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
-        val DerBreite = 360
+        val DerBreite = CROPPEDSUDOKUSIZE
         // destination vertices
-        var dstCoords: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
-        dstCoords = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
+        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
         // the destination buffer
-        val dst = Mat.zeros(image.size(), CV_8UC3);
+        var dst = Mat.zeros(image.size(), CV_8UC3);
         // create the perspective transform
         val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
         Imgproc.warpPerspective(image, dst, perspectiveTransform, image.size(), INTER_LINEAR, BORDER_CONSTANT)
-        val r = Rect(srcCoords.toList()[0], srcCoords.toList()[3])
+        val r = Rect(dstCoords.toList()[0], dstCoords.toList()[3])
         val wowi = Mat(dst, r)
+        dst = Mat.zeros(dst.size(), CV_8UC3)
+        Imgproc.resize(wowi, dst, dst.size())
         return dst
     }
 
