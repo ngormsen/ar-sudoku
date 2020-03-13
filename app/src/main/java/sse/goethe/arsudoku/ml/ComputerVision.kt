@@ -23,11 +23,15 @@ import kotlin.math.tan
  *
  * Use it in MainActivity.kt. Especially in onCameraFrame()
  *
+ * discord treffen:
+ * develeopment process
+ * landscape
+ * invert that
  *
  * todo
  * 1. preprocessing                              Done
  * 2. finding corners/intersections
- * 2.1 sudokuCellMidCoordinates (+ tilt of sudoku maybe?)
+ * 2.1 sudokuCellMidCoordinates (+ the current tilt of sudoku maybe?) -> do the perspective transform inversely
  * 2.2 sudokuEdgeCoordinates
  * 3. cropping
  * 3.1 croppedSudokuBlocks: Array<Bitmap>
@@ -36,6 +40,9 @@ import kotlin.math.tan
  * 4.2 viability check
  * 5. Known Bugs
  * 5.1 With completely black picture, no contour can be found, results in null array and crash
+ * 5.2 Kelvin fragen nach Kamera Auflösung
+ * 6. Documentation
+ *
  *
  */
 class ComputerVision {
@@ -63,10 +70,10 @@ class ComputerVision {
          * 5. Find Intersections
          */
         val img = preprocessing(frame)
-        var fra = Mat.zeros(frame.gray().size(), frame.gray().type())
-        var canny: Mat = Mat()
+        val fra = Mat.zeros(frame.gray().size(), frame.gray().type())
+        val canny: Mat = Mat()
         Imgproc.Canny(img, canny, 100.0, 200.0)
-        var lines: Mat = Mat()
+        val lines: Mat = Mat()
         Imgproc.HoughLines(canny, lines, 1.0, PI/180, 200)
         for (i in 0..lines.rows()-1){
             drawLine(lines.get(i,0), fra)
@@ -129,10 +136,10 @@ class ComputerVision {
             x.fromList(biggest.toList())
             Imgproc.approxPolyDP(x, approx, d,true);
         }
-
+        var croppedImage: Mat
         if(approx.toArray().size == 4) { //might be less than 4 // todo correct array casting
             approx = sortPointsArray(approx)
-            displayMat = cropImageOn(displayMat, approx)
+            croppedImage = cropImage(displayMat, approx)
         }
 
         var i = 0
@@ -147,15 +154,15 @@ class ComputerVision {
     /* Image Preprocessing */
     private fun preprocessing(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat{
 
-        var grayMat: Mat = frame.gray()
-        var blurMat: Mat = Mat()
+        val grayMat: Mat = frame.gray()
+        val blurMat: Mat = Mat()
         Imgproc.GaussianBlur(grayMat, blurMat, Size(9.0,9.0), 0.0)
-        var threshMat: Mat = Mat()
+        val threshMat: Mat = Mat()
         Imgproc.adaptiveThreshold(blurMat, threshMat, 255.0,1,1,11,2.0)
-        var morphedMat: Mat = Mat()
+        val morphedMat: Mat = Mat()
         val core = Imgproc.getStructuringElement(0, Size(2.0, 2.0))
         Imgproc.morphologyEx(threshMat, morphedMat, 2, core)
-        var dilatedMat: Mat = Mat()
+        val dilatedMat: Mat = Mat()
         Imgproc.dilate(morphedMat, dilatedMat, core)
         return dilatedMat
     }
@@ -246,7 +253,7 @@ class ComputerVision {
      * This function takes an Image and returns a cropped Image
      * with only the sudoku in it
      */
-    fun cropImage(image: Mat, srcCoords: MatOfPoint2f): Mat{val derBreite = 360.0
+    private fun cropImage(image: Mat, srcCoords: MatOfPoint2f): Mat{
         // destination vertices
         val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
         // the destination buffer
@@ -257,21 +264,46 @@ class ComputerVision {
         Imgproc.warpPerspective(image, dst, perspectiveTransform, dst.size(), INTER_LINEAR, BORDER_CONSTANT)
         return dst
     }
-    fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
-        val DerBreite = CROPPEDSUDOKUSIZE
+    /**
+     * this funtion is similar to the above and to be used for testing purposes
+     */
+    private fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
         // destination vertices
-        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
+        //val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
+        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
         // the destination buffer
         var dst = Mat.zeros(image.size(), CV_8UC3);
         // create the perspective transform
         val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
         Imgproc.warpPerspective(image, dst, perspectiveTransform, image.size(), INTER_LINEAR, BORDER_CONSTANT)
-        val r = Rect(dstCoords.toList()[0], dstCoords.toList()[3])
-        val wowi = Mat(dst, r)
-        dst = Mat.zeros(dst.size(), CV_8UC3)
-        Imgproc.resize(wowi, dst, dst.size())
+        Log.d("Points", "first x: ${dstCoords.toList()[0].x}, first y: ${dstCoords.toList()[0].y}, second x: ${dstCoords.toList()[3].x}, second y: ${dstCoords.toList()[3].y}")
+        //val r = Rect(dstCoords.toList()[0], dstCoords.toList()[3])
+        //val wowi = Mat(dst, r)
+        //dst = Mat.zeros(dst.size(), CV_8UC3)
+        //Imgproc.resize(wowi, dst, dst.size())
         return dst
+    }
+
+    /**
+     * Takes the image of a sudoku and cuts it into 81 sub-images,
+     * each containing the image of a single digit
+     *
+     */
+    private fun cutSudoku(sudoku: Mat): Array<Mat>{
+        val xPoints = Array(9) { i -> i * CROPPEDSUDOKUSIZE}
+        val yPoints = Array(9) { i -> i * CROPPEDSUDOKUSIZE}
+        var squares: Array<Mat> = Array(81) { Mat.zeros(Size(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()), sudoku.type())}
+        for (row in 0..9){ // each row
+            for (column in 0..9){ // each column of the current row
+                // make a rectangle from the left upper and the right lower point
+                val r = Rect(Point(column.toDouble(), row.toDouble()), Point(column+1.toDouble(), row+1.toDouble()))
+                // use rect to cut out roi from sudoku
+                val oneSquare = Mat(sudoku, r)
+                squares[row*9+column] = oneSquare
+            }
+        }
+        return squares
     }
 
     /**
