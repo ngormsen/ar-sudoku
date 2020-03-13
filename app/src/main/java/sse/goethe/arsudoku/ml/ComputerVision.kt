@@ -137,17 +137,12 @@ class ComputerVision {
             Imgproc.approxPolyDP(x, approx, d,true);
         }
         var croppedImage: Mat
-        if(approx.toArray().size == 4) { //might be less than 4 // todo correct array casting
+        if(approx.toArray().size == 4) { //might be less than 4
             approx = sortPointsArray(approx)
             croppedImage = cropImage(displayMat, approx)
+            val boxes = cutSudoku(croppedImage)
         }
 
-        var i = 0
-        for(point in approx.toArray()){
-            i++
-            //Imgproc.putText(displayMat, "$i", point, 0, 1.0, Scalar(255.0, 0.0, 0.0))
-            //Imgproc.circle(displayMat, point, 50, Scalar(255.0, 0.0, 0.0), 50)
-        }
         return displayMat
     }
 
@@ -168,85 +163,13 @@ class ComputerVision {
     }
 
     /**
-     * The analyzeFrame function searches the biggest square (sudoku)
-     * within a frame and is used within the "onCameraFrame()" Function.
-     *
-     * Input: frame as object of CvCameraViewFrame
-     * Output: Mat which will be then displayed as frame
+     * The overall funciton that is to be called from outside the class
+     * It will set some class-internal attributes, that can then be called
+     * outside of the class.
      *
      * */
-    fun analyzeFrame( frame: CameraBridgeViewBase.CvCameraViewFrame ): Mat {
-        Log.d("ComputerVision", "analyzeFrame()")
-
-        var grayMat: Mat = frame.gray()
-        var blurMat: Mat = Mat()
-        var thresh: Mat = Mat()
-        var contours = ArrayList<MatOfPoint>()
-        var hierarchy = Mat() // Get Hierarchy Tree from OpenCV
-        var biggest: MatOfPoint2f = MatOfPoint2f()
-        var max_area = 0.0
-
-        Imgproc.GaussianBlur( grayMat, blurMat, Size(5.0, 5.0), 0.0 )
-        Imgproc.adaptiveThreshold( blurMat, thresh,255.0, 1,1, 11, 2.0 )
-        Imgproc.findContours(thresh, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
-        hierarchy.release()
-
-        // For each contour approximate with polygon and find biggest area
-        for (contour in contours) {
-            var area = Imgproc.contourArea(contour) //
-            if (area > 100) {
-                var m: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
-                m.fromList(contour.toList())
-
-                var peri = Imgproc.arcLength(m, true)
-                var approx: MatOfPoint2f = MatOfPoint2f()
-                Imgproc.approxPolyDP(m, approx, 0.02 * peri, true)
-
-                if (area > max_area && approx.total() == 4L) {
-                    biggest = approx
-                    max_area = area
-                }
-            }
-        }
-
-        // Finding outer box
-        var displayMat: Mat = frame.rgba()
-        var points: Array<Point> = biggest.toArray()
-        var cropped = Mat()
-        var t = 3
-
-        if (points.size == 4) { // TODO: ELSE ? ...
-
-            // TODO: WE HAVE TO DETERMINE WHICH COORDINATE IS "TOP LEFT", "TOP RIGHT", ...
-
-            Log.d("MainActivity", "Point: x " + points[0].x + " y: " + points[0].y)
-            Log.d("MainActivity", "Point: x " + points[1].x + " y: " + points[1].y)
-            Log.d("MainActivity", "Point: x " + points[2].x + " y: " + points[2].y)
-            Log.d("MainActivity", "Point: x " + points[3].x + " y: " + points[3].y)
-            // Draw surrounding box
-            var xDiff = abs(points[2].x - points[1].x ) /9
-            var yDiff = abs(points[2].y - points[3].y ) /9
-
-            Imgproc.line(displayMat, Point(points[0].x, points[0].y), Point(points[1].x, points[1].y), Scalar(255.0,0.0,0.0), 3 ) // oben rechts -> unten rechts
-            Imgproc.line(displayMat, Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Scalar(255.0,0.0,0.0), 3 ) // oben links -> oben rechts
-            Imgproc.line(displayMat, Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Scalar(255.0,0.0,0.0), 3 ) // oben links -> unten links
-            Imgproc.line(displayMat, Point(points[3].x, points[3].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 3 ) // unten links -> unten rechts
-
-            var R: Rect = Rect( Point(points[0].x - t, points[0].y - t), Point(points[2].x + t, points[2].y + t) )
-            if (displayMat.width() > 1 && displayMat.height() > 1) {
-                cropped = Mat(displayMat, R)
-                // TODO: CONVERT Mat TO Bitmap AND USE IT FOR DigitClassifier
-            }
-        }
-
-
-        //
-        //
-        // TODO: use cropped to get the Sudoku as Bitmap!!!
-        //
-        //
-
-        return displayMat
+    fun analyzeFrame( frame: CameraBridgeViewBase.CvCameraViewFrame ) {
+         //ToDo
     }
 
     /**
@@ -288,6 +211,9 @@ class ComputerVision {
     /**
      * Takes the image of a sudoku and cuts it into 81 sub-images,
      * each containing the image of a single digit
+     *
+     * The returned Array contains the Mats of each box.
+     * They are ordered row by row, e.g. squares[17] would be row 2 column 8
      *
      */
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
