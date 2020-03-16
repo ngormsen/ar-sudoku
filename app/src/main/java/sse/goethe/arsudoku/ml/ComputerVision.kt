@@ -355,21 +355,4 @@ class ComputerVision {
     fun cropSudoku(sudokuImg: Bitmap):Array<Bitmap> {
         return Array(81) { sudokuImg }
     }
-
-
-
-    /* in case of using an array for sudoku */
-    private fun calculateSudokuDigitCells() {
-        // just calculates the array position of
-        // a digit to the 2 dim cell positions
-        // within the sudoku 81x81 field
-
-        // use modulo: e.g.
-        // 10 mod 9 = 1
-        // 11 mod 9 = 2 ... for column number
-        // for row number just divide
-        // the array position by 9,
-        // and if it is floating point number
-        // then round up.
-    }
 }

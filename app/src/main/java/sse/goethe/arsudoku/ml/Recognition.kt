@@ -10,11 +10,13 @@ import sse.goethe.arsudoku.ml.DigitClassifier
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import com.google.common.primitives.UnsignedBytes.toInt
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import sse.goethe.arsudoku.MainActivity
 import java.lang.IllegalStateException
+import kotlin.math.floor
 
 /**
  * The Recognition Class instantiate the DigitClassifier
@@ -41,7 +43,7 @@ class Recognition(context: Context) {
      * 0 = empty field, 1-9 machine written, 10 - 18 hand written
      * */
     var sudokuPredictedDigits: Array<Array<Int>>
-    var sudokuFieldIsHandwritten: Array<Array<Int>>
+    var sudokuHandOrMachinePrintedFields: Array<Array<Int>>
 
     private lateinit var croppedSudokuBlocks: Array<Bitmap>
 
@@ -68,8 +70,7 @@ class Recognition(context: Context) {
          *  1 = True if it is hand written
          *  0 = empty if it is an empty field
          * */
-        // TODO: -17 WEG MACHEN
-        sudokuFieldIsHandwritten = arrayOf(
+        sudokuHandOrMachinePrintedFields = arrayOf(
                                     arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1),
                                     arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
                                     arrayOf(0, 0, -1, 0, -1, 0, -1, 0, 0),
@@ -84,13 +85,12 @@ class Recognition(context: Context) {
         * Set up the digit classifier
         *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-        //digitClassifier.initializeInterpreter()
+        digitClassifier.initializeInterpreter()
         /* test with a bitmap */
         //var testbitmap: Bitmap = digitClassifier.getBitmapFromAsset(context, "mnist_7.PNG")
         // Initialize Interpreter from DigitClassifier
-
-        //var predictedClass: String = digitClassifier.classify(testbitmap)
-        //Log.d(Recognition.TAG, "The predicted class is: " + predictedClass)
+        //var predictedClass: Int = digitClassifier.classify(testbitmap)
+        //Log.d(TAG, "The predicted class is: " + predictedClass)
     }
 
     /**
@@ -118,27 +118,57 @@ class Recognition(context: Context) {
      *
      * */
     private fun classifyAll() {
+        var count = 1
         if (croppedSudokuBlocks.size != 81) {
             throw IllegalStateException(" croppedSudokuBlock has not size 81 yet. ")
         }
 
         for (sudokuBlock in croppedSudokuBlocks) {
-            var tmpDigit = digitClassifier.classify(sudokuBlock)
-            addToResultMatrix(tmpDigit)
+            var recogDigit = digitClassifier.classify(sudokuBlock)
+            var blockCoord = calculateSudokuDigitCells(count)
+            addToResultMatrix(blockCoord, recogDigit)
             // TODO: as well save if it is machine printed or hand written
+            count++
         }
+    }
+
+    private fun isValidSudoku(): Boolean{
+        return false
     }
 
     /**
      * The addToResultMatrix add a class infered by classify()
      * to the sudokuPredictedDigit Matrix.
      *
-     * Input:
-     * Output:
+     * Input: Array with 2 Elements sybolizing the coordinates
+     *        The interpreted result from the digitClassifier
+     * Output: void
      *
      * */
-    private fun addToResultMatrix(tmpDigit: Int) {
-        // TODO: finish addToResultMatrix, maybe rename it.
+    private fun addToResultMatrix(coordinate: Array<Int>, result: Int) {
+        // TODO: IS sudokuPredictedDigits Matrix initialized?!?!?!
+        // TODO: As well add if it is machine, hand printed/written -1, 0, 1 to sudokuHandOrMachinePrintedFields
+        sudokuPredictedDigits[coordinate[0]][coordinate[1]] = result
+    }
+
+    /* in case of using an array for sudoku */
+    /**
+     * The calculateSudokuDigitCells just transforms the array position of
+     * a digit to the 2 dim cell positions within the sudoku 81x81 field.
+     *
+     * Input: Index/Place within an array ( 1,...,9,...,81 )
+     * Output: Array with coordinate.
+     *         First position row,
+     *         second position column.
+     *
+     * */
+    private fun calculateSudokuDigitCells(index: Int): Array<Int> {
+        val SIZE = 9
+        var row = 0
+        var column = index%SIZE - 1
+        if (index%SIZE == 0) { row = index/SIZE - 1 }
+        else { row = floor((index/SIZE).toDouble()).toInt() }
+        return arrayOf(row, column)
     }
 
     fun close() {

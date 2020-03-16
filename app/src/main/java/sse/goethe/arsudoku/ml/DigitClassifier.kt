@@ -39,13 +39,11 @@ class DigitClassifier(private val context: Context) {
      * Do not forget to close() the Interpreter
      * */
     fun initializeInterpreter() {
-        // load model
-        val assetManager = context.assets
+        Log.d("DigitClassifier", "initializeInterpreter()")
+        val assetManager = context.assets // load model
         val model = loadModelFile(assetManager)
-
-        // Init TF Lite Interpreter with NNAPI enabled
         val options = Interpreter.Options()
-        options.setUseNNAPI(true)
+        options.setUseNNAPI(true) // NNAPI provides acceleration for devices GPU; DSP, NPU
         val interpreter = Interpreter(model, options)
 
         // Read input shape from model file
@@ -57,7 +55,6 @@ class DigitClassifier(private val context: Context) {
         this.interpreter = interpreter
         isInitialized = true
         Log.d(TAG, " >> Initialized TFLite interpreter! << ")
-
     }
 
     /**

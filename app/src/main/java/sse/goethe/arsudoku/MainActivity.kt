@@ -51,13 +51,18 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     var  mOpenCvCameraView : CameraBridgeViewBase? = null
 
     /* Instance of Recognition Class */
-    var recognition = Recognition(this)
+    //var recognition = Recognition(this)
+    // If this does not work delete the following line
+    private lateinit var recognition: Recognition
 
     var frameCounter = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        /* Recognition class has to be initialized here bc context is ready after "onCreate".. */
+        recognition = Recognition(this)
 
         val solver = Sudoku( arrayOf(
             intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
@@ -70,20 +75,15 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
             intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
         ))
-
         println(solver.solve())
 
+        /* Initialization of OpenCV camera */
         mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
         mOpenCvCameraView?.apply {
             visibility = SurfaceView.VISIBLE
             setCvCameraViewListener(this@MainActivity)
         }
 
-        /* ############################################
-        *  RECOGNIZE SUDOKU TEST
-        *  ############################################ */
-
-        // #########################################################################################
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
@@ -101,9 +101,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-
-
+        // Delete the following line later
         Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
+
+
         setGlobalUser(User("name", "email"))
 
 
