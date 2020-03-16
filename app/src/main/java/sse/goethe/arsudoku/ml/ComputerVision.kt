@@ -50,6 +50,11 @@ class ComputerVision {
     private lateinit var bitmap: Bitmap
     private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 32  // the width and height of one Sudoku number square
     private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
+    /**
+     * The following are class properties that are being set by analyzeFram().
+     * They are nullable. You MUST check for null value. If null value is found, that
+     * indicates, that no Sudoku was found in the frame.
+     */
     var SudokuCorners: MatOfPoint2f? = null
     var CroppedSudoku: Mat? = null
     var TransformationMat: Mat? = null
@@ -103,7 +108,7 @@ class ComputerVision {
 
     /**
      * Finds the larges contour in the frame
-     * and gets the four corners of it, should it be similar to a square
+     * and gets the four corners of it, should it be similar to a square.
      *
      */
     public fun findCorners(frame: Mat): MatOfPoint2f? {
@@ -171,6 +176,16 @@ class ComputerVision {
      * It will set some class-internal attributes, that can then be called
      * outside of the class.
      *
+     * Call this once for every frame. The class attributes are:
+     * SudokuCorners
+     * CroppedSudoku
+     * TransformationMat
+     * SudokuBoxes
+     *
+     * All of them are nullable, so you MUST check for null value.
+     * If any null value is found, it's an indication, that no Sudoku was found
+     * in the frame
+     *
      * */
     fun analyzeFrame( frame: CameraBridgeViewBase.CvCameraViewFrame ) {
         // ToDo: create more Sudoku viability checks
@@ -188,7 +203,7 @@ class ComputerVision {
         var corners = findCorners(img)
 
         // corners is a nullable MatOfPoint2f
-        // if null, there was no SUdoku in the frame
+        // if null, there was no Sudoku in the frame
         if (corners == null){
             return
         }else{
@@ -222,6 +237,7 @@ class ComputerVision {
         return dst
     }
     /**
+     * IGNORE this function!
      * this funtion is similar to the above and to be used for testing purposes
      */
     private fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
@@ -249,6 +265,7 @@ class ComputerVision {
      * The returned Array contains the Mats of each box.
      * They are ordered row by row, e.g. squares[17] would be row 2 column 8
      *
+     * ToDo: Test this!!
      */
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
         val xPoints = Array(9) { i -> i * CROPPEDSUDOKUSIZE}
@@ -328,40 +345,8 @@ class ComputerVision {
      * Use this function in analyzeFrame()
      * */
     private fun convertMatToBitmap(frameMat: Mat): Bitmap {
-        var bmp: Bitmap = Bitmap.createBitmap(frameMat.cols(), frameMat.rows(), Bitmap.Config.ARGB_8888)
+        val bmp: Bitmap = Bitmap.createBitmap(frameMat.cols(), frameMat.rows(), Bitmap.Config.ARGB_8888)
         Utils.matToBitmap(frameMat, bmp)
         return bmp
-    }
-
-    /**
-     * The cropSudoku function is a private helper function
-     * which takes a Bitmap of a Sudoku and crops it into
-     * 81 pieces to get each Sudoku cell.
-     *
-     * Input: Bitmap of a Sudoku
-     * Output: Array pf 81 Bitmap's
-     *
-     * Use this after launching convertMatToBitmap() to create
-     * the Bitmap Array.
-     **/
-    fun cropSudoku(sudokuImg: Bitmap):Array<Bitmap> {
-        return Array(81) { sudokuImg }
-    }
-
-
-
-    /* in case of using an array for sudoku */
-    private fun calculateSudokuDigitCells() {
-        // just calculates the array position of
-        // a digit to the 2 dim cell positions
-        // within the sudoku 81x81 field
-
-        // use modulo: e.g.
-        // 10 mod 9 = 1
-        // 11 mod 9 = 2 ... for column number
-        // for row number just divide
-        // the array position by 9,
-        // and if it is floating point number
-        // then round up.
     }
 }
