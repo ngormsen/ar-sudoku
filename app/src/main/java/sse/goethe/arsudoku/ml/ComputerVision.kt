@@ -137,20 +137,22 @@ class ComputerVision {
         // therefore clearly not a sudoku! We return null.
         if (biggest.toList().size < 4) return null
 
-        val approx: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
+        // TODO: better conversion from MatOfPoint to MatOfPoint2f ??
+        val approx: MatOfPoint2f = MatOfPoint2f()
         approx.fromList(biggest.toList())
+        val x: MatOfPoint2f = MatOfPoint2f()
+        x.fromList(biggest.toList())
         var d = 0.0
         while(approx.toArray().size > 4) {
             d++
-            val x: MatOfPoint2f = MatOfPoint2f()
-            x.fromList(biggest.toList())
             Imgproc.approxPolyDP(x, approx, d,true)
 
             // 4.2.1: if we need too many iterations of this, it's probably not a square/sudoku
             if (d > 100) return null // ToDo: figure out a reasonable d
         }
 
-
+        // this check is necessary, because we might go from >4 points to <4 in a single increment of d
+        if (approx.toList().size < 4) return null
 
         return approx
     }
@@ -214,7 +216,7 @@ class ComputerVision {
         croppedImage = cropImage(frame.gray(), corners)
         val boxes = cutSudoku(croppedImage)
 
-        // In the end, we set as class properties all the calculated data
+        // In the end, we set all the calculated data as class properties
         SudokuCorners = corners
         CroppedSudoku = croppedImage
         // TransformationMat = ... // setting of this var is handled in cropImage()
@@ -298,14 +300,15 @@ class ComputerVision {
      *
      * */
     private fun sortPointsArray(coordMat: MatOfPoint2f): MatOfPoint2f {
-        var coordList = coordMat.toList()
+        val coordList = coordMat.toList()
+        Log.d("points", "${coordList.size}")
 
         // 1. sort by y-pos
         coordList.sortBy{it.y}
 
         // 2. split into upper and lower half
-        var firstHalf = coordList.slice(0..1).toMutableList()
-        var secondHalf = coordList.slice(2..3).toMutableList()
+        val firstHalf = coordList.slice(0..1).toMutableList()
+        val secondHalf = coordList.slice(2..3).toMutableList()
 
         // 3. sort each half by x-pos
         firstHalf.sortBy{it.x}
