@@ -106,7 +106,7 @@ class Recognition(context: Context) {
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         // TODO: anstelle von analyzeFrame dann die contourDetection()
         computerVision.analyzeFrame(frame)
-        classifyAll()
+        //classifyAll()
     }
 
     /**
