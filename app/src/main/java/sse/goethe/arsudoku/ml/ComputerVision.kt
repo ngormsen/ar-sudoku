@@ -268,13 +268,11 @@ class ComputerVision {
      * ToDo: Test this!!
      */
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
-        val xPoints = Array(9) { i -> i * CROPPEDSUDOKUSIZE}
-        val yPoints = Array(9) { i -> i * CROPPEDSUDOKUSIZE}
-        val squares: Array<Mat> = Array(81) { Mat.zeros(Size(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()), sudoku.type())}
-        for (row in 0..9){ // each row
-            for (column in 0..9){ // each column of the current row
+        val squares: Array<Mat> = Array(81) { Mat.zeros(Size(SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), sudoku.type())}
+        for (row in 0..8){ // each row
+            for (column in 0..8){ // each column of the current row
                 // make a rectangle from the left upper and the right lower point
-                val r = Rect(Point(column.toDouble(), row.toDouble()), Point(column+1.toDouble(), row+1.toDouble()))
+                val r = Rect(Point(column*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), row*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), Point((column+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), (row+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()))
                 // use rect to cut out roi from sudoku
                 val oneSquare = Mat(sudoku, r)
                 squares[row*9+column] = oneSquare
