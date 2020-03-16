@@ -23,10 +23,6 @@ import kotlin.math.tan
  *
  * Use it in MainActivity.kt. Especially in onCameraFrame()
  *
- * discord treffen:
- * develeopment process
- * landscape
- * invert that
  *
  * todo
  * 1. preprocessing                              Done
@@ -38,6 +34,9 @@ import kotlin.math.tan
  * 4. Miscellaneous
  * 4.1 convertMatToBitmap
  * 4.2 viability check
+ * 4.2.1 look at how many approxDP invokations are usually needed to approximate the
+ * sudoku contour to 4 points. If the currently needed number greatly exceeds this,
+ * it's probably not a sudoku.
  * 5. Known Bugs
  * 5.1 With completely black picture, no contour can be found, results in null array and crash
  * 5.2 Kelvin fragen nach Kamera Auflösung
@@ -51,6 +50,10 @@ class ComputerVision {
     private lateinit var bitmap: Bitmap
     private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 32  // the width and height of one Sudoku number square
     private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
+    var SudokuCorners: MatOfPoint2f? = null
+    var CroppedSudoku: Mat? = null
+    var TransformationMat: Mat? = null
+    var SudokuBoxes: Array<Mat>? = null
 
     /* init is called once if class is instantiated */
     init {
@@ -98,20 +101,21 @@ class ComputerVision {
         }
     }
 
-    /* find largest contour in the frame*/
-    public fun contourDetection(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
+    /**
+     * Finds the larges contour in the frame
+     * and gets the four corners of it, should it be similar to a square
+     *
+     */
+    public fun findCorners(frame: Mat): MatOfPoint2f? {
 
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.
 
-        // Preprocessing:
-        val img = preprocessing(frame)
-
-        var contours = ArrayList<MatOfPoint>() // destination for findContours()
+        val contours = ArrayList<MatOfPoint>() // destination for findContours()
 
         // TODO: WHAT IF IT IS NOT POSSIBLE TO FIND A CONTOUR? -> Use try, catch
-        var hierarchy: Mat = Mat()
-        Imgproc.findContours(img, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
+        val hierarchy: Mat = Mat()
+        Imgproc.findContours(frame, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
         hierarchy.release()
 
         var biggest: MatOfPoint = MatOfPoint()
@@ -124,26 +128,26 @@ class ComputerVision {
             }
         }
 
-        var displayMat = frame.gray()
-        //Imgproc.drawContours(displayMat, mutableListOf(biggest), 0, Scalar(0.0, 255.0, 0.0), 2)
+        // if the contour can be approximated by 3 or fewer points, it's clearly not a square and
+        // therefore clearly not a sudoku! We return null.
+        if (biggest.toList().size < 4) return null
 
-        var approx: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
+        val approx: MatOfPoint2f = MatOfPoint2f() // TODO: DIES NOCHMAL CHECKEN
         approx.fromList(biggest.toList())
         var d = 0.0
-        while(approx.toArray().size>4) {
+        while(approx.toArray().size > 4) {
             d++
-            var x: MatOfPoint2f = MatOfPoint2f()
+            val x: MatOfPoint2f = MatOfPoint2f()
             x.fromList(biggest.toList())
-            Imgproc.approxPolyDP(x, approx, d,true);
-        }
-        var croppedImage: Mat
-        if(approx.toArray().size == 4) { //might be less than 4
-            approx = sortPointsArray(approx)
-            croppedImage = cropImage(displayMat, approx)
-            val boxes = cutSudoku(croppedImage)
+            Imgproc.approxPolyDP(x, approx, d,true)
+
+            // 4.2.1: if we need too many iterations of this, it's probably not a square/sudoku
+            if (d > 100) return null // ToDo: figure out a reasonable d
         }
 
-        return displayMat
+
+
+        return approx
     }
 
     /* Image Preprocessing */
@@ -169,7 +173,37 @@ class ComputerVision {
      *
      * */
     fun analyzeFrame( frame: CameraBridgeViewBase.CvCameraViewFrame ) {
-         //ToDo
+        // ToDo: create more Sudoku viability checks
+
+        // reset everything to null, because it's at this point not clear if there is a sudoku
+        SudokuCorners = null
+        CroppedSudoku = null
+        TransformationMat = null
+        SudokuBoxes = null
+
+        // Preprocessing:
+        val img = preprocessing(frame)
+
+        // Finding Corners using Contour Detection:
+        var corners = findCorners(img)
+
+        // corners is a nullable MatOfPoint2f
+        // if null, there was no SUdoku in the frame
+        if (corners == null){
+            return
+        }else{
+            corners = sortPointsArray(corners)
+        }
+
+        val croppedImage: Mat
+        croppedImage = cropImage(frame.gray(), corners)
+        val boxes = cutSudoku(croppedImage)
+
+        // In the end, we set as class properties all the calculated data
+        SudokuCorners = corners
+        CroppedSudoku = croppedImage
+        // TransformationMat = ... // setting of this var is handled in cropImage()
+        SudokuBoxes = boxes
     }
 
     /**
@@ -182,9 +216,9 @@ class ComputerVision {
         // the destination buffer
         val dst = Mat.zeros(CROPPEDSUDOKUSIZE, CROPPEDSUDOKUSIZE, CV_8UC3) // TODO: not 100% sure about the type here...
         // create the perspective transform
-        val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
+        TransformationMat = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
-        Imgproc.warpPerspective(image, dst, perspectiveTransform, dst.size(), INTER_LINEAR, BORDER_CONSTANT)
+        Imgproc.warpPerspective(image, dst, TransformationMat, dst.size(), INTER_LINEAR, BORDER_CONSTANT)
         return dst
     }
     /**
@@ -219,7 +253,7 @@ class ComputerVision {
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
         val xPoints = Array(9) { i -> i * CROPPEDSUDOKUSIZE}
         val yPoints = Array(9) { i -> i * CROPPEDSUDOKUSIZE}
-        var squares: Array<Mat> = Array(81) { Mat.zeros(Size(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()), sudoku.type())}
+        val squares: Array<Mat> = Array(81) { Mat.zeros(Size(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()), sudoku.type())}
         for (row in 0..9){ // each row
             for (column in 0..9){ // each column of the current row
                 // make a rectangle from the left upper and the right lower point
