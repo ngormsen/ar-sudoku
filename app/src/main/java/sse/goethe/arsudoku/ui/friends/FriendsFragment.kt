@@ -1,5 +1,7 @@
 package sse.goethe.arsudoku.ui.friends
 
+import android.content.ContentValues
+import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -9,19 +11,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.baoyz.swipemenulistview.SwipeMenu
 import com.baoyz.swipemenulistview.SwipeMenuCreator
 import com.baoyz.swipemenulistview.SwipeMenuItem
 import com.baoyz.swipemenulistview.SwipeMenuListView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
@@ -30,6 +28,8 @@ class FriendsFragment : Fragment() {
 
     private lateinit var friendsViewModel: FriendsViewModel
     private val users = ArrayList<String>()  // Transfer to viewModel in production version
+    var games = arrayOf("", "", "","", "", "","", "", "","", "", "","")
+    val db = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -174,7 +174,8 @@ class FriendsFragment : Fragment() {
                     }
                     1 -> {
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
-
+                        populateGameArray()
+                        buildGameList(root.context, users[position])
                     }
                 }// open
                 // delete
@@ -187,5 +188,51 @@ class FriendsFragment : Fragment() {
         })
 
         return root
+    }
+
+    fun populateGameArray(){
+        val activity = activity as MainActivity?
+        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("games")
+            .get()
+            .addOnSuccessListener { documents ->
+                for ((idx, document) in documents.withIndex()) {
+                    Log.d("Data", "${document.id} => ${document.data}")
+                    games.set(idx, document.data.get("date").toString())
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w(ContentValues.TAG, "Error getting documents: ", exception)
+            }
+    }
+
+    fun buildGameList(context: Context, item: String){
+        val builder = AlertDialog.Builder(context)
+        val selectedItems = ArrayList<Int>() // Where we track the selected items
+        val array = Array(games.size) {
+            games[it]
+        }
+        // Get game data from current user and populate game array with correct data
+        builder.setTitle("Game to send:")
+//            .setMessage("Login not successful! Please input valid data.")
+
+            .setItems(array,
+                DialogInterface.OnClickListener { dialog, which ->
+                    // Updates database
+                    System.out.println("Send " + item + " the game: " + games.get(which))
+                    val gameData = hashMapOf(
+                        "date" to games.get(which)
+                    )
+                    db.collection("users").document(item).collection("games").document(games.get(which))
+                        .set(gameData)
+                        .addOnSuccessListener { Log.d(ContentValues.TAG, "DocumentSnapshot successfully written!") }
+                        .addOnFailureListener { e -> Log.w(ContentValues.TAG, "Error writing document", e) }
+
+                    // The 'which' argument contains the index position
+                    // of the selected item
+                })
+
+
+        val dialog = builder.create()
+        dialog.show()
     }
 }

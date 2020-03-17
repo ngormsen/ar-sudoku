@@ -140,17 +140,14 @@ class HistoryFragment : Fragment() {
                             .collection("games").document(history[position])
                             .delete()
 
-                            .addOnSuccessListener {                              adapter.notifyDataSetChanged()
+                            .addOnSuccessListener {
+                                adapter.notifyDataSetChanged()
                             }
                             .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
-
-
-
                     }
                     1 -> {
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
                         showFriendList(root.context, history[position])
-
                     }
                 }// open
                 // delete
@@ -170,23 +167,53 @@ class HistoryFragment : Fragment() {
         val db = FirebaseFirestore.getInstance()
         val selectedItems = ArrayList<Int>() // Where we track the selected items
 //        var users = ArrayList<String>()
-        var users = arrayOf("test@gmail.com", "test2@gmail.com", "hello@gmail.com")
+//        var users = arrayOf("1@gmail.com", "", "", "","", "", "", "","", "", "", "")
+//        var users = arrayOfNulls<String>(10)
 
-//        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("friends")
-//            .get()
-//            .addOnSuccessListener { documents ->
-//                for (document in documents) {
-//                    Log.d("Data", "${document.id} => ${document.data}")
-//                    users.add(document.data.get("email" ).toString())
-//                }
-////                System.out.println(users.size)
-////                System.out.println(users.toArray().toString())
-////                System.out.println(users.toTypedArray())
-//
-//            }
-//            .addOnFailureListener { exception ->
-//                Log.w(TAG, "Error getting documents: ", exception)
-//            }
+        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("friends")
+            .get()
+            .addOnSuccessListener { documents ->
+                for ((idx, document) in documents.withIndex()) {
+                    Log.d("Data", "${document.id} => ${document.data}")
+                    users.add(idx, document.data.get("email" ).toString())
+                }
+
+
+            }
+            .addOnFailureListener { exception ->
+                Log.w(TAG, "Error getting documents: ", exception)
+            }
+
+        val array = Array(users.size) {
+            users[it]
+        }
+
+        builder.setTitle("Send to a friend:")
+//            .setMessage("Login not successful! Please input valid data.")
+
+            .setItems(array,
+                DialogInterface.OnClickListener { dialog, which ->
+                    System.out.println("Send " + item + " to friend: " + users.get(which))
+                    val gameData = hashMapOf(
+                        "date" to item
+                    )
+                    println(gameData["date"])
+//                    db.collection("users").document(users.get(which)).collection("games").document(item)
+//                        .set(gameData)
+//                        .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
+//                        .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+
+                    // The 'which' argument contains the index position
+                    // of the selected item
+                })
+
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+}
+
 
 //        val userArray = arra
 //        val userArray = arrayOfNulls<String>(users.size)
@@ -214,26 +241,9 @@ class HistoryFragment : Fragment() {
 //        var userArray = users.toTypedArray()
 //        println(array.toCollection())
 
-        val array = Array(users.size) {
-            users[it]
-        }
-        builder.setTitle("Send to a friend:")
-//            .setMessage("Login not successful! Please input valid data.")
 
-            .setItems(array,
-                DialogInterface.OnClickListener { dialog, which ->
-                    System.out.println("Send " + item + " to friend: " + users.get(which))
-                    val gameData = hashMapOf(
-                        "date" to item
-                    )
-                    db.collection("users").document(users.get(which)).collection("games").document(item)
-                        .set(gameData)
-                        .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
-                        .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
 
-                    // The 'which' argument contains the index position
-                    // of the selected item
-                })
+
 
 //            .setCancelable(false)
 //            .setPositiveButton("OK",
@@ -254,9 +264,3 @@ class HistoryFragment : Fragment() {
 ////                                            ).show()
 ////                                        })
 //        //Creating dialog box
-        val dialog = builder.create()
-        dialog.show()
-    }
-
-}
-

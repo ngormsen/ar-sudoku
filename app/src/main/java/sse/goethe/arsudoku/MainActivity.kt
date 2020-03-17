@@ -87,7 +87,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
         Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
-        setGlobalUser(User("name", "email"))
+        setGlobalUser(User("Nils", "nils.gormsen@googlemail.com"))
+        stopCamera()
 
     }
 
@@ -145,7 +146,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         navUserName.text = user.getName()
         navUserEmail.text = user.getEmail()
-
     }
 
     fun stopCamera(){
