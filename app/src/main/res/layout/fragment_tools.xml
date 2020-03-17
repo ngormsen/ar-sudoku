@@ -59,13 +59,13 @@
         </TableLayout>
 
         <!-- Add three common column in the table row. -->
-        <TableRow
+        <TableLayout
             android:id="@+id/table_layout_row_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1">
 
-        </TableRow>
+        </TableLayout>
 
 
     </TableLayout>
