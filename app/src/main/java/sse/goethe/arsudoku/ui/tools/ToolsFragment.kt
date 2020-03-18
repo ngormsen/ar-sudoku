@@ -1,11 +1,13 @@
 package sse.goethe.arsudoku.ui.tools
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RectShape
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -91,6 +93,8 @@ class ToolsFragment : Fragment() {
                 textView.textSize = 30F
                 textView.gravity = 11
                 textView.id = displayNumber.toInt() // TODO umbauen zu string
+                textView.gravity = Gravity.CENTER_VERTICAL
+                textView.gravity = Gravity.CENTER_HORIZONTAL
                 textView.setOnClickListener(View.OnClickListener {
                     // Click field
                     // set selectedField to current field
@@ -115,6 +119,8 @@ class ToolsFragment : Fragment() {
                 tableRow.addView(textView)
             }
             tableRow.gravity = 11
+            tableRow.setGravity(Gravity.CENTER_HORIZONTAL);
+
             upperTableRow.addView(tableRow)
 
 
@@ -122,8 +128,102 @@ class ToolsFragment : Fragment() {
         }
 
 
+        // create row for delete,hint,undo,redo buttons
+        var tableRowActions = TableRow(context)
+
+        // Create hint button
+        val textViewHint = TextView(context)
+        textViewHint.text = "HINT"
+        textViewHint.width = 110
+        textViewHint.height = 110
+        textViewHint.textSize = 20F
+        textViewHint.gravity = Gravity.CENTER_VERTICAL
+        textViewHint.gravity = Gravity.CENTER_HORIZONTAL
+
+        //theChild in this case is the child of TableRow
+        textViewHint.setOnClickListener(View.OnClickListener {
+        })
+        textViewHint.setBackgroundResource(R.drawable.input_number_bg)
+
+        tableRowActions.addView(textViewHint)
+        val paramsHint = textViewHint.layoutParams as TableRow.LayoutParams
+        paramsHint.span = 2 //amount of columns you will span
+            textViewHint.setLayoutParams(paramsHint)
+
+
+        // Create undo button
+        val textViewUndo = TextView(context)
+        textViewUndo.text = "UNDO"
+        textViewUndo.width = 110
+        textViewUndo.height = 110
+        textViewUndo.textSize = 20F
+        textViewUndo.gravity = Gravity.CENTER_VERTICAL
+        textViewUndo.gravity = Gravity.CENTER_HORIZONTAL
+
+        //theChild in this case is the child of TableRow
+        textViewUndo.setOnClickListener(View.OnClickListener {
+        })
+        textViewUndo.setBackgroundResource(R.drawable.input_number_bg)
+        tableRowActions.addView(textViewUndo)
+        val paramsUndo = textViewUndo.layoutParams as TableRow.LayoutParams
+        paramsUndo.span = 2 //amount of columns you will span
+        textViewUndo.setLayoutParams(paramsUndo)
+
+        // Create redo button
+        val textViewRedo = TextView(context)
+        textViewRedo.text = "REDO"
+        textViewRedo.width = 110
+        textViewRedo.height = 110
+        textViewRedo.textSize = 20F
+        textViewRedo.gravity = Gravity.CENTER_VERTICAL
+        textViewRedo.gravity = Gravity.CENTER_HORIZONTAL
+
+        //theChild in this case is the child of TableRow
+        textViewRedo.setOnClickListener(View.OnClickListener {
+        })
+        textViewRedo.setBackgroundResource(R.drawable.input_number_bg)
+        tableRowActions.addView(textViewRedo)
+        val paramsRedo = textViewRedo.layoutParams as TableRow.LayoutParams
+        paramsRedo.span = 2 //amount of columns you will span
+        textViewRedo.setLayoutParams(paramsRedo)
+
+        // Create delete button
+        val textViewDelete = TextView(context)
+        textViewDelete.text = "DELETE"
+        textViewDelete.width = 110
+        textViewDelete.height = 110
+        textViewDelete.textSize = 20F
+        textViewDelete.gravity = Gravity.CENTER_VERTICAL
+        textViewDelete.gravity = Gravity.CENTER_HORIZONTAL
+
+
+
+        //theChild in this case is the child of TableRow
+        textViewDelete.setOnClickListener(View.OnClickListener {
+        })
+        textViewDelete.setBackgroundResource(R.drawable.input_number_bg)
+        tableRowActions.addView(textViewDelete)
+        val paramsDelete = textViewDelete.layoutParams as TableRow.LayoutParams
+        paramsDelete.span = 2 //amount of columns you will span
+        textViewDelete.setLayoutParams(paramsDelete)
+
+
+        tableRowActions.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        // Add Row to layout
+        lowerTableRow.addView(tableRowActions)
+//        val paramsActionRow = tableRowActions.layoutParams as TableLayout.LayoutParams
+//        paramsActionRow.setMargins(50,0,0,0)
+//        tableRowActions.setLayoutParams(paramsActionRow)
+
+
+
+
+
+
+
         // Create row for input buttons
-        val tableRow = TableRow(context)
+        val tableRowNumbers = TableRow(context)
         for(column in 0..8){
             val textView = TextView(context)
             textView.text = (column+1).toString()
@@ -131,6 +231,9 @@ class ToolsFragment : Fragment() {
             textView.height = 110
             textView.textSize = 30F
             textView.gravity = 11
+            textView.gravity = Gravity.CENTER_VERTICAL
+            textView.gravity = Gravity.CENTER_HORIZONTAL
+
             textView.setOnClickListener(View.OnClickListener {
                 if(selectedField != ""){
                     val currentTextField = root.findViewById<TextView>(selectedField.toInt())
@@ -150,10 +253,11 @@ class ToolsFragment : Fragment() {
             textView.setBackgroundResource(R.drawable.input_number_bg)
 
 
-            tableRow.addView(textView)
+            tableRowNumbers.addView(textView)
         }
-        tableRow.gravity = 11
-        lowerTableRow.addView(tableRow)
+        tableRowNumbers.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        lowerTableRow.addView(tableRowNumbers)
 
 
 

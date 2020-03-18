@@ -58,14 +58,27 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
             intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
         ))
+        println("Fun with Sudoku:")
+        solver.printCurrentState()
+        solver.solve()
+        solver.printCurrentState()
 
-        println(solver.solve())
+//        for (i in 0 until 9) {
+//            for (j in 0 until 9) {
+//                print(solver.getSudokuSolution()[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
+//        }
 
-        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
-        mOpenCvCameraView?.apply {
-            visibility = SurfaceView.VISIBLE
-            setCvCameraViewListener(this@MainActivity)
-        }
+
+//        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase //TODO uncomment
+//        mOpenCvCameraView?.apply {
+//            visibility = SurfaceView.VISIBLE
+//            setCvCameraViewListener(this@MainActivity)
+//        }
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -88,7 +101,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
         setGlobalUser(User("Nils", "nils.gormsen@googlemail.com"))
-        stopCamera()
 
     }
 
@@ -138,6 +150,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     companion object {
         // just to use it for Log's
         private const val TAG = "MainActivity"}
+
     fun setHeaderCredentials(user:User){
         // Get header access
         val headerView : View = navView.getHeaderView(0)
