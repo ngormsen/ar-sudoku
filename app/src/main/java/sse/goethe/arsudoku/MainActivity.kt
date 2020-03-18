@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val solver = Sudoku( arrayOf(
+        val solver = Sudoku( arrayOf( // TODO test hint again with this sudoku...returns 0 as value.
             intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
             intArrayOf(0, 6, 0, 2, 1, 0, 0, 0, 4),
             intArrayOf(9, 0, 2, 0, 0, 6, 0, 1, 3),
@@ -62,6 +62,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         solver.printCurrentState()
         solver.solve()
         solver.printCurrentState()
+
+        println("Fun with Gamestate's:")
+
+
+
+
 
 //        for (i in 0 until 9) {
 //            for (j in 0 until 9) {

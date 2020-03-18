@@ -7,6 +7,10 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         return sudoku
     }
 
+    fun setNumber(row: Int, column: Int, value: Int){
+        sudoku[row][column] = value
+    }
+
     fun printCurrentState(){
         for (i in 0 until n) {
             for (j in 0 until n) {
