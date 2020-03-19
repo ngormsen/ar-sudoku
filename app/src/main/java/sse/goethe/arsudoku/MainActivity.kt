@@ -335,7 +335,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             // X < 10 will cause threadng problems
             if (this.frameCounter > 0 ) { // k = 25 for now
                 recognition.run(inputFrame)
-                outputFrame = inputFrame.rgba()
+                //test code to display a single sudoku digit box
+
+                outputFrame = testBoxDisplay(recognition.computerVision.SudokuBoxes, inputFrame.rgba())
                 this.frameCounter = 0
                 return outputFrame
 
@@ -348,6 +350,20 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         //return inputFrame!!.rgba()
         //return inputFrame!!.gray()
+    }
+    var boxCounter = 0
+
+    fun testBoxDisplay(boxes: Array<Mat>?, frame: Mat): Mat{
+        // do null check if there is a sudoku found
+        if (boxes == null){
+            return frame
+        }else {
+            // to iterate through and check all 81 boxes we increment a counter
+            boxCounter++
+            val dst = Mat.zeros(frame.size(), frame.type())
+            Imgproc.resize(boxes[boxCounter%81], dst, dst.size())
+            return dst
+        }
     }
 
 }

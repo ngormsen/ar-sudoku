@@ -41,7 +41,13 @@ import kotlin.math.tan
  * 5.1 With completely black picture, no contour can be found, results in null array and crash
  * 5.2 Kelvin fragen nach Kamera Auflösung
  * 6. Documentation
+ * 6.1 Class diagram
+ * 6.2
  *
+ *
+ * 19.03:
+ * figure out warpPerspektive
+ * display on square
  *
  */
 class ComputerVision {
@@ -111,7 +117,7 @@ class ComputerVision {
      * and gets the four corners of it, should it be similar to a square.
      *
      */
-    public fun findCorners(frame: Mat): MatOfPoint2f? {
+    fun findCorners(frame: Mat): MatOfPoint2f? {
 
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.
@@ -235,7 +241,7 @@ class ComputerVision {
         // create the perspective transform
         TransformationMat = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
-        Imgproc.warpPerspective(image, dst, TransformationMat, dst.size(), INTER_LINEAR, BORDER_CONSTANT)
+        Imgproc.warpPerspective(image, dst, TransformationMat, dst.size(), INTER_LINEAR, BORDER_CONSTANT) // ToDo: is the zoom problem here, that the warp is too close up
         return dst
     }
     /**
