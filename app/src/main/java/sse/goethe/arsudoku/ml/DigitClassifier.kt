@@ -113,17 +113,15 @@ class DigitClassifier(private val context: Context) {
      * Output:
      *
      * */
-    //fun classify(bitmap: Bitmap): String {
+
     fun classify(bitmap: Bitmap): Int {
         if (!isInitialized) {
             throw IllegalStateException(" TF Lite Interpreter is not initialized yet. ")
         }
-        // Preprocessing: resize the input
         val resizedImage = Bitmap.createScaledBitmap(bitmap, inputImageWidth, inputImageHeight, true)
         val byteBuffer = convertBitmapToBytebuffer(resizedImage)
         val result = Array(1) { FloatArray(OUTPUT_CLASSES_COUNT) }
         interpreter?.run(byteBuffer, result)
-        //return getOutputString(result[0])
         return getOutputInt(result[0])
     }
 
@@ -180,7 +178,7 @@ class DigitClassifier(private val context: Context) {
         private const val MODEL_FILE = "mnist.tflite"
         private const val FLOAT_TYPE_SIZE = 4
         private const val PIXEL_SIZE = 1
-        private const val OUTPUT_CLASSES_COUNT = 10
+        private const val OUTPUT_CLASSES_COUNT = 10 // to 10
     }
 }
 

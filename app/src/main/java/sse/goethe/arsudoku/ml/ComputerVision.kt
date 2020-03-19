@@ -6,6 +6,7 @@ package sse.goethe.arsudoku.ml
 
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.core.graphics.createBitmap
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.Utils
 import org.opencv.core.*
@@ -59,6 +60,8 @@ class ComputerVision {
     var CroppedSudoku: Mat? = null
     var TransformationMat: Mat? = null
     var SudokuBoxes: Array<Mat>? = null
+
+    var SudokuBoxesBitmap: Array<Bitmap>? = null
 
     /* init is called once if class is instantiated */
     init {
@@ -126,8 +129,8 @@ class ComputerVision {
         var biggest: MatOfPoint = MatOfPoint()
         var max_area = 0.0
 
-        for (contour in contours){
-            if (Imgproc.contourArea(contour) > max_area){
+        for (contour in contours) {
+            if (Imgproc.contourArea(contour) > max_area) {
                 biggest = contour
                 max_area = Imgproc.contourArea(contour)
             }
@@ -198,6 +201,8 @@ class ComputerVision {
         TransformationMat = null
         SudokuBoxes = null
 
+        SudokuBoxesBitmap = null
+
         // Preprocessing:
         val img = preprocessing(frame)
 
@@ -216,11 +221,22 @@ class ComputerVision {
         croppedImage = cropImage(frame.gray(), corners)
         val boxes = cutSudoku(croppedImage)
 
+        //
+        // convert Mat images to Bitmaps
+        //
+        val boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
+            createBitmap( boxes[0].width(), boxes[0].height() )
+        }
+        for (i in 0..80) {
+            boxesBitmap[i] = convertMatToBitmap(boxes[i])
+        }
+
         // In the end, we set all the calculated data as class properties
         SudokuCorners = corners
         CroppedSudoku = croppedImage
         // TransformationMat = ... // setting of this var is handled in cropImage()
         SudokuBoxes = boxes
+        SudokuBoxesBitmap = boxesBitmap
     }
 
     /**
@@ -271,13 +287,25 @@ class ComputerVision {
      */
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
         val squares: Array<Mat> = Array(81) { Mat.zeros(Size(SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), sudoku.type())}
+
+        Log.d("CoVi", "Array size: " + squares.size)
+
         for (row in 0..8){ // each row
             for (column in 0..8){ // each column of the current row
                 // make a rectangle from the left upper and the right lower point
                 val r = Rect(Point(column*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), row*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), Point((column+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), (row+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()))
                 // use rect to cut out roi from sudoku
                 val oneSquare = Mat(sudoku, r)
+
+                Log.d("CoVi", ">>> " + oneSquare.size())
+
                 squares[row*9+column] = oneSquare
+            }
+        }
+        /* just for some tests */
+        for (i in 0..8){
+            for (j in 0..8){
+                Log.d("CoVi", " >>> " + squares[0].get(i,j) )
             }
         }
         return squares

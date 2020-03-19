@@ -9,12 +9,19 @@ import sse.goethe.arsudoku.ml.ComputerVision
 import sse.goethe.arsudoku.ml.DigitClassifier
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Camera
+import android.graphics.Color
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.graphics.get
 import com.google.common.primitives.UnsignedBytes.toInt
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import sse.goethe.arsudoku.MainActivity
+import java.io.File
+import java.io.FileOutputStream
 import java.lang.IllegalStateException
 import kotlin.math.floor
 
@@ -45,7 +52,9 @@ class Recognition(context: Context) {
     var sudokuPredictedDigits: Array<Array<Int>>
     var sudokuHandOrMachinePrintedFields: Array<Array<Int>>
 
+    lateinit var croppedSudokuMats: Array<Mat>
     private lateinit var croppedSudokuBlocks: Array<Bitmap>
+    lateinit var testbitmap: Bitmap
 
     init {
         // x1 top left corner, x2 top right corner, x3 bottom left ...
@@ -87,7 +96,7 @@ class Recognition(context: Context) {
 
         digitClassifier.initializeInterpreter()
         /* test with a bitmap */
-        //var testbitmap: Bitmap = digitClassifier.getBitmapFromAsset(context, "mnist_7.PNG")
+        testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
         // Initialize Interpreter from DigitClassifier
         //var predictedClass: Int = digitClassifier.classify(testbitmap)
         //Log.d(TAG, "The predicted class is: " + predictedClass)
@@ -103,15 +112,30 @@ class Recognition(context: Context) {
      * Output:
      *
      * */
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         // TODO: anstelle von analyzeFrame dann die contourDetection()
         computerVision.analyzeFrame(frame)
+        croppedSudokuMats = computerVision.SudokuBoxes!!
+        croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
+
+        //File(android.os.Environment.DIRECTORY_SCREENSHOTS, "test.png").writeBitmap(croppedSudokuBlocks[0], Bitmap.CompressFormat.JPEG, 85)
+
+        for (i in 0..8) {
+            for (j in 0..8) {
+                Log.d("Recognition", " red " + Color.red(croppedSudokuBlocks[0].getPixel(i,j))   )
+                Log.d("Recognition", " green " + Color.green(croppedSudokuBlocks[0].getPixel(i,j))   )
+                Log.d("Recognition", " blue  " + Color.blue(croppedSudokuBlocks[0].getPixel(i,j))   )
+            }
+        }
+        //Log.d("Recognition:", "test inference: " + digitClassifier.classify( testbitmap ) ) // works for mnist!
+        Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
         //classifyAll()
     }
 
     /**
      * The classify function classifies a machine or handwritten digit or
-     * a empty field into 19 classes.
+     * a empty field into 19 classes. Change to 20
      *
      * Input: cropped Bitmap of a Sudoku cell
      * Output: classified digit
@@ -119,11 +143,9 @@ class Recognition(context: Context) {
      * */
     private fun classifyAll() {
         var count = 1
-        if (croppedSudokuBlocks.size != 81) {
-            throw IllegalStateException(" croppedSudokuBlock has not size 81 yet. ")
-        }
+        if (croppedSudokuBlocks!!.size != 81) { throw IllegalStateException(" croppedSudokuBlock has not size 81 yet. ") }
 
-        for (sudokuBlock in croppedSudokuBlocks) {
+        for (sudokuBlock in this!!.croppedSudokuBlocks!!) {
             var recogDigit = digitClassifier.classify(sudokuBlock)
             var blockCoord = calculateSudokuDigitCells(count)
             addToResultMatrix(blockCoord, recogDigit)
@@ -169,6 +191,13 @@ class Recognition(context: Context) {
         if (index%SIZE == 0) { row = index/SIZE - 1 }
         else { row = floor((index/SIZE).toDouble()).toInt() }
         return arrayOf(row, column)
+    }
+
+    private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
+        outputStream().use { out ->
+            bitmap.compress(format, quality, out)
+            out.flush()
+        }
     }
 
     fun close() {

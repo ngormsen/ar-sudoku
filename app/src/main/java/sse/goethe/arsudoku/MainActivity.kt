@@ -305,27 +305,14 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
-        this.frameCounter += 1
+        Log.d("FRAME:", "onCameraFrame() Method")
         // This method is invoked when delivery of the frame needs to be done.
         // The returned values - is a modified frame which needs to be displayed on the screen
+        this.frameCounter += 1
+
         if(inputFrame == null){
             Log.e(TAG, "Input frame is null!!")
         }
-
-        // init matrices and apply adaptiveThreshold
-        // create List for contours and use findContours function
-        // for each contour use contourArea()
-            // approximate with polygons
-            // determine max area
-
-        // find the outer box
-        // draw lines with Core.line(...)
-        // crop img
-
-        // return displayMat
-
-        Log.d("FRAME:", "onCameraFrame() Method")
-
 
         var outputFrame: Mat
         if (inputFrame != null) {
