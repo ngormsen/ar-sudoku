@@ -114,7 +114,6 @@ class Recognition(context: Context) {
      * */
     @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
-        // TODO: anstelle von analyzeFrame dann die contourDetection()
         computerVision.analyzeFrame(frame)
         croppedSudokuMats = computerVision.SudokuBoxes!!
         croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
