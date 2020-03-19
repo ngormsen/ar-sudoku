@@ -11,7 +11,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Camera
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.get
@@ -20,8 +22,7 @@ import org.opencv.android.CameraBridgeViewBase
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import sse.goethe.arsudoku.MainActivity
-import java.io.File
-import java.io.FileOutputStream
+import java.io.*
 import java.lang.IllegalStateException
 import kotlin.math.floor
 
@@ -31,7 +32,7 @@ import kotlin.math.floor
  * their dependence to the stream of the camera.
  */
 class Recognition(context: Context) {
-
+    var context = context
     private var digitClassifier = DigitClassifier(context)
     var computerVision = ComputerVision()
     var sudokuIsExistent: Boolean = false // For Kelvin
@@ -95,7 +96,8 @@ class Recognition(context: Context) {
         *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
         digitClassifier.initializeInterpreter()
-        /* test with a bitmap */
+
+        /* test with a bitmap from asset folder */
         testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
         // Initialize Interpreter from DigitClassifier
         //var predictedClass: Int = digitClassifier.classify(testbitmap)
@@ -118,17 +120,12 @@ class Recognition(context: Context) {
         croppedSudokuMats = computerVision.SudokuBoxes!!
         croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
 
-        //File(android.os.Environment.DIRECTORY_SCREENSHOTS, "test.png").writeBitmap(croppedSudokuBlocks[0], Bitmap.CompressFormat.JPEG, 85)
-
-        for (i in 0..8) {
-            for (j in 0..8) {
-                Log.d("Recognition", " red " + Color.red(croppedSudokuBlocks[0].getPixel(i,j))   )
-                Log.d("Recognition", " green " + Color.green(croppedSudokuBlocks[0].getPixel(i,j))   )
-                Log.d("Recognition", " blue  " + Color.blue(croppedSudokuBlocks[0].getPixel(i,j))   )
-            }
+        for (i in 0..80) {
+            Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
         }
+
         //Log.d("Recognition:", "test inference: " + digitClassifier.classify( testbitmap ) ) // works for mnist!
-        Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
+        //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
         //classifyAll()
     }
 
@@ -197,6 +194,28 @@ class Recognition(context: Context) {
             bitmap.compress(format, quality, out)
             out.flush()
         }
+    }
+
+    private fun saveBitmapPng(context: Context, bitmap: Bitmap, name: String): Uri{
+        Log.d(TAG, "saveBitmapPng()")
+
+        var filename = "output_" + name + ".png"
+        //var sudokuDirectory = File("/DCIM/sudoku/")
+        var sudokuDirectory = File(Environment.getDataDirectory().toString() + "/DCIM/" + "/sudoku/")
+        //var sudokuDirectory = File(context.filesDir, "sudokuFolder")
+        sudokuDirectory.mkdirs()
+        val fOut = File(sudokuDirectory, filename)
+        try {
+            var stream: ByteArrayOutputStream = ByteArrayOutputStream()
+            var outputStream: FileOutputStream = FileOutputStream(fOut, true)
+            // Compress bitmap  or Bitmap.CompressFormat.PNG
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+            outputStream.write(stream.toByteArray())
+            outputStream.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return Uri.parse(fOut.absolutePath)
     }
 
     fun close() {
