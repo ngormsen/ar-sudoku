@@ -120,7 +120,7 @@ class Recognition(context: Context) {
     @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
-        croppedSudokuMats = computerVision.SudokuBoxes!!
+        //croppedSudokuMats = computerVision.SudokuBoxes!!
 
         /* keep this one! */
         croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
@@ -174,7 +174,7 @@ class Recognition(context: Context) {
      *  Output:
      *
      * */
-    private fun digitRecognitionIsValid(): Boolean{
+    private fun digitRecognitionIsValid(): Boolean {
         // This function has to validate the classification.
         // Take another x frames and
         // run the inference again
