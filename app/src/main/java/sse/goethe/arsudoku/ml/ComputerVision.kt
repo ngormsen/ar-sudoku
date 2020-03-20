@@ -223,8 +223,11 @@ class ComputerVision {
             corners = sortPointsArray(corners)
         }
 
+        // cropping
         val croppedImage: Mat
-        croppedImage = cropImage(frame.gray(), corners)
+        croppedImage = cropImage(img, corners)
+
+        // cutting
         val boxes = cutSudoku(croppedImage)
 
         //

@@ -123,7 +123,7 @@ class Recognition(context: Context) {
         //croppedSudokuMats = computerVision.SudokuBoxes!!
 
         /* keep this one! */
-        croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
+        //croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
 
         for (i in 0..80) {
             /* test of threadsafe classifying  */
@@ -138,7 +138,7 @@ class Recognition(context: Context) {
             */
 
             /* End test of threadsafe classyfying */
-            Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
+            //Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
         }
 
         //Log.d("Recognition:", "test inference: " + digitClassifier.classify( testbitmap ) ) // works for mnist!
