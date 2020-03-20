@@ -230,7 +230,7 @@ class ComputerVision {
         //
         // convert Mat images to Bitmaps
         //
-        val boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
+        var boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
             createBitmap( boxes[0].width(), boxes[0].height() )
         }
         for (i in 0..80) {
@@ -294,24 +294,13 @@ class ComputerVision {
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
         val squares: Array<Mat> = Array(81) { Mat.zeros(Size(SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), sudoku.type())}
 
-        Log.d("CoVi", "Array size: " + squares.size)
-
         for (row in 0..8){ // each row
             for (column in 0..8){ // each column of the current row
                 // make a rectangle from the left upper and the right lower point
                 val r = Rect(Point(column*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), row*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), Point((column+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), (row+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()))
                 // use rect to cut out roi from sudoku
                 val oneSquare = Mat(sudoku, r)
-
-                Log.d("CoVi", ">>> " + oneSquare.size())
-
                 squares[row*9+column] = oneSquare
-            }
-        }
-        /* just for some tests */
-        for (i in 0..8){
-            for (j in 0..8){
-                Log.d("CoVi", " >>> " + squares[0].get(i,j) )
             }
         }
         return squares

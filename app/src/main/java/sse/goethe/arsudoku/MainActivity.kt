@@ -342,6 +342,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         //return inputFrame!!.rgba()
         //return inputFrame!!.gray()
     }
+
     var boxCounter = 0
 
     fun testBoxDisplay(boxes: Array<Mat>?, frame: Mat): Mat{
@@ -356,5 +357,4 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             return dst
         }
     }
-
 }

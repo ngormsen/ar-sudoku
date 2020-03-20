@@ -16,11 +16,15 @@ import android.os.Build
 import android.os.Environment
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.get
 import com.google.common.primitives.UnsignedBytes.toInt
 import org.opencv.android.CameraBridgeViewBase
+import org.opencv.android.Utils
+import org.opencv.core.Core.bitwise_not
 import org.opencv.core.Mat
 import org.opencv.core.Point
+import org.opencv.imgproc.Imgproc
 import sse.goethe.arsudoku.MainActivity
 import java.io.*
 import java.lang.IllegalStateException
@@ -54,7 +58,9 @@ class Recognition(context: Context) {
     var sudokuHandOrMachinePrintedFields: Array<Array<Int>>
 
     lateinit var croppedSudokuMats: Array<Mat>
+    private lateinit var croppedSudokuBlocksBinary: Array<Bitmap>
     private lateinit var croppedSudokuBlocks: Array<Bitmap>
+
     lateinit var testbitmap: Bitmap
 
     init {
@@ -94,12 +100,9 @@ class Recognition(context: Context) {
         /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         * Set up the digit classifier
         *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
         digitClassifier.initializeInterpreter()
-
-        /* test with a bitmap from asset folder */
         testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
-        // Initialize Interpreter from DigitClassifier
+
         //var predictedClass: Int = digitClassifier.classify(testbitmap)
         //Log.d(TAG, "The predicted class is: " + predictedClass)
     }
@@ -118,9 +121,23 @@ class Recognition(context: Context) {
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
         croppedSudokuMats = computerVision.SudokuBoxes!!
+
+        /* keep this one! */
         croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
 
         for (i in 0..80) {
+            /* test of threadsafe classifying  */
+
+            /*
+            if ( (croppedSudokuBlocks[i] != null ) && digitClassifier.isInitialized ) {
+                digitClassifier
+                    .classifyAsynchronous( croppedSudokuBlocks[i] )
+                    .addOnSuccessListener { Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i])) }
+            }
+            Log.d("Recognition", "Error classifying")
+            */
+
+            /* End test of threadsafe classyfying */
             Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
         }
 
@@ -150,7 +167,19 @@ class Recognition(context: Context) {
         }
     }
 
-    private fun isValidSudoku(): Boolean{
+    /** Use this function to validate over multiple frames
+     *  if the inference is correct
+     *
+     *  Input:
+     *  Output:
+     *
+     * */
+    private fun digitRecognitionIsValid(): Boolean{
+        // This function has to validate the classification.
+        // Take another x frames and
+        // run the inference again
+        // Only if all x frames inferred the same classification
+        // provide the data to AR and solver
         return false
     }
 
@@ -216,6 +245,40 @@ class Recognition(context: Context) {
             e.printStackTrace()
         }
         return Uri.parse(fOut.absolutePath)
+    }
+
+
+    private fun applyThresholdToBoxes(sudokuBoxesMat: Array<Mat>): Array<Mat>{
+        // threshold like MNIST Dataset
+        var destination = sudokuBoxesMat
+        var destinationRvrs = sudokuBoxesMat
+        for (i in sudokuBoxesMat.indices) {
+            Imgproc.adaptiveThreshold(sudokuBoxesMat[i], destination[i],
+                256.0,
+                Imgproc.ADAPTIVE_THRESH_MEAN_C,
+                Imgproc.THRESH_BINARY,
+                10,
+                40.0)
+            bitwise_not(destination[i], destinationRvrs[i])
+        }
+        return destination
+    }
+
+    private fun convertMatBmp(mats: Array<Mat>): Array<Bitmap> {
+        var boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
+            createBitmap(mats[0].width(), mats[0].height())
+        }
+
+        for (i in mats.indices){
+            boxesBitmap[i] = cnv(mats[i])
+        }
+        return boxesBitmap
+    }
+
+    private fun cnv(frameMat: Mat): Bitmap {
+        val bmp: Bitmap = Bitmap.createBitmap(frameMat.cols(), frameMat.rows(), Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(frameMat, bmp)
+        return bmp
     }
 
     fun close() {
