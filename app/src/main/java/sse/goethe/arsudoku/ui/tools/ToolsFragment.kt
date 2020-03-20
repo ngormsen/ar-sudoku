@@ -14,12 +14,15 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import kotlinx.coroutines.processNextEventInCurrentThread
 import sse.goethe.arsudoku.R
+import sse.goethe.arsudoku.Sudoku
+import java.lang.Integer.parseInt
 
 class ToolsFragment : Fragment() {
 
     private lateinit var toolsViewModel: ToolsViewModel
-    var sudoku = arrayOf(
+    var sudoku = Sudoku(arrayOf(
         intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
         intArrayOf(5, 2, 0, 0, 0, 0, 0, 0, 0),
         intArrayOf(0, 8, 7, 0, 0, 0, 0, 3, 1),
@@ -29,16 +32,90 @@ class ToolsFragment : Fragment() {
         intArrayOf(1, 3, 0, 0, 0, 0, 2, 5, 0),
         intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
         intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
-    )
+    )).getCurrentState()
+
+
+
+    fun printCurrentState(){
+        var n = 9
+        for (i in 0 until n) {
+            for (j in 0 until n) {
+                print(sudoku[i][j].toString())
+                if (Math.floorMod(j, 3) == 2 && j < n - 1)
+                    print(" ")
+            }
+            println()
+            if (Math.floorMod(i, 3) == 2 && i < n - 1) println()
+        }
+    }
 
     fun setSudokuNumber(row: Int, column: Int, number: Int) {
-        sudoku[row - 1][column - 1] = number
+        if(checkSudokuNumber(row-1, column-1, number)){
+            sudoku[row-1].set(column - 1, number)
+        }
+        else{
+            var toast = Toast.makeText(this.context, "Not a valid move!", Toast.LENGTH_SHORT)
+            toast.setGravity(Gravity.CENTER, 0, 200)
+            toast.show()
+
+            println("Not a valid move!")
+        }
+
     }
     fun removeSudokuNumber(row: Int, column: Int){
-        sudoku[row - 1][column - 1] = 0
+        sudoku[row - 1].set(column - 1, 0)
+        printCurrentState()
     }
-    fun checkSudokuNumber(row: Int, column: Int, number: Int){
+
+    fun checkSudokuNumber(i: Int, j: Int, x: Int): Boolean {
+        var n = 9
+        // Is 'x' used in row.
+        for (jj in 0 until n) {
+            print(sudoku[i][jj])
+            if (sudoku[i][jj] == x) {
+                return false
+            }
+        }
+        // Is 'x' used in column.
+        for (ii in 0 until n) {
+            if (sudoku[ii][j] == x) {
+                return false
+            }
+        }
+        // Is 'x' used in sudoku 3x3 box.
+        val boxRow = i - i % 3
+        val boxColumn = j - j % 3
+        for (ii in 0..2) {
+            for (jj in 0..2) {
+                if (sudoku[boxRow + ii][boxColumn + jj] == x) {
+                    return false
+                }
+            }
+        }
+        // Everything looks good.
+        return true
+    }
+
+    fun solveAll(){
         return
+    }
+
+    @SuppressLint("ResourceType")
+    fun updateSudokuVisualisation(view: View){
+        for (row in 1..9) { // We need to start with 1 as we set the id to row and col (row would otherwise be zero)
+            for (column in 1..9) {
+                var textView: TextView = view.findViewById<TextView>(parseInt("${row}${column}"))
+//                println("text displayed: ${textView.text}")
+//                println("value from sudoku: ${sudoku[row-1][column-1]}")
+                if (sudoku[row-1][column-1] != 0){
+                    textView.text = "${sudoku[row-1][column-1]}"
+                }
+                else{
+                    textView.text = ""
+                }
+            }
+        }
+
     }
 
     @SuppressLint("ResourceType")
@@ -65,6 +142,7 @@ class ToolsFragment : Fragment() {
 
 //        // Add a TextView in the first column.
 
+        // Not necessary anymore TODO: delete
         // Define Background
         val sd = ShapeDrawable()
         // Specify the shape of ShapeDrawable
@@ -76,7 +154,7 @@ class ToolsFragment : Fragment() {
         // Specify the style is a Stroke
         sd.paint.style = Paint.Style.STROKE
         // Finally, add the drawable background to TextView
-
+        // Create Sudoku Grid
         for (row in 1..9){ // We need to start with 1 as we set the id to row and col (row would otherwise be zero)
             val tableRow = TableRow(context)
             for (column in 1..9){
@@ -104,17 +182,21 @@ class ToolsFragment : Fragment() {
 
                     selectedField = displayNumber
                     if (selectedField != lastFieldSelected){
-                        textView.setBackgroundColor(Color.LTGRAY)
+                        textView.setBackgroundColor(Color.parseColor("#ACCBE1"))
                         if (lastFieldSelected == "Default"){
                             lastFieldSelected = 12.toString()
                         }
                         val lastTextField = root.findViewById<TextView>(lastFieldSelected.toInt())
-                        lastTextField.setBackground(sd)
+//                        lastTextField.setBackground(sd)
+                        lastTextField.setBackgroundResource(R.drawable.input_number_bg)
+
                         lastFieldSelected = displayNumber
                     }
                 })
 
-                textView.setBackground(sd)
+//                textView.setBackground(sd)
+                textView.setBackgroundResource(R.drawable.input_number_bg)
+
 
                 tableRow.addView(textView)
             }
@@ -139,16 +221,14 @@ class ToolsFragment : Fragment() {
         textViewHint.textSize = 20F
         textViewHint.gravity = Gravity.CENTER_VERTICAL
         textViewHint.gravity = Gravity.CENTER_HORIZONTAL
-
         //theChild in this case is the child of TableRow
         textViewHint.setOnClickListener(View.OnClickListener {
         })
         textViewHint.setBackgroundResource(R.drawable.input_number_bg)
-
         tableRowActions.addView(textViewHint)
         val paramsHint = textViewHint.layoutParams as TableRow.LayoutParams
         paramsHint.span = 2 //amount of columns you will span
-            textViewHint.setLayoutParams(paramsHint)
+        textViewHint.setLayoutParams(paramsHint)
 
 
         // Create undo button
@@ -159,7 +239,6 @@ class ToolsFragment : Fragment() {
         textViewUndo.textSize = 20F
         textViewUndo.gravity = Gravity.CENTER_VERTICAL
         textViewUndo.gravity = Gravity.CENTER_HORIZONTAL
-
         //theChild in this case is the child of TableRow
         textViewUndo.setOnClickListener(View.OnClickListener {
         })
@@ -177,7 +256,6 @@ class ToolsFragment : Fragment() {
         textViewRedo.textSize = 20F
         textViewRedo.gravity = Gravity.CENTER_VERTICAL
         textViewRedo.gravity = Gravity.CENTER_HORIZONTAL
-
         //theChild in this case is the child of TableRow
         textViewRedo.setOnClickListener(View.OnClickListener {
         })
@@ -195,17 +273,23 @@ class ToolsFragment : Fragment() {
         textViewDelete.textSize = 20F
         textViewDelete.gravity = Gravity.CENTER_VERTICAL
         textViewDelete.gravity = Gravity.CENTER_HORIZONTAL
-
-
-
         //theChild in this case is the child of TableRow
         textViewDelete.setOnClickListener(View.OnClickListener {
+            if(selectedField != ""){
+                val currentTextField = root.findViewById<TextView>(selectedField.toInt())
+                val textFieldRow = currentTextField.id.toString()[0]
+                val textFieldColumn = currentTextField.id.toString()[1]
+                removeSudokuNumber(Integer.parseInt(textFieldRow.toString()), Integer.parseInt(textFieldColumn.toString()))
+            }
+            updateSudokuVisualisation(root)
         })
         textViewDelete.setBackgroundResource(R.drawable.input_number_bg)
         tableRowActions.addView(textViewDelete)
         val paramsDelete = textViewDelete.layoutParams as TableRow.LayoutParams
         paramsDelete.span = 2 //amount of columns you will span
         textViewDelete.setLayoutParams(paramsDelete)
+
+
 
 
         tableRowActions.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -237,7 +321,7 @@ class ToolsFragment : Fragment() {
             textView.setOnClickListener(View.OnClickListener {
                 if(selectedField != ""){
                     val currentTextField = root.findViewById<TextView>(selectedField.toInt())
-                    currentTextField.setText(textView.text)
+//                    currentTextField.setText(textView.text)
                     val textFieldRow = currentTextField.id.toString()[0]
                     val textFieldColumn = currentTextField.id.toString()[1]
                     println(textFieldRow)
@@ -246,6 +330,7 @@ class ToolsFragment : Fragment() {
                         textView.text as String
                     ))
                 }
+                updateSudokuVisualisation(root)
             })
 
             // Finally, add the drawable background to TextView

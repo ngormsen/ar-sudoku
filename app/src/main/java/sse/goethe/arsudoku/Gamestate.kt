@@ -12,7 +12,6 @@ class Gamestate (private var currentState: Sudoku){
         // Solve Sudoku and set solvedState
         currentState.solve()
         solvedState = Sudoku(currentState.getCurrentState())
-
     }
 
     //TODO If you input a new number you need to delete the future history from this point on
