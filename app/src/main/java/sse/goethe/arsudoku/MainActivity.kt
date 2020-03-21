@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         /* Recognition class has to be initialized here bc context is ready after "onCreate".. */
         recognition = Recognition(this)
+        visualisation = Visualisation(recognition)
 
         val solver = Sudoku( arrayOf(
             intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
@@ -295,18 +296,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         // This method is invoked when delivery of the frame needs to be done.
         // The returned values - is a modified frame which needs to be displayed on the screen
         this.frameCounter += 1
-        if (inputFrame != null) {
+        return if (inputFrame != null) {
             var outputFrame: Mat
             if (this.frameCounter > 0) {
                 outputFrame = visualisation.runVisualisation(inputFrame.rgba())
                 this.frameCounter = 0
-                return outputFrame
-            }
-            else return inputFrame.rgba()
-        }
-        else {
+                outputFrame
+            } else inputFrame.rgba()
+        } else {
             Log.e(TAG, "Input frame is null!!")
-            return Mat()
+            Mat()
         }
     }
 }

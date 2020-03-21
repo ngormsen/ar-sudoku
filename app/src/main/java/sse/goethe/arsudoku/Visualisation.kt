@@ -1,27 +1,24 @@
 package sse.goethe.arsudoku
 
-import android.content.Context
 import org.opencv.core.Core
 import org.opencv.core.Core.inRange
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
-import sse.goethe.arsudoku.ml.ComputerVision
 import sse.goethe.arsudoku.ml.Recognition
 
 /**
  * author: Kelvin Tsang
  */
-class Visualisation() {
+class Visualisation(recognition: Recognition) {
 
     // colums and row size
     private val TOTAL_ROWS = 9
     private val TOTAL_COLS = 9
 
     // connection to Recognition and ComputerVision
-    private lateinit var recognition: Recognition
-    private lateinit var cv: ComputerVision
+    private var recognition: Recognition = recognition
 
     private var inputMat : Mat? = null
     private var sudokuMat : Mat? = null
@@ -38,7 +35,6 @@ class Visualisation() {
      */
     fun runVisualisation(inputFrame: Mat) : Mat {
 
-        /*
         return if (getInput(inputFrame)) {
             renderDigits()
             perspectiveTransform()
@@ -48,8 +44,6 @@ class Visualisation() {
             outputMat
         }
         else inputFrame
-         */
-        return inputFrame
     }
 
     /**
@@ -60,13 +54,13 @@ class Visualisation() {
      *       - get the sudoku digits
      */
     private fun getInput(inputFrame: Mat) : Boolean {
-        return if (cv.CroppedSudoku != null && cv.TransformationMat != null && recognition.sudokuPredictedDigits != null) {
+        return if (recognition.computerVision.CroppedSudoku != null && recognition.computerVision.TransformationMat != null && recognition.sudokuPredictedDigits != null) {
             inputMat = inputFrame
-            sudokuMat = cv.CroppedSudoku
-            transformMat = cv.TransformationMat!!.inv()
+            sudokuMat = recognition.computerVision.CroppedSudoku
+            transformMat = recognition.computerVision.TransformationMat!!.inv()
             digits = recognition.sudokuPredictedDigits
 
-            true
+            return true
         } else false
     }
 
@@ -129,7 +123,7 @@ class Visualisation() {
      *  Function createMask
      *      - creates mask
      *
-     * https://stackoverflow.com/questions/45131216/opencv-overlay-two-mat-drawings-not-images-with-transparency
+     *  https://stackoverflow.com/questions/45131216/opencv-overlay-two-mat-drawings-not-images-with-transparency
      */
     private fun createMask () {
 
