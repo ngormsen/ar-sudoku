@@ -1,41 +1,92 @@
 package sse.goethe.arsudoku
 
+import android.content.Context
+import org.opencv.core.Core
 import org.opencv.core.Core.inRange
 import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
+import sse.goethe.arsudoku.ml.ComputerVision
+import sse.goethe.arsudoku.ml.Recognition
 
-class Visualisation {
+/**
+ * author: Kelvin Tsang
+ */
+class Visualisation() {
 
     // colums and row size
     private val TOTAL_ROWS = 9
     private val TOTAL_COLS = 9
 
-    fun visualisation(inputMat: Mat, sudokuMat: Mat, transformMat :  Mat, digits : Array<Array<Int>>) : Mat {
+    // connection to Recognition and ComputerVision
+    private lateinit var recognition: Recognition
+    private lateinit var cv: ComputerVision
 
-        val outputSize = inputMat.size()                                                      // the output has the same size like the input
-        var edit_sudoku = renderDigits(sudokuMat, digits)                                      // edit_sudoku is a Mat with the redered digits
-        edit_sudoku = rotateMat(edit_sudoku)                                                        // rotate the sudoku bc of rotated CameraView
-        edit_sudoku = perspectiveTransform(inputMat, edit_sudoku, transformMat)                     // perspective transformation
-        val mask = createMask(edit_sudoku)                                                     // create mask
-        edit_sudoku = mergeMat(inputMat, edit_sudoku, mask)
-        return edit_sudoku
+    private var inputMat : Mat? = null
+    private var sudokuMat : Mat? = null
+    private var transformMat : Mat? = null
+    private var digits : Array<Array<Int>>? = null
+
+    private lateinit var mask : Mat
+    private lateinit var outputMat : Mat
+
+    /**
+     *   Function startVisualisation (input is the current video stream as Mat)
+     *       - starts the visualisation if the sudoku is found and the input isn't null
+     *       -> return outputMat as Mat
+     */
+    fun runVisualisation(inputFrame: Mat) : Mat {
+
+        /*
+        return if (getInput(inputFrame)) {
+            renderDigits()
+            perspectiveTransform()
+            createMask()
+            mergeMat()
+
+            outputMat
+        }
+        else inputFrame
+         */
+        return inputFrame
     }
 
-    // Write/render solved digits on the cropped sudoku
-    private fun renderDigits (sudokuMat : Mat, digits : Array<Array<Int>>) : Mat {
+    /**
+     *   Function getInput
+     *       - get the current video stream as Mat
+     *       - get the cropped and square sudoku as Mat
+     *       - get the invers transformation matrix
+     *       - get the sudoku digits
+     */
+    private fun getInput(inputFrame: Mat) : Boolean {
+        return if (cv.CroppedSudoku != null && cv.TransformationMat != null && recognition.sudokuPredictedDigits != null) {
+            inputMat = inputFrame
+            sudokuMat = cv.CroppedSudoku
+            transformMat = cv.TransformationMat!!.inv()
+            digits = recognition.sudokuPredictedDigits
 
-        val sudoku_matSize = sudokuMat.size()
-        val sudoku_matType = sudokuMat.type()
+            true
+        } else false
+    }
+
+    /**
+     *   Function renderDigits
+     *       - creates a Mat with the size of the cropped sudoku on a black background
+     *       - renders the solved digits on their location
+     */
+    private fun renderDigits () {
+
+        val sudoku_matSize = sudokuMat!!.size()
+        val sudoku_matType = sudokuMat!!.type()
         var canvas = Mat.zeros(sudoku_matSize, sudoku_matType)
 
-        val cellWidth = sudokuMat.width() / 9
+        val cellWidth = sudokuMat!!.width() / 9
 
         for (row in 0 until TOTAL_ROWS) {
             for (col in 0 until TOTAL_COLS) {
-                val digit = digits[row][col].toString()
-                if (digit != null) {
+                val digit = digits!![row][col].toString()
+                if (digit != null && digit != "0") {
                     val x = row * cellWidth.toDouble()
                     val y = col * cellWidth.toDouble()
                     Imgproc.putText(canvas,
@@ -47,47 +98,42 @@ class Visualisation {
                 }
             }
         }
-        return canvas
+        sudokuMat = canvas
     }
 
-    // TODO
-    // merge the edit sudoku with the video stream
-    private fun mergeMat (inputMat : Mat, sudokuMat: Mat, mask : Mat) : Mat {
-
-        var outputMat = inputMat.clone()
-
-        sudokuMat.copyTo(outputMat, mask)
-        return outputMat
-    }
-
-    // TODO
-    // Rotate the matrix
-    private fun rotateMat(canvas: Mat) : Mat {
-
-        return canvas
-    }
-
-    // TODO
-    // Perspective transformation
-    private fun perspectiveTransform (inputMat: Mat, sudokuMat: Mat, transformMat :  Mat) : Mat {
-
-        val matSize = inputMat.size()
-        val matType = inputMat.type()
-        var outputMat = Mat.zeros(matSize, matType)
-
-        Imgproc.warpPerspective(inputMat, outputMat, transformMat, matSize)
-        return outputMat
-    }
-
-
-    /*
-            https://stackoverflow.com/questions/45131216/opencv-overlay-two-mat-drawings-not-images-with-transparency
+    /**
+     *   Function mergeMat
+     *       - merged the input video stream with the edit sudoku with help of a mask
      */
-    private fun createMask (sudokuMat: Mat) : Mat {
+    private fun mergeMat () {
 
-        var mask = sudokuMat.clone()
+        outputMat.copyTo(inputMat, mask)
+        outputMat = inputMat!!
+    }
+
+    /**
+     *  Function perspectiveTransform
+     *      - does a perspective transformation of the sudoku with help a the invers of the transform matrix
+     */
+    private fun perspectiveTransform () {
+
+        val matSize = inputMat!!.size()
+        val matType = inputMat!!.type()
+        outputMat = Mat.zeros(matSize, matType)
+
+        Imgproc.warpPerspective(sudokuMat, outputMat, transformMat, matSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
+    }
+
+
+    /**
+     *  Function createMask
+     *      - creates mask
+     *
+     * https://stackoverflow.com/questions/45131216/opencv-overlay-two-mat-drawings-not-images-with-transparency
+     */
+    private fun createMask () {
+
+        mask = sudokuMat!!
         inRange(sudokuMat,Scalar(0.0,0.0,0.0,0.0), Scalar(0.0,0.0,0.0,0.0), mask)
-
-        return mask
     }
 }

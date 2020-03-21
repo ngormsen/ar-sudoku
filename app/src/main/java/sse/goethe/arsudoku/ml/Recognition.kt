@@ -39,9 +39,9 @@ class Recognition(context: Context) {
     var context = context
     private var digitClassifier = DigitClassifier(context)
     var computerVision = ComputerVision()
-    var sudokuIsExistent: Boolean = false // For Kelvin
+    var sudokuIsExistent: Boolean = false // For Kelvin <- wird nicht mehr benötigt
     // The whole squared Sudoku
-    lateinit var sudokuSquare: Mat // For Kelvin
+    lateinit var sudokuSquare: Mat // For Kelvin <- wird nicht mehr benötigt
 
     var sudokuEdgeCoordinates: Array<Array<Int>> // Sudokus 4 edges
         get() { return sudokuEdgeCoordinates }
