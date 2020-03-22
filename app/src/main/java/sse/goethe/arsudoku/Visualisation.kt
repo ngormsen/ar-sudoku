@@ -1,10 +1,7 @@
 package sse.goethe.arsudoku
 
-import org.opencv.core.Core
+import org.opencv.core.*
 import org.opencv.core.Core.inRange
-import org.opencv.core.Mat
-import org.opencv.core.Point
-import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import sse.goethe.arsudoku.ml.Recognition
 
@@ -25,6 +22,9 @@ class Visualisation(recognition: Recognition) {
     private var transformMat : Mat? = null
     private var digits : Array<Array<Int>>? = null
 
+    private var inputSize : Size? = null
+    private var inputType : Int? = null
+
     private lateinit var mask : Mat
     private lateinit var outputMat : Mat
 
@@ -36,11 +36,11 @@ class Visualisation(recognition: Recognition) {
     fun runVisualisation(inputFrame: Mat) : Mat {
 
         return if (getInput(inputFrame)) {
-            renderDigits()
-            perspectiveTransform()
-            createMask()
-            mergeMat()
-
+            //renderDigits()
+            //perspectiveTransform()
+            //createMask()
+            //mergeMat()
+            testPlot(inputMat!!)
             outputMat
         }
         else inputFrame
@@ -56,6 +56,8 @@ class Visualisation(recognition: Recognition) {
     private fun getInput(inputFrame: Mat) : Boolean {
         return if (recognition.computerVision.CroppedSudoku != null && recognition.computerVision.TransformationMat != null && recognition.sudokuPredictedDigits != null) {
             inputMat = inputFrame
+            inputSize = inputFrame.size()
+            inputType = inputFrame.type()
             sudokuMat = recognition.computerVision.CroppedSudoku
             transformMat = recognition.computerVision.TransformationMat!!.inv()
             digits = recognition.sudokuPredictedDigits
@@ -111,11 +113,9 @@ class Visualisation(recognition: Recognition) {
      */
     private fun perspectiveTransform () {
 
-        val matSize = inputMat!!.size()
-        val matType = inputMat!!.type()
-        outputMat = Mat.zeros(matSize, matType)
+        outputMat = Mat.zeros(inputSize, inputType!!)
 
-        Imgproc.warpPerspective(sudokuMat, outputMat, transformMat, matSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
+        Imgproc.warpPerspective(sudokuMat, outputMat, transformMat, inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
     }
 
 
@@ -129,5 +129,16 @@ class Visualisation(recognition: Recognition) {
 
         mask = sudokuMat!!
         inRange(sudokuMat,Scalar(0.0,0.0,0.0,0.0), Scalar(0.0,0.0,0.0,0.0), mask)
+    }
+
+    /**
+     *  FOR TESTING
+     *
+     *  Function testPlot (input: Mat to plot)
+     *      -  resize and plot the input
+     */
+    private fun testPlot (test : Mat) {
+        outputMat = Mat.zeros(inputSize, inputType!!)
+        Imgproc.resize(test,outputMat,inputSize)
     }
 }

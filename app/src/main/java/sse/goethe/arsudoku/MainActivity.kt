@@ -93,7 +93,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         setGlobalUser(User("name", "email"))
 
-
     }
 
     // THIS IS A FUNCTION TO TEST OPENCV AND BELONGS TO THE OPENVISION PART
@@ -299,7 +298,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return if (inputFrame != null) {
             var outputFrame: Mat
             if (this.frameCounter > 0) {
-                outputFrame = visualisation.runVisualisation(inputFrame.rgba())
+                recognition.run(inputFrame)
+                outputFrame = visualisation.runVisualisation(inputFrame.gray())
                 this.frameCounter = 0
                 outputFrame
             } else inputFrame.rgba()
