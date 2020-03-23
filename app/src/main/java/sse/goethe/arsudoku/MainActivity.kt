@@ -30,18 +30,25 @@ import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Mat
+import java.util.*
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private var globalUser: User = User("Hello", "world@gmail.com")
     private lateinit var navView: NavigationView
+    private lateinit var game:Game
 
     val TAG = MainActivity::class.java.simpleName
     var  mOpenCvCameraView : CameraBridgeViewBase? = null
 
     /* Instance of Recognition Class */
     var recognition = Recognition(this)
+
+    fun setGame(sudoku: Sudoku){
+        game = Game(Date(), getGlobalUser().getEmail(), sudoku)
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +70,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         solver.solve()
         solver.printCurrentState()
 
-        println("Fun with Gamestate's:")
+
+
+
 
 
 

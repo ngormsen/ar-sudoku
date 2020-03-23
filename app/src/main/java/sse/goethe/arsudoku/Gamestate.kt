@@ -1,23 +1,17 @@
 package sse.goethe.arsudoku
 
-class Gamestate (private var currentState: Sudoku){
+class Gamestate (sudoku: Sudoku){
 
-    private lateinit var solvedState: Sudoku
-    private lateinit var historyOfStates: MutableList<Sudoku>
+    private var sudoku: Sudoku = sudoku
+    private lateinit var currentState: Array<IntArray>
+    private lateinit var historyOfStates: MutableList<Array<IntArray>>
     private var historyPointer = 0
 
     init {
+        currentState = sudoku.getCurrentState()
+        sudoku.solve()
         // Add inital state to history
         historyOfStates.add(currentState)
-        // Solve Sudoku and set solvedState
-        currentState.solve()
-        solvedState = Sudoku(currentState.getCurrentState())
-    }
-
-    //TODO If you input a new number you need to delete the future history from this point on
-    fun addCurrentState(state: Sudoku){
-        currentState = state
-        historyPointer += 1
     }
 
     fun setCurrentState(state: Sudoku){
@@ -25,29 +19,27 @@ class Gamestate (private var currentState: Sudoku){
         historyPointer += 1
     }
 
-    fun getCurrentState(): Sudoku{
+    fun getCurrentState(): Array<IntArray>{
         return currentState
     }
 
 
 
-    fun getSolvedState(): Sudoku{
-        return solvedState
+    fun getSolvedState(): Array<IntArray>{
+        return sudoku.getCurrentState()
     }
 
 
     fun undo(){
         historyPointer -= 1
-        setCurrentState(historyOfStates[historyPointer])
     }
 
     fun redo(){
         historyPointer += 1
-        setCurrentState(historyOfStates[historyPointer])
     }
 
     fun solveAll(){
-        currentState = solvedState
+        return
     }
 
     fun giveHint(){

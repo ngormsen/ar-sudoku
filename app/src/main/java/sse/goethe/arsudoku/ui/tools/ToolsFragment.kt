@@ -22,6 +22,9 @@ import java.lang.Integer.parseInt
 class ToolsFragment : Fragment() {
 
     private lateinit var toolsViewModel: ToolsViewModel
+    private var stateHistory: MutableList<Array<IntArray>> = arrayListOf()
+    private var historyPointer: Int = 0
+
     var sudoku = Sudoku(arrayOf(
         intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
         intArrayOf(5, 2, 0, 0, 0, 0, 0, 0, 0),
@@ -32,15 +35,28 @@ class ToolsFragment : Fragment() {
         intArrayOf(1, 3, 0, 0, 0, 0, 2, 5, 0),
         intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
         intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
-    )).getCurrentState()
+    ))
+
+    private var solvedSudoku = Sudoku(arrayOf(
+        intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
+        intArrayOf(5, 2, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 8, 7, 0, 0, 0, 0, 3, 1),
+        intArrayOf(0, 0, 3, 0, 1, 0, 0, 8, 0),
+        intArrayOf(9, 0, 0, 8, 6, 3, 0, 0, 5),
+        intArrayOf(0, 5, 0, 0, 9, 0, 6, 0, 0),
+        intArrayOf(1, 3, 0, 0, 0, 0, 2, 5, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
+        intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
+    ))
 
 
+    private lateinit var currentState: Array<IntArray>
 
     fun printCurrentState(){
         var n = 9
         for (i in 0 until n) {
             for (j in 0 until n) {
-                print(sudoku[i][j].toString())
+                print(sudoku.getCurrentState()[i][j].toString())
                 if (Math.floorMod(j, 3) == 2 && j < n - 1)
                     print(" ")
             }
@@ -49,9 +65,36 @@ class ToolsFragment : Fragment() {
         }
     }
 
+    fun redo(view: View){
+
+    }
+
+    fun undo(view: View){
+        historyPointer -= 1
+        currentState = stateHistory.get(historyPointer)
+
+    }
+
+    fun setHint(view: View){
+        try {
+            val hint = solvedSudoku.hint(sudoku.getCurrentState())
+            println(hint)
+            setSudokuNumber(hint.first, hint.second, hint.third )
+            updateSudokuVisualisation(view)
+        }
+        catch (e: IndexOutOfBoundsException){
+            println("No more hints available.")
+        }
+
+    }
+
     fun setSudokuNumber(row: Int, column: Int, number: Int) {
-        if(checkSudokuNumber(row-1, column-1, number)){
-            sudoku[row-1].set(column - 1, number)
+        if(checkSudokuNumber(row, column, number)){
+            printCurrentState()
+            sudoku.getCurrentState()[row].set(column, number)
+            printCurrentState()
+            historyPointer += 1
+            stateHistory.add(sudoku.getCurrentState())
         }
         else{
             var toast = Toast.makeText(this.context, "Not a valid move!", Toast.LENGTH_SHORT)
@@ -63,7 +106,7 @@ class ToolsFragment : Fragment() {
 
     }
     fun removeSudokuNumber(row: Int, column: Int){
-        sudoku[row - 1].set(column - 1, 0)
+        sudoku.getCurrentState()[row - 1].set(column - 1, 0)
         printCurrentState()
     }
 
@@ -71,14 +114,14 @@ class ToolsFragment : Fragment() {
         var n = 9
         // Is 'x' used in row.
         for (jj in 0 until n) {
-            print(sudoku[i][jj])
-            if (sudoku[i][jj] == x) {
+            print(sudoku.getCurrentState()[i][jj])
+            if (sudoku.getCurrentState()[i][jj] == x) {
                 return false
             }
         }
         // Is 'x' used in column.
         for (ii in 0 until n) {
-            if (sudoku[ii][j] == x) {
+            if (sudoku.getCurrentState()[ii][j] == x) {
                 return false
             }
         }
@@ -87,7 +130,7 @@ class ToolsFragment : Fragment() {
         val boxColumn = j - j % 3
         for (ii in 0..2) {
             for (jj in 0..2) {
-                if (sudoku[boxRow + ii][boxColumn + jj] == x) {
+                if (sudoku.getCurrentState()[boxRow + ii][boxColumn + jj] == x) {
                     return false
                 }
             }
@@ -107,8 +150,8 @@ class ToolsFragment : Fragment() {
                 var textView: TextView = view.findViewById<TextView>(parseInt("${row}${column}"))
 //                println("text displayed: ${textView.text}")
 //                println("value from sudoku: ${sudoku[row-1][column-1]}")
-                if (sudoku[row-1][column-1] != 0){
-                    textView.text = "${sudoku[row-1][column-1]}"
+                if (sudoku.getCurrentState()[row-1][column-1] != 0){
+                    textView.text = "${sudoku.getCurrentState()[row-1][column-1]}"
                 }
                 else{
                     textView.text = ""
@@ -125,7 +168,8 @@ class ToolsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Get TableLayout object in layout xml.
-
+        solvedSudoku.solve()
+        currentState = sudoku.getCurrentState()
 
         toolsViewModel =
             ViewModelProviders.of(this).get(ToolsViewModel::class.java)
@@ -160,8 +204,8 @@ class ToolsFragment : Fragment() {
             for (column in 1..9){
                 val textView = TextView(context)
                 val displayNumber = "$row" + "$column"
-                if (sudoku[row-1][column-1] != 0){
-                    textView.text = sudoku[row-1][column-1].toString()
+                if (sudoku.getCurrentState()[row-1][column-1] != 0){
+                    textView.text = sudoku.getCurrentState()[row-1][column-1].toString()
                 }
                 else{
                     textView.text = ""
@@ -223,6 +267,7 @@ class ToolsFragment : Fragment() {
         textViewHint.gravity = Gravity.CENTER_HORIZONTAL
         //theChild in this case is the child of TableRow
         textViewHint.setOnClickListener(View.OnClickListener {
+            setHint(root)
         })
         textViewHint.setBackgroundResource(R.drawable.input_number_bg)
         tableRowActions.addView(textViewHint)
@@ -326,7 +371,7 @@ class ToolsFragment : Fragment() {
                     val textFieldColumn = currentTextField.id.toString()[1]
                     println(textFieldRow)
                     println(textFieldColumn)
-                    setSudokuNumber(Integer.parseInt(textFieldRow.toString()), Integer.parseInt(textFieldColumn.toString()), Integer.parseInt(
+                    setSudokuNumber(Integer.parseInt(textFieldRow.toString())-1, Integer.parseInt(textFieldColumn.toString())-1, Integer.parseInt(
                         textView.text as String
                     ))
                 }
