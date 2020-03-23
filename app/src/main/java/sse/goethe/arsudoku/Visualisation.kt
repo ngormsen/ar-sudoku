@@ -1,13 +1,15 @@
 package sse.goethe.arsudoku
 
 import org.opencv.core.*
-import org.opencv.core.Core.LINE_8
-import org.opencv.core.Core.inRange
+import org.opencv.core.Core.*
 import org.opencv.imgproc.Imgproc
 import sse.goethe.arsudoku.ml.Recognition
 
 /**
- * author: Kelvin Tsang
+ *      author: Kelvin Tsang
+ *
+ *      Class Visualisation
+ *          - Rendering digits in to the sudoku
  */
 class Visualisation(recognition: Recognition) {
 
@@ -15,7 +17,14 @@ class Visualisation(recognition: Recognition) {
     private val TOTAL_ROWS = 9
     private val TOTAL_COLS = 9
 
-    private val TEXT_COLOR = Scalar(255.0, 255.0, 255.0, 0.0) // white = (255,255,255)
+    // font attributes
+    private val FONT_COLOR = Scalar(255.0, 255.0, 255.0, 0.0) // black = (0,0,0); white = (255,255,255)
+    private val FONT_FACE = FONT_HERSHEY_DUPLEX // https://codeyarns.github.io/tech/2015-03-11-fonts-in-opencv.html
+    private val FONT_SCALE = 1.0
+    private val FONT_THICKNESS = 1
+    private val FONT_LINETYPE = LINE_AA //antialiased line
+
+    private val ROTANTION_ANGLE = 90.0
 
     // connection to Recognition and ComputerVision
     private var recognition: Recognition = recognition
@@ -41,10 +50,10 @@ class Visualisation(recognition: Recognition) {
 
         return if (getInput(inputFrame)) {
             renderDigits()
-            //perspectiveTransform()
+            perspectiveTransform()
             //createMask()
             //mergeMat()
-            testPlot(sudokuMat!!)
+            resizeMat(outputMat)
             outputMat
         }
         else inputFrame
@@ -85,19 +94,18 @@ class Visualisation(recognition: Recognition) {
 
         for (row in 0 until TOTAL_ROWS) {
             for (col in 0 until TOTAL_COLS) {
-                val digit = digits!![row][col].toString()
+                val digit = digits!![col][row].toString()
                 if (digit != null && digit != "0") {
                     val x = row * cellWidth.toDouble()
                     val y = col * cellWidth.toDouble()
                     Imgproc.putText(canvas,
                                     digit,
                                     Point(x,y),
-                            3,
-                            1.0,
-                                     TEXT_COLOR,
-                            1,
-                                    LINE_8,
-                        true)
+                                    FONT_FACE,
+                                    FONT_SCALE,
+                                    FONT_COLOR,
+                                    FONT_THICKNESS,
+                                    FONT_LINETYPE)
                 }
             }
         }
@@ -106,14 +114,13 @@ class Visualisation(recognition: Recognition) {
 
     /**
      *  Function rotateMat (input: Mat)
-     *      - rotate Mat by (angle =) 90 degrees
+     *      - rotate Mat by 90 degrees
      *
      *      https://stackoverflow.com/questions/15043152/rotate-opencv-matrix-by-90-180-270-degrees
      */
     private fun rotateMat (input : Mat) : Mat {
-        val angle = 270.0 // degrees
         val centerPoint : Point = Point(input.cols()/2.0, input.rows()/2.0)
-        val rotMat : Mat = Imgproc.getRotationMatrix2D(centerPoint, angle, 1.0)
+        val rotMat : Mat = Imgproc.getRotationMatrix2D(centerPoint, ROTANTION_ANGLE, 1.0)
         var dst : Mat = Mat.zeros(input.cols(), input.rows(), input.type())
         Imgproc.warpAffine(input, dst, rotMat, input.size(), Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
         return dst
@@ -156,10 +163,10 @@ class Visualisation(recognition: Recognition) {
     /**
      *  FOR TESTING
      *
-     *  Function testPlot (input: Mat to plot)
-     *      -  resize and plot the input
+     *  Function resizeMat (input: Mat to resize)
+     *      -  resize input to frame size
      */
-    private fun testPlot (test : Mat) {
+    private fun resizeMat (test : Mat) {
         outputMat = Mat.zeros(inputSize, inputType!!)
         Imgproc.resize(test,outputMat,inputSize)
     }
