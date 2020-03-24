@@ -47,7 +47,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     fun setGame(sudoku: Sudoku){
         game = Game(Date(), getGlobalUser().getEmail(), sudoku)
+    }
 
+    fun getGame(): Game{
+        return game
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,28 +68,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
             intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
         ))
-        println("Fun with Sudoku:")
-        solver.printCurrentState()
-        solver.solve()
-        solver.printCurrentState()
 
-
-
-
-
-
-
-
-
-//        for (i in 0 until 9) {
-//            for (j in 0 until 9) {
-//                print(solver.getSudokuSolution()[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
-//        }
+        // Create game
+        setGame(solver)
 
 
 //        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase //TODO uncomment
@@ -252,3 +236,93 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     }
 }
 
+
+
+
+
+//        println("Fun with Sudoku:")
+//        solver.printCurrentState()
+//        solver.solve()
+//        solver.printCurrentState()
+//        println("fun with game:")
+//        setGame(solver)
+//        var gamestate = game.getGamestate()
+//        gamestate.setCurrentState(1, 0, 1)
+//
+//        println("current gamestate: ")
+//        for (i in 0 until 9) {
+//            for (j in 0 until 9) {
+//                print(gamestate.getCurrentState()[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
+//        }
+//        gamestate.setCurrentState(2, 0, 2)
+//        gamestate.setCurrentState(3, 0, 3)
+//        println("current gamestate before undo: ")
+//        for (i in 0 until 9) {
+//            for (j in 0 until 9) {
+//                print(gamestate.getCurrentState()[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
+//        }
+//        gamestate.undo()
+//        println("current gamestate after undo: ")
+//        for (i in 0 until 9) {
+//            for (j in 0 until 9) {
+//                print(gamestate.getCurrentState()[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
+//        }
+//        gamestate.redo()
+//        println("current gamestate after redo: ")
+//        for (i in 0 until 9) {
+//            for (j in 0 until 9) {
+//                print(gamestate.getCurrentState()[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
+//        }
+//        gamestate.undo()
+//        println("current gamestate after undo again: ")
+//        for (i in 0 until 9) {
+//            for (j in 0 until 9) {
+//                print(gamestate.getCurrentState()[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
+//        }
+//        gamestate.setCurrentState(4, 0, 4)
+//        println("current gamestate after setting new number: ")
+//        for (i in 0 until 9) {
+//            for (j in 0 until 9) {
+//                print(gamestate.getCurrentState()[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
+//        }
+//        gamestate.undo()
+//        println("current gamestate after undo after setting new number: ")
+//        for (i in 0 until 9) {
+//            for (j in 0 until 9) {
+//                print(gamestate.getCurrentState()[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
+//        }

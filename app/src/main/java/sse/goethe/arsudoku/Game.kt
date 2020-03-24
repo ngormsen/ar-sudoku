@@ -11,6 +11,10 @@ class Game (date: Date, email: String, sudoku: Sudoku){
         return date.toString()
     }
 
+    fun getGamestate(): Gamestate{
+        return gamestate
+    }
+
     fun getEmail(): String{
         /**
          * Returns the email address of the user

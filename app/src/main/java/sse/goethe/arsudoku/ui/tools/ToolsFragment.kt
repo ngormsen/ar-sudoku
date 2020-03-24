@@ -15,6 +15,8 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.coroutines.processNextEventInCurrentThread
+import sse.goethe.arsudoku.Gamestate
+import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
 import sse.goethe.arsudoku.Sudoku
 import java.lang.Integer.parseInt
@@ -22,32 +24,12 @@ import java.lang.Integer.parseInt
 class ToolsFragment : Fragment() {
 
     private lateinit var toolsViewModel: ToolsViewModel
-    private var stateHistory: MutableList<Array<IntArray>> = arrayListOf()
     private var historyPointer: Int = 0
+    private lateinit var gamestate: Gamestate
 
-    var sudoku = Sudoku(arrayOf(
-        intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
-        intArrayOf(5, 2, 0, 0, 0, 0, 0, 0, 0),
-        intArrayOf(0, 8, 7, 0, 0, 0, 0, 3, 1),
-        intArrayOf(0, 0, 3, 0, 1, 0, 0, 8, 0),
-        intArrayOf(9, 0, 0, 8, 6, 3, 0, 0, 5),
-        intArrayOf(0, 5, 0, 0, 9, 0, 6, 0, 0),
-        intArrayOf(1, 3, 0, 0, 0, 0, 2, 5, 0),
-        intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
-        intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
-    ))
 
-    private var solvedSudoku = Sudoku(arrayOf(
-        intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
-        intArrayOf(5, 2, 0, 0, 0, 0, 0, 0, 0),
-        intArrayOf(0, 8, 7, 0, 0, 0, 0, 3, 1),
-        intArrayOf(0, 0, 3, 0, 1, 0, 0, 8, 0),
-        intArrayOf(9, 0, 0, 8, 6, 3, 0, 0, 5),
-        intArrayOf(0, 5, 0, 0, 9, 0, 6, 0, 0),
-        intArrayOf(1, 3, 0, 0, 0, 0, 2, 5, 0),
-        intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
-        intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
-    ))
+    private var stateHistory = arrayListOf<Sudoku>()
+
 
 
     private lateinit var currentState: Array<IntArray>
@@ -56,7 +38,7 @@ class ToolsFragment : Fragment() {
         var n = 9
         for (i in 0 until n) {
             for (j in 0 until n) {
-                print(sudoku.getCurrentState()[i][j].toString())
+                print(currentState[i][j].toString())
                 if (Math.floorMod(j, 3) == 2 && j < n - 1)
                     print(" ")
             }
@@ -66,35 +48,57 @@ class ToolsFragment : Fragment() {
     }
 
     fun redo(view: View){
+        gamestate.redo()
+        currentState = gamestate.getCurrentState()
+        updateSudokuVisualisation(view)
 
     }
 
-    fun undo(view: View){
-        historyPointer -= 1
-        currentState = stateHistory.get(historyPointer)
+    fun createStateClone(currentState: Array<IntArray>): Array<IntArray> {
+        var newState = arrayOf(
+            intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
+            intArrayOf(5, 2, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 8, 7, 0, 0, 0, 0, 3, 1),
+            intArrayOf(0, 0, 3, 0, 1, 0, 0, 8, 0),
+            intArrayOf(9, 0, 0, 8, 6, 3, 0, 0, 5),
+            intArrayOf(0, 5, 0, 0, 9, 0, 6, 0, 0),
+            intArrayOf(1, 3, 0, 0, 0, 0, 2, 5, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
+            intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
+        )
+        for (row in 0..8) {
+            for (column in 0..8) {
+                newState[row].set(column, currentState[row][column])
+            }
+        }
+        return newState
+    }
 
+
+
+
+    fun undo(view: View){
+        gamestate.undo()
+        currentState = gamestate.getCurrentState()
+        updateSudokuVisualisation(view)
     }
 
     fun setHint(view: View){
-        try {
-            val hint = solvedSudoku.hint(sudoku.getCurrentState())
-            println(hint)
-            setSudokuNumber(hint.first, hint.second, hint.third )
-            updateSudokuVisualisation(view)
-        }
-        catch (e: IndexOutOfBoundsException){
-            println("No more hints available.")
-        }
+        gamestate.setHint()
+        updateSudokuVisualisation(view)
 
     }
 
     fun setSudokuNumber(row: Int, column: Int, number: Int) {
         if(checkSudokuNumber(row, column, number)){
             printCurrentState()
-            sudoku.getCurrentState()[row].set(column, number)
+            currentState[row].set(column, number)
             printCurrentState()
             historyPointer += 1
-            stateHistory.add(sudoku.getCurrentState())
+            stateHistory.add(Sudoku(createStateClone(currentState)))
+            for (idx in historyPointer + 1 until stateHistory.size){
+                stateHistory.removeAt(idx)
+            }
         }
         else{
             var toast = Toast.makeText(this.context, "Not a valid move!", Toast.LENGTH_SHORT)
@@ -103,10 +107,10 @@ class ToolsFragment : Fragment() {
 
             println("Not a valid move!")
         }
-
     }
+
     fun removeSudokuNumber(row: Int, column: Int){
-        sudoku.getCurrentState()[row - 1].set(column - 1, 0)
+        currentState[row - 1].set(column - 1, 0)
         printCurrentState()
     }
 
@@ -114,14 +118,14 @@ class ToolsFragment : Fragment() {
         var n = 9
         // Is 'x' used in row.
         for (jj in 0 until n) {
-            print(sudoku.getCurrentState()[i][jj])
-            if (sudoku.getCurrentState()[i][jj] == x) {
+            print(currentState[i][jj])
+            if (currentState[i][jj] == x) {
                 return false
             }
         }
         // Is 'x' used in column.
         for (ii in 0 until n) {
-            if (sudoku.getCurrentState()[ii][j] == x) {
+            if (currentState[ii][j] == x) {
                 return false
             }
         }
@@ -130,7 +134,7 @@ class ToolsFragment : Fragment() {
         val boxColumn = j - j % 3
         for (ii in 0..2) {
             for (jj in 0..2) {
-                if (sudoku.getCurrentState()[boxRow + ii][boxColumn + jj] == x) {
+                if (currentState[boxRow + ii][boxColumn + jj] == x) {
                     return false
                 }
             }
@@ -150,8 +154,8 @@ class ToolsFragment : Fragment() {
                 var textView: TextView = view.findViewById<TextView>(parseInt("${row}${column}"))
 //                println("text displayed: ${textView.text}")
 //                println("value from sudoku: ${sudoku[row-1][column-1]}")
-                if (sudoku.getCurrentState()[row-1][column-1] != 0){
-                    textView.text = "${sudoku.getCurrentState()[row-1][column-1]}"
+                if (currentState[row-1][column-1] != 0){
+                    textView.text = "${currentState[row-1][column-1]}"
                 }
                 else{
                     textView.text = ""
@@ -167,9 +171,12 @@ class ToolsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Get TableLayout object in layout xml.
-        solvedSudoku.solve()
-        currentState = sudoku.getCurrentState()
+        // Get current Gamestate from mainactivity
+        val activity = activity as MainActivity
+        gamestate = activity.getGame().getGamestate()
+
+
+        currentState = gamestate.getCurrentState()
 
         toolsViewModel =
             ViewModelProviders.of(this).get(ToolsViewModel::class.java)
@@ -204,8 +211,8 @@ class ToolsFragment : Fragment() {
             for (column in 1..9){
                 val textView = TextView(context)
                 val displayNumber = "$row" + "$column"
-                if (sudoku.getCurrentState()[row-1][column-1] != 0){
-                    textView.text = sudoku.getCurrentState()[row-1][column-1].toString()
+                if (currentState[row-1][column-1] != 0){
+                    textView.text = currentState[row-1][column-1].toString()
                 }
                 else{
                     textView.text = ""
@@ -286,6 +293,7 @@ class ToolsFragment : Fragment() {
         textViewUndo.gravity = Gravity.CENTER_HORIZONTAL
         //theChild in this case is the child of TableRow
         textViewUndo.setOnClickListener(View.OnClickListener {
+            undo(root)
         })
         textViewUndo.setBackgroundResource(R.drawable.input_number_bg)
         tableRowActions.addView(textViewUndo)
@@ -303,6 +311,7 @@ class ToolsFragment : Fragment() {
         textViewRedo.gravity = Gravity.CENTER_HORIZONTAL
         //theChild in this case is the child of TableRow
         textViewRedo.setOnClickListener(View.OnClickListener {
+            redo(root)
         })
         textViewRedo.setBackgroundResource(R.drawable.input_number_bg)
         tableRowActions.addView(textViewRedo)
@@ -404,3 +413,16 @@ class ToolsFragment : Fragment() {
 //        toolsViewModel.text.observe(this, Observer {
 //            textView.text = it
 //        })
+
+//
+//private var sudoku = Sudoku(arrayOf(
+//    intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
+//    intArrayOf(5, 2, 0, 0, 0, 0, 0, 0, 0),
+//    intArrayOf(0, 8, 7, 0, 0, 0, 0, 3, 1),
+//    intArrayOf(0, 0, 3, 0, 1, 0, 0, 8, 0),
+//    intArrayOf(9, 0, 0, 8, 6, 3, 0, 0, 5),
+//    intArrayOf(0, 5, 0, 0, 9, 0, 6, 0, 0),
+//    intArrayOf(1, 3, 0, 0, 0, 0, 2, 5, 0),
+//    intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
+//    intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
+//))
