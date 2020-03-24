@@ -6,12 +6,14 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RectShape
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.coroutines.processNextEventInCurrentThread
@@ -24,14 +26,7 @@ import java.lang.Integer.parseInt
 class ToolsFragment : Fragment() {
 
     private lateinit var toolsViewModel: ToolsViewModel
-    private var historyPointer: Int = 0
     private lateinit var gamestate: Gamestate
-
-
-    private var stateHistory = arrayListOf<Sudoku>()
-
-
-
     private lateinit var currentState: Array<IntArray>
 
     fun printCurrentState(){
@@ -54,29 +49,6 @@ class ToolsFragment : Fragment() {
 
     }
 
-    fun createStateClone(currentState: Array<IntArray>): Array<IntArray> {
-        var newState = arrayOf(
-            intArrayOf(3, 0, 6, 5, 0, 8, 4, 0, 0),
-            intArrayOf(5, 2, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 8, 7, 0, 0, 0, 0, 3, 1),
-            intArrayOf(0, 0, 3, 0, 1, 0, 0, 8, 0),
-            intArrayOf(9, 0, 0, 8, 6, 3, 0, 0, 5),
-            intArrayOf(0, 5, 0, 0, 9, 0, 6, 0, 0),
-            intArrayOf(1, 3, 0, 0, 0, 0, 2, 5, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 7, 4),
-            intArrayOf(0, 0, 5, 2, 0, 6, 3, 0, 0)
-        )
-        for (row in 0..8) {
-            for (column in 0..8) {
-                newState[row].set(column, currentState[row][column])
-            }
-        }
-        return newState
-    }
-
-
-
-
     fun undo(view: View){
         gamestate.undo()
         currentState = gamestate.getCurrentState()
@@ -91,27 +63,17 @@ class ToolsFragment : Fragment() {
 
     fun setSudokuNumber(row: Int, column: Int, number: Int) {
         if(checkSudokuNumber(row, column, number)){
-            printCurrentState()
-            currentState[row].set(column, number)
-            printCurrentState()
-            historyPointer += 1
-            stateHistory.add(Sudoku(createStateClone(currentState)))
-            for (idx in historyPointer + 1 until stateHistory.size){
-                stateHistory.removeAt(idx)
-            }
+            gamestate.setSudokuNumber(row, column, number)
         }
         else{
             var toast = Toast.makeText(this.context, "Not a valid move!", Toast.LENGTH_SHORT)
             toast.setGravity(Gravity.CENTER, 0, 200)
             toast.show()
-
-            println("Not a valid move!")
         }
     }
 
     fun removeSudokuNumber(row: Int, column: Int){
-        currentState[row - 1].set(column - 1, 0)
-        printCurrentState()
+        gamestate.removeSudokuNumber(row, column)
     }
 
     fun checkSudokuNumber(i: Int, j: Int, x: Int): Boolean {
@@ -143,9 +105,9 @@ class ToolsFragment : Fragment() {
         return true
     }
 
-    fun solveAll(){
-        return
-    }
+//    fun solveAll(){
+//        return
+//    }
 
     @SuppressLint("ResourceType")
     fun updateSudokuVisualisation(view: View){
@@ -165,6 +127,7 @@ class ToolsFragment : Fragment() {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("ResourceType")
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -186,25 +149,7 @@ class ToolsFragment : Fragment() {
         val lowerTableRow: TableLayout = root.findViewById(R.id.table_layout_row_2)
         var lastFieldSelected = "Default"
         var selectedField = ""
-        // Set new table row layout parameters.
-//        val layoutParams: TableRow.LayoutParams =
-//            TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT)
-//        tableRow.setLayoutParams(layoutParams)
 
-//        // Add a TextView in the first column.
-
-        // Not necessary anymore TODO: delete
-        // Define Background
-        val sd = ShapeDrawable()
-        // Specify the shape of ShapeDrawable
-        sd.shape = RectShape()
-        // Specify the border color of shape
-        sd.paint.color = Color.BLACK
-        // Set the border width
-        sd.paint.strokeWidth = 10f
-        // Specify the style is a Stroke
-        sd.paint.style = Paint.Style.STROKE
-        // Finally, add the drawable background to TextView
         // Create Sudoku Grid
         for (row in 1..9){ // We need to start with 1 as we set the id to row and col (row would otherwise be zero)
             val tableRow = TableRow(context)
@@ -225,11 +170,6 @@ class ToolsFragment : Fragment() {
                 textView.gravity = Gravity.CENTER_VERTICAL
                 textView.gravity = Gravity.CENTER_HORIZONTAL
                 textView.setOnClickListener(View.OnClickListener {
-                    // Click field
-                    // set selectedField to current field
-                    // set the current field to blue
-                    // if we choose a new field, set the old one to white
-                    // if the old field ist default, set the value for the old one to the current one
 
                     selectedField = displayNumber
                     if (selectedField != lastFieldSelected){
@@ -333,7 +273,7 @@ class ToolsFragment : Fragment() {
                 val currentTextField = root.findViewById<TextView>(selectedField.toInt())
                 val textFieldRow = currentTextField.id.toString()[0]
                 val textFieldColumn = currentTextField.id.toString()[1]
-                removeSudokuNumber(Integer.parseInt(textFieldRow.toString()), Integer.parseInt(textFieldColumn.toString()))
+                removeSudokuNumber(Integer.parseInt(textFieldRow.toString())-1, Integer.parseInt(textFieldColumn.toString())-1)
             }
             updateSudokuVisualisation(root)
         })

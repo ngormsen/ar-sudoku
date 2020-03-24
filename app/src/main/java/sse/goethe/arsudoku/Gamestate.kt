@@ -18,14 +18,11 @@ class Gamestate (sudoku: Sudoku){
         solvedState = createDeepStateClone(sudoku.getCurrentState())
         // Add inital state to history
         historyOfStates.add(createDeepStateClone(currentState))
-        println("added current state to history of states")
-        println("current state:")
-        println(currentState)
-        println("solved state:")
-        println(solvedState)
-        println("inital history state:")
-        println(historyOfStates[0])
-        println(historyOfStates.size)
+    }
+
+    fun removeSudokuNumber(row: Int, column: Int){
+        currentState[row][column] = 0
+        addCurrentStateToHistory()
     }
 
     fun setSudokuNumber(row: Int, column: Int, value: Int){
@@ -38,14 +35,9 @@ class Gamestate (sudoku: Sudoku){
     }
 
     fun setHint(){
-//        try {
             val hint = sudoku.hint(currentState)
             println(hint)
             setSudokuNumber(hint.first, hint.second, hint.third )
-//        }
-//        catch (e: IndexOutOfBoundsException){
-//            println("No more hints available.")
-//        }
     }
 
     fun getStateHistory():MutableList<Array<IntArray>>{
@@ -61,26 +53,12 @@ class Gamestate (sudoku: Sudoku){
         print(historyPointer)
         try{
             historyOfStates[historyPointer].isEmpty()
-            println("set")
             historyOfStates[historyPointer] = createDeepStateClone(currentState)
 
         }
         catch (e : IndexOutOfBoundsException){
-            println("add")
             historyOfStates.add(createDeepStateClone(currentState))
 
-        }
-        println("pointer:")
-        println(historyPointer)
-        println("historysize:")
-        println(historyOfStates.size)
-
-
-
-        println("new nurrent state added to history")
-        println("history:")
-        for (state in historyOfStates){
-            println(state)
         }
     }
 
@@ -93,36 +71,6 @@ class Gamestate (sudoku: Sudoku){
         catch (e: IndexOutOfBoundsException){
             println("Index out of bounds")
         }
-    }
-
-    fun checkSudokuNumber(i: Int, j: Int, x: Int): Boolean{
-        var n = 9
-        // Is 'x' used in row.
-        for (jj in 0 until n) {
-            print(currentState[i][jj])
-            if (currentState[i][jj] == x) {
-                return false
-            }
-        }
-        // Is 'x' used in column.
-        for (ii in 0 until n) {
-            if (currentState[ii][j] == x) {
-                return false
-            }
-        }
-        // Is 'x' used in sudoku 3x3 box.
-        val boxRow = i - i % 3
-        val boxColumn = j - j % 3
-        for (ii in 0..2) {
-            for (jj in 0..2) {
-                if (currentState[boxRow + ii][boxColumn + jj] == x) {
-                    return false
-                }
-            }
-        }
-        // Everything looks good.
-        return true
-
     }
 
     fun redo(){

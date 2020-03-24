@@ -1,4 +1,5 @@
 package sse.goethe.arsudoku
+import android.content.ContentValues
 import android.content.Context
 import sse.goethe.arsudoku.ml.Recognition
 import android.os.Bundle
@@ -20,9 +21,12 @@ import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import java.io.IOException
 import java.io.InputStream
 import android.widget.TextView
+import androidx.annotation.RequiresApi
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_home.*
 import org.opencv.android.BaseLoaderCallback
@@ -31,6 +35,7 @@ import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Mat
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -38,6 +43,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     private var globalUser: User = User("Hello", "world@gmail.com")
     private lateinit var navView: NavigationView
     private lateinit var game:Game
+    val db = FirebaseFirestore.getInstance()
 
     val TAG = MainActivity::class.java.simpleName
     var  mOpenCvCameraView : CameraBridgeViewBase? = null
@@ -45,19 +51,120 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     /* Instance of Recognition Class */
     var recognition = Recognition(this)
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun convertGamestateToFirebase(): ArrayList<Int>{
+        var gamestateForFirebase = ArrayList<Int>()
+        for(row in game.getGamestate().getCurrentState()){
+            for (column in row){
+                gamestateForFirebase.add(column)
+            }
+        }
+        return gamestateForFirebase
+    }
+
+    fun convertFirebaseToGamestate(firebaseGamestate: ArrayList<Int>): Array<IntArray>{
+        var newState = arrayOf(
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
+        )
+        var listIdx = 0
+        for (row in 0..8) {
+            for (column in 0..8) {
+                newState[row][column] = firebaseGamestate[listIdx]
+                listIdx += 1
+            }
+        }
+        return newState
+    }
+
+
+    fun printState(state: Array<IntArray>){
+        var n = 9
+        for (i in 0 until n) {
+            for (j in 0 until n) {
+                print(state[i][j].toString())
+                if (Math.floorMod(j, 3) == 2 && j < n - 1)
+                    print(" ")
+            }
+            println()
+            if (Math.floorMod(i, 3) == 2 && i < n - 1) println()
+        }
+    }
+
+    fun compareGamestates(state1: Array<IntArray>, state2: Array<IntArray>): Boolean{
+        /**
+         * Returns true if the gamestates are not the same
+         */
+        for (row in 0..8){
+            for (column in 0..8) {
+                if (state1[row][column] != state2[row][column]) {
+                    return true // If one number is different we return true
+                }
+            }
+        }
+        return false
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun checkIfGameExistsInDatabase(): Boolean{
+        /**
+         * Returns true if the last entry in the firebase is not the same game
+         */
+        var exists = false
+        db.collection("users").document(getGlobalUser().getEmail()).collection("games")
+            .orderBy("date")
+            .limitToLast(1)
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    Log.d(TAG, "${document.id} => ${document.data}")
+                    var firebaseState = convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>)
+                    exists = compareGamestates(firebaseState, game.getGamestate().getCurrentState()) // if one number is different we get true
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w(ContentValues.TAG, "Error getting documents: ", exception)
+            }
+        return exists
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun saveGameToDatabase(){
+        val gameMap = hashMapOf(
+            "date" to game.getDate(),
+            "user" to game.getEmail(),
+            "gamestate" to convertGamestateToFirebase()
+        )
+
+        db.collection("users").document(getGlobalUser().getEmail()).collection("games").document(game.getDate())
+            .set(gameMap)
+            .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
+            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
     fun setGame(sudoku: Sudoku){
-        game = Game(Date(), getGlobalUser().getEmail(), sudoku)
+        game = Game(getGlobalUser().getEmail(), sudoku)
+
     }
 
     fun getGame(): Game{
         return game
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val solver = Sudoku( arrayOf( // TODO test hint again with this sudoku...returns 0 as value.
+        val solver = Sudoku( arrayOf( //
             intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
             intArrayOf(0, 6, 0, 2, 1, 0, 0, 0, 4),
             intArrayOf(9, 0, 2, 0, 0, 6, 0, 1, 3),
@@ -68,10 +175,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
             intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
         ))
-
-        // Create game
-        setGame(solver)
-
 
 //        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase //TODO uncomment
 //        mOpenCvCameraView?.apply {
@@ -100,6 +203,15 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
         setGlobalUser(User("Nils", "nils.gormsen@googlemail.com"))
+
+        // Create game
+        setGame(solver)
+        println("document in database:")
+
+        if(checkIfGameExistsInDatabase() == true){
+            saveGameToDatabase() // TODO: fix logic error and handle empty list case
+        }
+
 
     }
 
@@ -238,91 +350,3 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
 
-
-
-//        println("Fun with Sudoku:")
-//        solver.printCurrentState()
-//        solver.solve()
-//        solver.printCurrentState()
-//        println("fun with game:")
-//        setGame(solver)
-//        var gamestate = game.getGamestate()
-//        gamestate.setCurrentState(1, 0, 1)
-//
-//        println("current gamestate: ")
-//        for (i in 0 until 9) {
-//            for (j in 0 until 9) {
-//                print(gamestate.getCurrentState()[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
-//        }
-//        gamestate.setCurrentState(2, 0, 2)
-//        gamestate.setCurrentState(3, 0, 3)
-//        println("current gamestate before undo: ")
-//        for (i in 0 until 9) {
-//            for (j in 0 until 9) {
-//                print(gamestate.getCurrentState()[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
-//        }
-//        gamestate.undo()
-//        println("current gamestate after undo: ")
-//        for (i in 0 until 9) {
-//            for (j in 0 until 9) {
-//                print(gamestate.getCurrentState()[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
-//        }
-//        gamestate.redo()
-//        println("current gamestate after redo: ")
-//        for (i in 0 until 9) {
-//            for (j in 0 until 9) {
-//                print(gamestate.getCurrentState()[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
-//        }
-//        gamestate.undo()
-//        println("current gamestate after undo again: ")
-//        for (i in 0 until 9) {
-//            for (j in 0 until 9) {
-//                print(gamestate.getCurrentState()[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
-//        }
-//        gamestate.setCurrentState(4, 0, 4)
-//        println("current gamestate after setting new number: ")
-//        for (i in 0 until 9) {
-//            for (j in 0 until 9) {
-//                print(gamestate.getCurrentState()[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
-//        }
-//        gamestate.undo()
-//        println("current gamestate after undo after setting new number: ")
-//        for (i in 0 until 9) {
-//            for (j in 0 until 9) {
-//                print(gamestate.getCurrentState()[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < 9 - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < 9 - 1) println()
-//        }
