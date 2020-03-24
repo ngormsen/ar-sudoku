@@ -46,9 +46,6 @@ import kotlin.math.tan
  * 6.2
  *
  *
- * 19.03:
- * figure out warpPerspektive
- * display on square
  *
  */
 class ComputerVision {
@@ -66,7 +63,6 @@ class ComputerVision {
     var CroppedSudoku: Mat? = null
     var TransformationMat: Mat? = null
     var SudokuBoxes: Array<Mat>? = null
-
     var SudokuBoxesBitmap: Array<Bitmap>? = null
 
     /* init is called once if class is instantiated */
@@ -77,6 +73,73 @@ class ComputerVision {
     /**###############################################################
      * class functions
      *################################################################*/
+
+
+    /**
+     * The overall funciton that is to be called from outside the class
+     * It will set some class-internal attributes, that can then be called
+     * outside of the class.
+     *
+     * Call this once for every frame. The class attributes are:
+     * SudokuCorners
+     * CroppedSudoku
+     * TransformationMat
+     * SudokuBoxes
+     *
+     * All of them are nullable, so you MUST check for null value.
+     * If any null value is found, it's an indication, that no Sudoku was found
+     * in the frame
+     *
+     * */
+    fun analyzeFrame( frame: CameraBridgeViewBase.CvCameraViewFrame ) {
+        // ToDo: create more Sudoku viability checks
+
+        // reset everything to null, because it's at this point not clear if there is a sudoku
+        SudokuCorners = null
+        CroppedSudoku = null
+        TransformationMat = null
+        SudokuBoxes = null
+
+        SudokuBoxesBitmap = null
+
+        // Preprocessing:
+        val img = preprocessing(frame)
+
+        // Finding Corners using Contour Detection:
+        var corners = findCorners(img)
+
+        // corners is a nullable MatOfPoint2f
+        // if null, there was no Sudoku in the frame
+        if (corners == null){
+            return
+        }else{
+            corners = sortPointsArray(corners)
+        }
+
+        // cropping
+        val croppedImage: Mat
+        croppedImage = cropImage(img, corners)
+
+        // cutting
+        val boxes = cutSudoku(croppedImage)
+
+        //
+        // convert Mat images to Bitmaps
+        //
+        val boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
+            createBitmap( boxes[0].width(), boxes[0].height() )
+        }
+        for (i in 0..80) {
+            boxesBitmap[i] = convertMatToBitmap(boxes[i])
+        }
+
+        // In the end, we set all the calculated data as class properties
+        SudokuCorners = corners
+        CroppedSudoku = croppedImage
+        // TransformationMat = ... // setting of this var is handled in cropImage()
+        SudokuBoxes = boxes
+        SudokuBoxesBitmap = boxesBitmap
+    }
 
     public fun lineDetection(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
         /**
@@ -182,71 +245,6 @@ class ComputerVision {
         return dilatedMat
     }
 
-    /**
-     * The overall funciton that is to be called from outside the class
-     * It will set some class-internal attributes, that can then be called
-     * outside of the class.
-     *
-     * Call this once for every frame. The class attributes are:
-     * SudokuCorners
-     * CroppedSudoku
-     * TransformationMat
-     * SudokuBoxes
-     *
-     * All of them are nullable, so you MUST check for null value.
-     * If any null value is found, it's an indication, that no Sudoku was found
-     * in the frame
-     *
-     * */
-    fun analyzeFrame( frame: CameraBridgeViewBase.CvCameraViewFrame ) {
-        // ToDo: create more Sudoku viability checks
-
-        // reset everything to null, because it's at this point not clear if there is a sudoku
-        SudokuCorners = null
-        CroppedSudoku = null
-        TransformationMat = null
-        SudokuBoxes = null
-
-        SudokuBoxesBitmap = null
-
-        // Preprocessing:
-        val img = preprocessing(frame)
-
-        // Finding Corners using Contour Detection:
-        var corners = findCorners(img)
-
-        // corners is a nullable MatOfPoint2f
-        // if null, there was no Sudoku in the frame
-        if (corners == null){
-            return
-        }else{
-            corners = sortPointsArray(corners)
-        }
-
-        // cropping
-        val croppedImage: Mat
-        croppedImage = cropImage(img, corners)
-
-        // cutting
-        val boxes = cutSudoku(croppedImage)
-
-        //
-        // convert Mat images to Bitmaps
-        //
-        var boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
-            createBitmap( boxes[0].width(), boxes[0].height() )
-        }
-        for (i in 0..80) {
-            boxesBitmap[i] = convertMatToBitmap(boxes[i])
-        }
-
-        // In the end, we set all the calculated data as class properties
-        SudokuCorners = corners
-        CroppedSudoku = croppedImage
-        // TransformationMat = ... // setting of this var is handled in cropImage()
-        SudokuBoxes = boxes
-        SudokuBoxesBitmap = boxesBitmap
-    }
 
     /**
      * This function takes an Image and returns a cropped Image
