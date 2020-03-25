@@ -299,7 +299,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             var outputFrame: Mat
             if (this.frameCounter > 0) {
                 recognition.run(inputFrame)
-                outputFrame = visualisation.runVisualisation(inputFrame.rgba())
+                outputFrame = visualisation.runVisualisation(inputFrame)
                 this.frameCounter = 0
                 outputFrame
             } else inputFrame.rgba()
