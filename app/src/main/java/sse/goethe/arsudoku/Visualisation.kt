@@ -43,7 +43,7 @@ class Visualisation(recognition: Recognition) {
 
     private lateinit var inputMat : Mat
     private lateinit var inputMat_rgba : Mat
-    private lateinit var inputMat_gray : Mat
+    //private lateinit var inputMat_gray : Mat
 
     private var sudokuMat : Mat? = null
     private var transformMat : Mat? = null
@@ -68,7 +68,8 @@ class Visualisation(recognition: Recognition) {
             createSudokuMask()
             createOutput()
             mergeMat()
-            outputMat
+            //outputMat
+            inputMat
         }
         else inputFrame.rgba()
     }
@@ -83,7 +84,7 @@ class Visualisation(recognition: Recognition) {
     private fun getInput(inputFrame: CameraBridgeViewBase.CvCameraViewFrame) : Boolean {
         return if (recognition.computerVision.CroppedSudoku != null && recognition.computerVision.TransformationMat != null && recognition.sudokuPredictedDigits != null) {
             inputMat_rgba = inputFrame.rgba()
-            inputMat_rgba = inputFrame.gray()
+            //inputMat_rgba = inputFrame.gray()
             inputMat = inputMat_rgba
             inputSize = inputMat_rgba.size()
             inputType = inputMat_rgba.type()
@@ -126,7 +127,7 @@ class Visualisation(recognition: Recognition) {
 
         for (row in 0 until TOTAL_ROWS) {
             for (col in 0 until TOTAL_COLS) {
-                val digit = digits!![col][row].toString()
+                val digit = digits!![row][col].toString()
                 if (digit != null && digit != "0") {
                     val x = col * cellWidth.toDouble() + cellWidth*0.3
                     val y = (row+1) * cellWidth.toDouble() - cellWidth*0.3
