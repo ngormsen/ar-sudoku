@@ -25,25 +25,26 @@ class Visualisation(recognition: Recognition) {
     private val FONT_COLOR_BLACK = Scalar(0.0, 0.0, 0.0, 0.0)
     private val FONT_COLOR_WHITE = Scalar(255.0, 255.0, 255.0, 0.0)
     private val FONT_FACE = FONT_HERSHEY_DUPLEX // https://codeyarns.github.io/tech/2015-03-11-fonts-in-opencv.html
-    private val FONT_SCALE = 1.0
+    private val FONT_SCALE = 0.6
     private val FONT_THICKNESS = 1
     private val FONT_LINETYPE = LINE_AA //antialiased line
 
     private val ROTANTION_ANGLE = 90.0
     
     // colour Scalar(Blue, Green, Red)
-    private val BLACK = Scalar(0.0, 0.0,0.0, 0.0)
-    private val WHITE = Scalar(255.0, 255.0,255.0, 0.0)
-    private val BLUE = Scalar(255.0, 0.0,0.0, 255.0)
-    private val GREEN = Scalar(0.0, 255.0,0.0, 255.0)
-    private val RED = Scalar(0.0, 0.0,255.0, 255.0)
+    private val BLACK = Scalar(0.0, 0.0,0.0)
+    private val WHITE = Scalar(255.0, 255.0,255.0)
+    private val BLUE = Scalar(255.0, 0.0,0.0)
+    private val GREEN = Scalar(0.0, 255.0,0.0)
+    private val RED = Scalar(0.0, 0.0,255.0)
     
     // connection to Recognition and ComputerVision
     private var recognition: Recognition = recognition
 
-    private var inputMat : Mat? = null
-    private var inputMat_rgba : Mat? = null
-    private var inputMat_gray : Mat? = null
+    private lateinit var inputMat : Mat
+    private lateinit var inputMat_rgba : Mat
+    private lateinit var inputMat_gray : Mat
+
     private var sudokuMat : Mat? = null
     private var transformMat : Mat? = null
     private var digits : Array<Array<Int>>? = null
@@ -84,8 +85,8 @@ class Visualisation(recognition: Recognition) {
             inputMat_rgba = inputFrame.rgba()
             inputMat_rgba = inputFrame.gray()
             inputMat = inputMat_rgba
-            inputSize = inputMat_rgba!!.size()
-            inputType = inputMat_rgba!!.type()
+            inputSize = inputMat_rgba.size()
+            inputType = inputMat_rgba.type()
 
             sudoku_mask = Mat.zeros(inputSize, inputType!!)
             outputMat = Mat.zeros(inputSize, inputType!!)
@@ -106,8 +107,8 @@ class Visualisation(recognition: Recognition) {
      *      https://stackoverflow.com/questions/45131216/opencv-overlay-two-mat-drawings-not-images-with-transparency
      */
     private fun createSudokuMask () {
-        renderDigits()
-        sudoku_mask = transformPerspective(sudokuMat!!)
+        sudoku_mask = renderDigits()
+        sudoku_mask = transformPerspective()
     }
 
     /**
@@ -115,21 +116,20 @@ class Visualisation(recognition: Recognition) {
      *       - creates a Mat with the size of the cropped sudoku on a black background
      *       - renders the solved digits on their location in white colour
      */
-    private fun renderDigits () {
+    private fun renderDigits (sudoku : Mat = sudokuMat!!) : Mat{
 
-        val sudoku_matSize = sudokuMat!!.size()
-        val sudoku_matType = sudokuMat!!.type()
-        var canvas = Mat.zeros(sudoku_matSize, sudoku_matType)
+        val matSize = sudoku.size()
+        val matType = sudoku.type()
+        var canvas = Mat.zeros(matSize, inputType!!)
 
-        val cellWidth = sudokuMat!!.width() / 9
+        val cellWidth = sudoku.width() / 9
 
         for (row in 0 until TOTAL_ROWS) {
             for (col in 0 until TOTAL_COLS) {
                 val digit = digits!![col][row].toString()
                 if (digit != null && digit != "0") {
-                    Log.d(TAG, digit) // for testing
-                    val x = row * cellWidth.toDouble()
-                    val y = col * cellWidth.toDouble()
+                    val x = col * cellWidth.toDouble() + cellWidth*0.3
+                    val y = (row+1) * cellWidth.toDouble() - cellWidth*0.3
                     Imgproc.putText(canvas,
                                     digit,
                                     Point(x,y),
@@ -141,7 +141,8 @@ class Visualisation(recognition: Recognition) {
                 }
             }
         }
-        sudokuMat = rotateMat(canvas)
+        //canvas = drawGrid(canvas) // for testing
+        return rotateMat(canvas)
     }
 
     /**
@@ -150,11 +151,14 @@ class Visualisation(recognition: Recognition) {
      *
      *      https://stackoverflow.com/questions/15043152/rotate-opencv-matrix-by-90-180-270-degrees
      */
-    private fun rotateMat (input : Mat) : Mat {
+    private fun rotateMat (input : Mat, angle : Double = ROTANTION_ANGLE) : Mat {
+
         val centerPoint : Point = Point(input.cols()/2.0, input.rows()/2.0)
-        val rotMat : Mat = Imgproc.getRotationMatrix2D(centerPoint, ROTANTION_ANGLE, 1.0)
+        val rotMat : Mat = Imgproc.getRotationMatrix2D(centerPoint, angle, 1.0)
         var dst : Mat = Mat.zeros(input.cols(), input.rows(), input.type())
+
         Imgproc.warpAffine(input, dst, rotMat, input.size(), Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
+
         return dst
     }
 
@@ -162,10 +166,10 @@ class Visualisation(recognition: Recognition) {
      *   Function mergeMat
      *       - merged the input video stream with the edit sudoku with help of a mask
      */
-    private fun mergeMat () {
+    private fun mergeMat (input : Mat = inputMat, mask : Mat = sudoku_mask) {
 
-        val dst : Mat = inputMat!!
-        outputMat.copyTo(dst, sudoku_mask)
+        val dst : Mat = input
+        outputMat.copyTo(dst, mask)
         outputMat = dst
     }
 
@@ -173,13 +177,10 @@ class Visualisation(recognition: Recognition) {
      *  Function perspectiveTransform
      *      - does a perspective transformation of the sudoku with help a the invers of the transform matrix
      */
-    private fun transformPerspective (input : Mat) : Mat{
+    private fun transformPerspective (input : Mat = sudoku_mask) : Mat{
 
         var dst : Mat = Mat.zeros(inputSize, inputType!!)
         Imgproc.warpPerspective(input, dst, transformMat, inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
-
-        //inputSize = dst.size()
-        //inputType = dst.type()
 
         return dst
     }
@@ -190,26 +191,15 @@ class Visualisation(recognition: Recognition) {
      */
     private fun createOutput () {
 
-        val whiteMat : Mat = createWhiteMat()
+        val whiteMat : Mat = createColouredMat()
         subtract(whiteMat, sudoku_mask, outputMat)
     }
 
-    /**
-     *  Function createWhiteMat
-     *      - creates a white Mat with the size of the input frame
-     */
-    private fun createWhiteMat () : Mat {
-
-        val dst : Mat = Mat.zeros(inputSize, inputType!!)
-
-        return dst.setTo(WHITE)
-    }
-
-    /** TODO: DOESN'T WORK!!!
-     *  Function createColouredMat
+    /** TODO: DOESN'T WORK!!! ONLY WITH WHITE COLOUR
+     *  Function createColouredMat(input colour : default white)
      *      - creates a coulored Mat with the size of the input frame
      */
-    private fun createColouredMat (colour : Scalar) : Mat {
+    private fun createColouredMat (colour : Scalar = WHITE) : Mat {
 
         val dst : Mat = Mat.zeros(inputSize, inputType!!)
 
@@ -219,12 +209,40 @@ class Visualisation(recognition: Recognition) {
     /**
      *  FOR TESTING
      *
-     *  Function resizeMat (input: Mat to resize)
-     *      -  resize input to frame size
+     *  Function drawGrid()
+     *      - draws a sudoku grid on Mat
+     */
+    private fun drawGrid(input : Mat = sudoku_mask, color : Scalar = WHITE, thickness : Int = 2) : Mat {
+
+        val height = input.height().toDouble()-1
+        val width = input.width().toDouble()-1
+        val cellHeight = (input.height()/9).toDouble()
+        val cellWidth = (input.height()/9).toDouble()
+
+        var output : Mat = input
+
+        // draw frame
+        Imgproc.rectangle(output, Point(0.0, 0.0), Point(width, height), color, thickness, LINE_AA)
+        // draw inner grid
+        for (i in 1 until TOTAL_ROWS) {
+            val y = i * cellHeight
+            val x = i * cellWidth
+            Imgproc.line(output, Point(0.0, y), Point(width, y), color, thickness, LINE_AA)
+            Imgproc.line(output, Point(x, 0.0), Point(x, height), color, thickness, LINE_AA)
+        }
+
+        return output
+    }
+
+    /**
+     *  FOR TESTING
+     *
+     *  Function resizeMat (input: Mat to resize, output: output Mat size)
+     *      - resize input to output size
      */
     private fun resizeMat (input : Mat, output : Mat) : Mat {
 
-        var dst : Mat = Mat.zeros(output.size(), output.type()!!)
+        var dst : Mat = Mat.zeros(output.size(), output.type())
         Imgproc.resize(input, dst, output.size())
 
         return dst
