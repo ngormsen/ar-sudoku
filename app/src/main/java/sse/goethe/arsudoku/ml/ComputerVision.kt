@@ -15,7 +15,6 @@ import org.opencv.core.CvType.CV_8UC3
 import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.INTER_LINEAR
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.sin
 import kotlin.math.tan
 
@@ -146,7 +145,7 @@ class ComputerVision {
         SudokuBoxesBitmap = boxesBitmap
     }
 
-    public fun lineDetection(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
+    fun lineDetection(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
         /**
          * 1. Canny Edge Detection
          * 2. Hough Transform
@@ -154,13 +153,13 @@ class ComputerVision {
          * 4. Check for Sudoku
          * 5. Find Intersections
          */
-        val (img, forML) = preprocessing(frame)
+        val (img, _) = preprocessing(frame)
         val fra = Mat.zeros(frame.gray().size(), frame.gray().type())
-        val canny: Mat = Mat()
+        val canny = Mat()
         Imgproc.Canny(img, canny, 100.0, 200.0)
-        val lines: Mat = Mat()
+        val lines = Mat()
         Imgproc.HoughLines(canny, lines, 1.0, PI/180, 200)
-        for (i in 0..lines.rows()-1){
+        for (i in 0 until lines.rows()){
             drawLine(lines.get(i,0), fra)
         }
         return fra
@@ -172,9 +171,9 @@ class ComputerVision {
     private fun drawLine(line: DoubleArray, img: Mat) {
         val color = Scalar(255.0, 0.0, 0.0)
         if(line[1]!=0.0) {
-            val m = -1/tan(line[1]);
+            val m = -1/tan(line[1])
 
-            val c = line[0]/sin(line[1]);
+            val c = line[0]/sin(line[1])
 
             Imgproc.line(img, Point(0.0, c), Point(img.size().width, m*img.size().width+c), color, 1)
         }
@@ -183,13 +182,13 @@ class ComputerVision {
         }
     }
 
-    fun experimentalContouring(frame: Mat) {
+    private fun experimentalContouring(frame: Mat) {
         /**
          * https://github.com/ColinEberhardt/wasm-sudoku-solver/blob/master/src/steps/findSudokuGrid.js
          * Doesn't seem very helpful so far!
          */
         val contours = ArrayList<MatOfPoint>()
-        val hierarchy: Mat = Mat()
+        val hierarchy = Mat()
         Imgproc.findContours(frame, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
         hierarchy.release()
 
@@ -197,7 +196,7 @@ class ComputerVision {
         val rectangles = mutableListOf<MatOfPoint2f>()
         for (contour in contours) {
             val approximatedContour = MatOfPoint2f()
-            val c: MatOfPoint2f = MatOfPoint2f()
+            val c = MatOfPoint2f()
             contour.convertTo(c, CvType.CV_32F)
             Imgproc.approxPolyDP(c, approximatedContour, 10.0, true)
 
@@ -223,14 +222,14 @@ class ComputerVision {
      *  */
     private fun preprocessing(frame: CameraBridgeViewBase.CvCameraViewFrame): Pair<Mat, Mat>{
         val grayMat: Mat = frame.gray()
-        val blurMat: Mat = Mat()
+        val blurMat = Mat()
         Imgproc.GaussianBlur(grayMat, blurMat, Size(9.0,9.0), 0.0)
-        val threshMat: Mat = Mat()
+        val threshMat = Mat()
         Imgproc.adaptiveThreshold(blurMat, threshMat, 255.0,1,1,11,2.0)
-        val morphedMat: Mat = Mat()
+        val morphedMat = Mat()
         val core = Imgproc.getStructuringElement(0, Size(2.0, 2.0))
         Imgproc.morphologyEx(threshMat, morphedMat, 2, core)
-        val dilatedMat: Mat = Mat()
+        val dilatedMat = Mat()
         Imgproc.dilate(morphedMat, dilatedMat, core)
         return Pair(dilatedMat, threshMat)
     }
@@ -240,7 +239,7 @@ class ComputerVision {
      * and gets the four corners of it, should it be similar to a square.
      *
      */
-    fun findCorners(frame: Mat): MatOfPoint2f? {
+    private fun findCorners(frame: Mat): MatOfPoint2f? {
 
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.
@@ -248,11 +247,11 @@ class ComputerVision {
         val contours = ArrayList<MatOfPoint>() // destination for findContours()
 
         // TODO: WHAT IF IT IS NOT POSSIBLE TO FIND A CONTOUR? -> Use try, catch
-        val hierarchy: Mat = Mat()
+        val hierarchy = Mat()
         Imgproc.findContours(frame, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
         hierarchy.release()
 
-        var biggest: MatOfPoint = MatOfPoint()
+        var biggest = MatOfPoint()
         var max_area = 0.0
 
         for (contour in contours) {
@@ -267,8 +266,8 @@ class ComputerVision {
         if (biggest.toList().size < 4) return null
 
         // convert to MatOfPoint2f from MatOfPoint (which was the result of findContours. But approxDP needs 2f)
-        val approx: MatOfPoint2f = MatOfPoint2f()
-        val x: MatOfPoint2f = MatOfPoint2f()
+        val approx = MatOfPoint2f()
+        val x = MatOfPoint2f()
         biggest.convertTo(approx, CvType.CV_32F)
         biggest.convertTo(x, CvType.CV_32F)
 
@@ -312,7 +311,7 @@ class ComputerVision {
         //val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
         val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
         // the destination buffer
-        var dst = Mat.zeros(image.size(), CV_8UC3);
+        val dst = Mat.zeros(image.size(), CV_8UC3)
         // create the perspective transform
         val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
