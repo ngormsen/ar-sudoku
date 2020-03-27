@@ -101,9 +101,15 @@ class Recognition(context: Context) {
      * The run() function is the final wrapper function which
      * combines the recognition and inference logic.
      *
-     * More description: It runs the analyzeFrame() function
-     * which sets all needed variables and properties to
-     * continue with the classification.
+     * More description:
+     * First we run anaylzeFrame(). This must be called once fore every
+     * frame before doing Character Recognition. It set computerVision's
+     * class attributes. All of those as nullable, so you MUST check for
+     * null value!! If there are any null values, that means no Sudoku
+     * could be found.
+     * If a Sudoku was (presumably) found, we continue to do Character
+     * Recognition.
+     *
      *
      * Input: frame of the camera
      *
@@ -111,6 +117,10 @@ class Recognition(context: Context) {
     @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
+
+        // How to do null-checks:
+        if (computerVision.SudokuBoxesBitmap == null) return
+        else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
 /*
         try {
             croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!

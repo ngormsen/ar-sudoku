@@ -90,7 +90,7 @@ class ComputerVision {
      * SudokuBoxes
      *
      * All of them are nullable, so you MUST check for null value.
-     * If any null value is found, it's an indication, that no Sudoku was found
+     * If any null value is found, no Sudoku was found
      * in the frame
      *
      * */
@@ -277,7 +277,7 @@ class ComputerVision {
             Imgproc.approxPolyDP(x, approx, d,true)
 
             // 4.2.1: if we need too many iterations of this, it's probably not a square/sudoku
-            if (d > 20) return null // ToDo: figure out a reasonable d
+            if (d > 50) return null // ToDo: figure out a reasonable d
         }
 
         // this check is necessary, because we might go from >4 points to <4 in a single increment of d
