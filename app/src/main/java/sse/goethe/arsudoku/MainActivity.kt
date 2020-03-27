@@ -98,41 +98,45 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
-    fun compareGamestates(state1: Array<IntArray>, state2: Array<IntArray>): Boolean{
-        /**
-         * Returns true if the gamestates are not the same
-         */
+    fun checkEqualGamestate(state1: Array<IntArray>, state2: Array<IntArray>): Boolean{
         for (row in 0..8){
             for (column in 0..8) {
                 if (state1[row][column] != state2[row][column]) {
-                    return true // If one number is different we return true
+                    return false // If one number is different we return false -> they are not equal
                 }
             }
         }
-        return false
+        return true
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun checkIfGameExistsInDatabase(): Boolean{
+    fun checkIfGameExistsInDatabase(){
         /**
-         * Returns true if the last entry in the firebase is not the same game
+         * Returns false if the game does not exist in database
          */
-        var exists = false
+        println("document check")
         db.collection("users").document(getGlobalUser().getEmail()).collection("games")
             .orderBy("date")
             .limitToLast(1)
             .get()
             .addOnSuccessListener { documents ->
+                if (documents.documents.isEmpty()){
+                    println("empty")
+                    saveGameToDatabase()
+                }
                 for (document in documents) {
                     Log.d(TAG, "${document.id} => ${document.data}")
                     var firebaseState = convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>)
-                    exists = compareGamestates(firebaseState, game.getGamestate().getCurrentState()) // if one number is different we get true
+                    if(!checkEqualGamestate(firebaseState, game.getGamestate().getCurrentState())) {
+                        saveGameToDatabase()
+
+                    }
                 }
+
             }
             .addOnFailureListener { exception ->
                 Log.w(ContentValues.TAG, "Error getting documents: ", exception)
             }
-        return exists
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -152,6 +156,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     @RequiresApi(Build.VERSION_CODES.O)
     fun setGame(sudoku: Sudoku){
         game = Game(getGlobalUser().getEmail(), sudoku)
+        checkIfGameExistsInDatabase()
 
     }
 
@@ -208,9 +213,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         setGame(solver)
         println("document in database:")
 
-        if(checkIfGameExistsInDatabase() == true){
-            saveGameToDatabase() // TODO: fix logic error and handle empty list case
-        }
 
 
     }

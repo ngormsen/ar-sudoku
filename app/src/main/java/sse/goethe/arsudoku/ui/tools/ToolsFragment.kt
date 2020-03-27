@@ -190,11 +190,22 @@ class ToolsFragment : Fragment() {
 
 
                 tableRow.addView(textView)
+
+
+
             }
             tableRow.gravity = 11
             tableRow.setGravity(Gravity.CENTER_HORIZONTAL);
 
             upperTableRow.addView(tableRow)
+            val v = View(getActivity())
+            v.layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                10
+            )
+            v.setBackgroundColor(Color.parseColor("#B3B3B3"))
+
+            upperTableRow.addView(v)
 
 
 
