@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,7 +13,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -23,6 +26,7 @@ import com.baoyz.swipemenulistview.SwipeMenuListView
 import com.google.firebase.firestore.FirebaseFirestore
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
+import sse.goethe.arsudoku.Sudoku
 import sse.goethe.arsudoku.ui.friends.FriendsViewModel
 import java.util.*
 import kotlin.collections.ArrayList
@@ -66,42 +70,47 @@ class HistoryFragment : Fragment() {
                 root.context
             )
             // set item background
-            deleteItem.background = ColorDrawable(
-                Color.rgb(
-                    0xF9, 0x3F,
-                    0x25
-                )
-            )
+//            deleteItem.background = ColorDrawable(
+//                Color.rgb(
+//                    0xF9, 0x3F,
+//                    0x25
+//                )
+//            )
             // set item width
             deleteItem.width = 170
             // set item title
             deleteItem.title = "Delete"
 //            // set a icon
-//            deleteItem.setIcon(R.drawable.ic_menu_send)
+            deleteItem.setIcon(R.drawable.cancel)
 
             // set item title fontsize
-            deleteItem.titleSize = 18
+            deleteItem.titleSize = 15
             // set item title font color
             deleteItem.titleColor = Color.BLACK
             // add to menu
             menu.addMenuItem(deleteItem)
 
-            // create "Send" item
+            // create "Play" item
             val sendItem = SwipeMenuItem(
 //                root.getApplicationContext<Context>()
                 root.context
             )
             // set item background
-            sendItem.background = ColorDrawable(
-                Color.rgb(
-                    75,
-                    219, 87
-                )
-            )
+//            sendItem.background = ColorDrawable(
+//                Color.rgb(
+//                    75,
+//                    219, 87
+//                )
+//            )
             // set item width
+            sendItem.title = "Play"
+            sendItem.titleColor = Color.BLACK
+            sendItem.titleSize = 15
+
+
             sendItem.width = 170
             // set a icon
-            sendItem.setIcon(R.drawable.ic_menu_send)
+            sendItem.setIcon(R.drawable.play_circle)
             // add to menu
             menu.addMenuItem(sendItem)
         }
@@ -130,8 +139,10 @@ class HistoryFragment : Fragment() {
 
         // Set action for menu swipe buttons
         listViewHistory.setOnMenuItemClickListener(object : SwipeMenuListView.OnMenuItemClickListener {
+            @RequiresApi(Build.VERSION_CODES.O)
             override
             fun onMenuItemClick(position: Int, menu: SwipeMenu, index: Int): Boolean {
+                val activity = activity as MainActivity?
                 when (index) {
                     0 -> {
                         val activity = activity as MainActivity?
@@ -147,7 +158,17 @@ class HistoryFragment : Fragment() {
                     }
                     1 -> {
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
-                        showFriendList(root.context, history[position])
+                        Log.d("which item", history[position])
+                        db.collection("users").document(activity!!.getGlobalUser().getEmail())
+                            .collection("games").document(history[position])
+                            .get()
+                            .addOnSuccessListener {document ->
+                                activity.printState( activity.convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>))
+                                activity.setGame(Sudoku(activity.convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>)))
+                                activity.navigateToPlay()
+                            }
+                            .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
+
                     }
                 }// open
                 // delete

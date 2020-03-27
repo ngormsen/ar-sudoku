@@ -28,7 +28,9 @@ class FriendsFragment : Fragment() {
 
     private lateinit var friendsViewModel: FriendsViewModel
     private val users = ArrayList<String>()  // Transfer to viewModel in production version
-    var games = arrayOf("", "", "","", "", "","", "", "","", "", "","")
+    var games = arrayOf("", "", "","", "", "","", "", "","", "", "","","", "", "","", "", "","", "", "","","", "", "","",
+        "", "","", "", "","","", "", "","", "", "","", "", "","","",
+        "", "","", "", "","", "", "","","", "", "","", "", "","", "", "","")  // TODO: fix array problem
     val db = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
@@ -92,41 +94,50 @@ class FriendsFragment : Fragment() {
                 root.context
             )
             // set item background
-            openItem.background = ColorDrawable(
-                Color.rgb(
-                    0xF9, 0x3F,
-                    0x25
-                )
-            )
+//            openItem.background = ColorDrawable(
+//                Color.rgb(
+//                    0xF9, 0x3F,
+//                    0x25
+//                )
+//            )
             // set item width
             openItem.width = 170
             // set item title
             openItem.title = "Delete"
             // set item title fontsize
-            openItem.titleSize = 18
+            openItem.titleSize = 15
             // set item title font color
-            openItem.titleColor = Color.WHITE
+            openItem.titleColor = Color.BLACK
+            openItem.setIcon(R.drawable.cancel)
+
+
             // add to menu
             menu.addMenuItem(openItem)
 
             // create "delete" item
-            val deleteItem = SwipeMenuItem(
+            val sendItem = SwipeMenuItem(
 //                root.getApplicationContext<Context>()
                 root.context
             )
             // set item background
-            deleteItem.background = ColorDrawable(
-                Color.rgb(
-                    75,
-                    219, 87
-                )
-            )
+//            sendItem.background = ColorDrawable(
+//                Color.rgb(
+//                    75,
+//                    219, 87
+//                )
+//            )
+            sendItem.title = "Send"
+            // set item title fontsize
+            sendItem.titleSize = 15
+            // set item title font color
+            sendItem.titleColor = Color.BLACK
+
             // set item width
-            deleteItem.width = 170
+            sendItem.width = 170
             // set a icon
-            deleteItem.setIcon(R.drawable.ic_menu_send)
+            sendItem.setIcon(R.drawable.ic_menu_send)
             // add to menu
-            menu.addMenuItem(deleteItem)
+            menu.addMenuItem(sendItem)
         }          // set creator
 
         // Attaches the Creator and Adapter to the Swipe Menu

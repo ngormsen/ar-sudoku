@@ -9,17 +9,17 @@
             android:icon="@drawable/ic_menu_camera"
             android:title="@string/menu_home" />
         <item
+            android:id="@+id/nav_play"
+            android:icon="@drawable/play_circle"
+            android:title="@string/menu_play" />
+        <item
             android:id="@+id/nav_history"
             android:icon="@drawable/ic_menu_gallery"
             android:title="@string/menu_history" />
         <item
             android:id="@+id/nav_friends"
-            android:icon="@drawable/ic_menu_slideshow"
+            android:icon="@drawable/face"
             android:title="@string/menu_friends" />
-        <item
-            android:id="@+id/nav_tools"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="@string/menu_tools" />
     </group>
 
     <item android:title="Communicate">

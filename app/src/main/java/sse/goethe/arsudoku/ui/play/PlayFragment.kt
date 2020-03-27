@@ -1,11 +1,7 @@
-package sse.goethe.arsudoku.ui.tools
+package sse.goethe.arsudoku.ui.play
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.drawable.ShapeDrawable
-import android.graphics.drawable.shapes.RectShape
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
@@ -16,16 +12,14 @@ import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
-import kotlinx.coroutines.processNextEventInCurrentThread
 import sse.goethe.arsudoku.Gamestate
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
-import sse.goethe.arsudoku.Sudoku
 import java.lang.Integer.parseInt
 
-class ToolsFragment : Fragment() {
+class PlayFragment : Fragment() {
 
-    private lateinit var toolsViewModel: ToolsViewModel
+    private lateinit var playViewModel: PlayViewModel
     private lateinit var gamestate: Gamestate
     private lateinit var currentState: Array<IntArray>
 
@@ -141,8 +135,8 @@ class ToolsFragment : Fragment() {
 
         currentState = gamestate.getCurrentState()
 
-        toolsViewModel =
-            ViewModelProviders.of(this).get(ToolsViewModel::class.java)
+        playViewModel =
+            ViewModelProviders.of(this).get(PlayViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_tools, container, false)
         val tableLayout: TableLayout = root.findViewById(R.id.table_layout_table);
         val upperTableRow: TableLayout = root.findViewById(R.id.table_layout_row_1);
@@ -199,13 +193,13 @@ class ToolsFragment : Fragment() {
 
             upperTableRow.addView(tableRow)
             val v = View(getActivity())
-            v.layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                10
-            )
-            v.setBackgroundColor(Color.parseColor("#B3B3B3"))
-
-            upperTableRow.addView(v)
+//            v.layoutParams = LinearLayout.LayoutParams(
+//                ViewGroup.LayoutParams.MATCH_PARENT,
+//                10
+//            )
+//            v.setBackgroundColor(Color.parseColor("#B3B3B3"))
+//
+//            upperTableRow.addView(v)
 
 
 

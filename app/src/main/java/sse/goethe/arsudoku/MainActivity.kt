@@ -1,6 +1,5 @@
 package sse.goethe.arsudoku
 import android.content.ContentValues
-import android.content.Context
 import sse.goethe.arsudoku.ml.Recognition
 import android.os.Bundle
 import android.util.Log
@@ -15,26 +14,15 @@ import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import android.view.Menu
-import android.content.res.AssetManager
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
-import java.io.IOException
-import java.io.InputStream
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_home.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Mat
-import java.util.*
 import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
@@ -110,7 +98,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun checkIfGameExistsInDatabase(){
+    fun saveGame(){
         /**
          * Returns false if the game does not exist in database
          */
@@ -156,10 +144,13 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     @RequiresApi(Build.VERSION_CODES.O)
     fun setGame(sudoku: Sudoku){
         game = Game(getGlobalUser().getEmail(), sudoku)
-        checkIfGameExistsInDatabase()
-
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun setNewGame(sudoku: Sudoku){
+        game = Game(getGlobalUser().getEmail(), sudoku)
+        saveGame()
+    }
     fun getGame(): Game{
         return game
     }
@@ -198,7 +189,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.nav_home, R.id.nav_history, R.id.nav_friends,
-                R.id.nav_tools, R.id.nav_login, R.id.nav_logout
+                R.id.nav_play, R.id.nav_login, R.id.nav_logout
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -283,6 +274,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     fun navigateHome() {
         val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigate(R.id.nav_home)
+    }
+
+    fun navigateToPlay() {
+        val navController = findNavController(R.id.nav_host_fragment)
+        return navController.navigate(R.id.nav_play)
     }
 
     fun setGlobalUser(user: User){

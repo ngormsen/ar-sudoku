@@ -24,9 +24,9 @@
         tools:layout="@layout/fragment_friends" />
 
     <fragment
-        android:id="@+id/nav_tools"
-        android:name="sse.goethe.arsudoku.ui.tools.ToolsFragment"
-        android:label="@string/menu_tools"
+        android:id="@+id/nav_play"
+        android:name="sse.goethe.arsudoku.ui.play.PlayFragment"
+        android:label="@string/menu_play"
         tools:layout="@layout/fragment_tools" />
 
     <fragment
