@@ -91,7 +91,7 @@ class Recognition(context: Context) {
                                     arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1) )
 
 
-        testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
+        testbitmap = digitClassifier.getBitmapFromAsset(context, "test_dataset3.png")
 
         //var predictedClass: Int = digitClassifier.classify(testbitmap)
         //Log.d(TAG, "The predicted class is: " + predictedClass)
@@ -119,7 +119,11 @@ class Recognition(context: Context) {
         }
 
         classifyAll()
+        //var predictedClass: Int = digitClassifier.classify(testbitmap)
+        //Log.d(TAG, "The predicted class is: " + predictedClass)
+
         //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
+        //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[9] ) )
     }
 
     /**
@@ -139,8 +143,9 @@ class Recognition(context: Context) {
             try {
                 for (block in croppedSudokuBlocks!!) {
                     var digit = digitClassifier.classify(block)
-                    Log.d(TAG + " - classifyAll()", "digit: " + digit)
+                    Log.d(TAG + " - classifyAll()", "classified class: " + digit)
                     blockCoord = calculateSudokuDigitCells(count)
+                    Log.d(TAG, "Sudoku coord row " + blockCoord[0] + " col:" + blockCoord[1])
                     addResult(blockCoord, digit)
                     count++
                 }
@@ -219,8 +224,12 @@ class Recognition(context: Context) {
                 machineHandOrNothing = 0
                 digit = 0
             }
-            //10 -> ...
+            10 -> {
+                machineHandOrNothing = 0 // evtl. noch ändern!!
+                digit = 0
+            }
         }
+        Log.d(TAG, "predicted digit: " + digit)
         sudokuPredictedDigits[coordinate[0]][coordinate[1]] = digit
         sudokuHandOrMachinePrintedFields[coordinate[0]][coordinate[1]] = machineHandOrNothing
     }

@@ -55,7 +55,7 @@ class ComputerVision {
 
     /* values and variables */
     private lateinit var bitmap: Bitmap
-    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 32  // the width and height of one Sudoku number square
+    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 28  // the width and height of one Sudoku number square
     private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
     /**
      * The following are class properties that are being set by analyzeFram().

@@ -60,7 +60,7 @@ class DigitClassifier(private val context: Context) {
         inputImageWidth = inputShape[1]
         inputImageHeight = inputShape[2]
         modelInputSize = FLOAT_TYPE_SIZE * inputImageWidth * inputImageHeight * PIXEL_SIZE
-
+        Log.d(TAG, "The model input size is: " + modelInputSize)
         this.interpreter = interpreter
         isInitialized = true
         Log.d(TAG, " >> Initialized TFLite interpreter! << ")
@@ -107,8 +107,10 @@ class DigitClassifier(private val context: Context) {
             val g = (pixelValue shr 8 and 0xFF)
             val b = (pixelValue and 0xFF)
 
+            Log.d("DigitClassifier:", "r: $r g: $g b:$b")
             // convert RGB to grayscale and normalize it
             val normalizedPixelValue = (r + g + b) / 3.0f / 255.0f
+            Log.d(TAG, "norm pxval: $normalizedPixelValue")
             byteBuffer.putFloat(normalizedPixelValue)
         }
         return byteBuffer
@@ -143,6 +145,13 @@ class DigitClassifier(private val context: Context) {
         startTime = System.nanoTime()
 
         interpreter?.run(byteBuffer, result)
+
+        Log.d(TAG, "result array: res 1: " + result[0][0] + " res 2: " + result[0][1] + "res 3: " + result[0][2]
+                + " res 2: " + result[0][3] + " res 2: " + result[0][4] + " res 2: " + result[0][5] + " res 2: " + result[0][6]
+                + " res 2: " + result[0][7] + " res 2: " + result[0][8] + " res 2: " + result[0][9] + " res 2: " + result[0][10]
+                + " res 2: " + result[0][11] + " res 2: " + result[0][12] + " res 2: " + result[0][13] + " res 2: " + result[0][14]
+                + " res 2: " + result[0][15] + " res 2: " + result[0][16] + " res 2: " + result[0][17] + " res 2: " + result[0][18]
+                + " res 2: " + result[0][19] )
 
         elapsedTime = (System.nanoTime() - startTime) / 1000000
         Log.d(TAG, "Inference time = " + elapsedTime + "ms")
@@ -210,6 +219,6 @@ class DigitClassifier(private val context: Context) {
         private const val MODEL_FILE = "mnist_model2.tflite"
         private const val FLOAT_TYPE_SIZE = 4
         private const val PIXEL_SIZE = 1
-        private const val OUTPUT_CLASSES_COUNT = 10 // to 10
+        private const val OUTPUT_CLASSES_COUNT = 20 // to 10
     }
 }
