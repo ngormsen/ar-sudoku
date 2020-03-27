@@ -1,12 +1,14 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
-INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
-INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
-INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
-INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
-INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
-INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
+
+ADDED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
+INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
+INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
+INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
+INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
+INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
+INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
+
 	package
 		ADDED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml:3:7-27
 		INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml
@@ -32,6 +34,7 @@ INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/ma
 		ADDED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml
 		INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml
 	android:minSdkVersion
-		INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml
-		ADDED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml
-		INJECTED from /Users/nils/AndroidStudioProjects/ARSudoku/openCVLibrary349/src/main/AndroidManifest.xml
+		INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml
+		ADDED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml
+		INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml
+
