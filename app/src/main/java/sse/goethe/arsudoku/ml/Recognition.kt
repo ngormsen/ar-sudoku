@@ -111,7 +111,7 @@ class Recognition(context: Context) {
     @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
-
+/*
         try {
             croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
         } catch (e: IOException)  {
@@ -120,6 +120,8 @@ class Recognition(context: Context) {
 
         classifyAll()
         //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
+
+ */
     }
 
     /**

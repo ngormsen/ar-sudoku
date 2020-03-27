@@ -45,6 +45,10 @@ import kotlin.math.tan
  * 6.1 Class diagram
  * 6.2
  *
+ * 25.03.
+ * Integration in MainActivity
+ * Manus ding
+ * davids ding
  *
  *
  */
@@ -55,7 +59,7 @@ class ComputerVision {
     private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 32  // the width and height of one Sudoku number square
     private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
     /**
-     * The following are class properties that are being set by analyzeFram().
+     * The following are class properties that are being set by analyzeFrame().
      * They are nullable. You MUST check for null value. If null value is found, that
      * indicates, that no Sudoku was found in the frame.
      */
@@ -99,14 +103,16 @@ class ComputerVision {
         CroppedSudoku = null
         TransformationMat = null
         SudokuBoxes = null
-
         SudokuBoxesBitmap = null
 
         // Preprocessing:
-        val img = preprocessing(frame)
+        val (img, forML) = preprocessing(frame)
 
         // Finding Corners using Contour Detection:
         var corners = findCorners(img)
+
+        // experimental box finding:
+        experimentalContouring(img)
 
         // corners is a nullable MatOfPoint2f
         // if null, there was no Sudoku in the frame
@@ -118,14 +124,13 @@ class ComputerVision {
 
         // cropping
         val croppedImage: Mat
-        croppedImage = cropImage(img, corners)
+        croppedImage = cropImage(forML, corners)
 
         // cutting
         val boxes = cutSudoku(croppedImage)
 
-        //
+        // ToDo: move this code to the convertMatToBitmap function!
         // convert Mat images to Bitmaps
-        //
         val boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
             createBitmap( boxes[0].width(), boxes[0].height() )
         }
@@ -149,7 +154,7 @@ class ComputerVision {
          * 4. Check for Sudoku
          * 5. Find Intersections
          */
-        val img = preprocessing(frame)
+        val (img, forML) = preprocessing(frame)
         val fra = Mat.zeros(frame.gray().size(), frame.gray().type())
         val canny: Mat = Mat()
         Imgproc.Canny(img, canny, 100.0, 200.0)
@@ -178,8 +183,60 @@ class ComputerVision {
         }
     }
 
+    fun experimentalContouring(frame: Mat) {
+        /**
+         * https://github.com/ColinEberhardt/wasm-sudoku-solver/blob/master/src/steps/findSudokuGrid.js
+         * Doesn't seem very helpful so far!
+         */
+        val contours = ArrayList<MatOfPoint>()
+        val hierarchy: Mat = Mat()
+        Imgproc.findContours(frame, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
+        hierarchy.release()
+
+        // approximates each contour to polygon
+        val rectangles = mutableListOf<MatOfPoint2f>()
+        for (contour in contours) {
+            val approximatedContour = MatOfPoint2f()
+            val c: MatOfPoint2f = MatOfPoint2f()
+            contour.convertTo(c, CvType.CV_32F)
+            Imgproc.approxPolyDP(c, approximatedContour, 10.0, true)
+
+            // is it a rectangle contour?
+            if (approximatedContour.size().height == 4.0) {
+                rectangles.add(approximatedContour)
+            }
+
+            approximatedContour.release()
+        }
+
+        Log.d("experimentalContour", "${rectangles.size}")
+    }
+
     /**
-     * Finds the larges contour in the frame
+     *  Image Preprocessing:
+     *
+     *  Greyscale
+     *  Gaussian Blur
+     *  Adaptive Thresolding
+     *  Open
+     *  Dilate
+     *  */
+    private fun preprocessing(frame: CameraBridgeViewBase.CvCameraViewFrame): Pair<Mat, Mat>{
+        val grayMat: Mat = frame.gray()
+        val blurMat: Mat = Mat()
+        Imgproc.GaussianBlur(grayMat, blurMat, Size(9.0,9.0), 0.0)
+        val threshMat: Mat = Mat()
+        Imgproc.adaptiveThreshold(blurMat, threshMat, 255.0,1,1,11,2.0)
+        val morphedMat: Mat = Mat()
+        val core = Imgproc.getStructuringElement(0, Size(2.0, 2.0))
+        Imgproc.morphologyEx(threshMat, morphedMat, 2, core)
+        val dilatedMat: Mat = Mat()
+        Imgproc.dilate(morphedMat, dilatedMat, core)
+        return Pair(dilatedMat, threshMat)
+    }
+
+    /**
+     * Finds the largest contour in the frame
      * and gets the four corners of it, should it be similar to a square.
      *
      */
@@ -209,40 +266,25 @@ class ComputerVision {
         // therefore clearly not a sudoku! We return null.
         if (biggest.toList().size < 4) return null
 
-        // TODO: better conversion from MatOfPoint to MatOfPoint2f ??
+        // convert to MatOfPoint2f from MatOfPoint (which was the result of findContours. But approxDP needs 2f)
         val approx: MatOfPoint2f = MatOfPoint2f()
-        approx.fromList(biggest.toList())
         val x: MatOfPoint2f = MatOfPoint2f()
-        x.fromList(biggest.toList())
+        biggest.convertTo(approx, CvType.CV_32F)
+        biggest.convertTo(x, CvType.CV_32F)
+
         var d = 0.0
         while(approx.toArray().size > 4) {
             d++
             Imgproc.approxPolyDP(x, approx, d,true)
 
             // 4.2.1: if we need too many iterations of this, it's probably not a square/sudoku
-            if (d > 100) return null // ToDo: figure out a reasonable d
+            if (d > 20) return null // ToDo: figure out a reasonable d
         }
 
         // this check is necessary, because we might go from >4 points to <4 in a single increment of d
         if (approx.toList().size < 4) return null
 
         return approx
-    }
-
-    /* Image Preprocessing */
-    private fun preprocessing(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat{
-
-        val grayMat: Mat = frame.gray()
-        val blurMat: Mat = Mat()
-        Imgproc.GaussianBlur(grayMat, blurMat, Size(9.0,9.0), 0.0)
-        val threshMat: Mat = Mat()
-        Imgproc.adaptiveThreshold(blurMat, threshMat, 255.0,1,1,11,2.0)
-        val morphedMat: Mat = Mat()
-        val core = Imgproc.getStructuringElement(0, Size(2.0, 2.0))
-        Imgproc.morphologyEx(threshMat, morphedMat, 2, core)
-        val dilatedMat: Mat = Mat()
-        Imgproc.dilate(morphedMat, dilatedMat, core)
-        return dilatedMat
     }
 
 
@@ -290,7 +332,6 @@ class ComputerVision {
      * The returned Array contains the Mats of each box.
      * They are ordered row by row, e.g. squares[17] would be row 2 column 8
      *
-     * ToDo: Test this!!
      */
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
         val squares: Array<Mat> = Array(81) { Mat.zeros(Size(SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), sudoku.type())}
