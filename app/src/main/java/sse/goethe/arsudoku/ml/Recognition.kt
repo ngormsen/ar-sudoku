@@ -122,6 +122,7 @@ class Recognition(context: Context) {
         // How to do null-checks:
         if (computerVision.SudokuBoxesBitmap == null) return
         else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
+        Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
 /*
         try {
             croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
@@ -130,7 +131,7 @@ class Recognition(context: Context) {
         }
 
         classifyAll()
-        //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
+
 
  */
     }
