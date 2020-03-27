@@ -1,5 +1,6 @@
 -- Merging decision tree log ---
 manifest
+
 ADDED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
 INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
 INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml:2:1-6:12
@@ -35,3 +36,4 @@ INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main
 		INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml
 		ADDED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml
 		INJECTED from /Users/kelvin/Documents/GitHub/ar-sudoku/openCVLibrary349/src/main/AndroidManifest.xml
+
