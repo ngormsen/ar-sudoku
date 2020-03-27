@@ -1,4 +1,5 @@
 package sse.goethe.arsudoku
+import android.content.ClipData
 import android.content.ContentValues
 import sse.goethe.arsudoku.ml.Recognition
 import android.os.Bundle
@@ -38,6 +39,63 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     /* Instance of Recognition Class */
     var recognition = Recognition(this)
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val solver = Sudoku(
+            arrayOf( //
+                intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
+                intArrayOf(0, 6, 0, 2, 1, 0, 0, 0, 4),
+                intArrayOf(9, 0, 2, 0, 0, 6, 0, 1, 3),
+                intArrayOf(0, 0, 0, 4, 0, 0, 1, 8, 0),
+                intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+                intArrayOf(0, 5, 7, 0, 0, 2, 0, 0, 0),
+                intArrayOf(7, 3, 0, 6, 0, 0, 2, 0, 1),
+                intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
+                intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
+            )
+        )
+
+//        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase //TODO uncomment
+//        mOpenCvCameraView?.apply {
+//            visibility = SurfaceView.VISIBLE
+//            setCvCameraViewListener(this@MainActivity)
+//        }
+
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+
+        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
+        navView = findViewById(R.id.nav_view)
+        val navController = findNavController(R.id.nav_host_fragment)
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.nav_home, R.id.nav_history, R.id.nav_friends,
+                R.id.nav_play, R.id.nav_login, R.id.nav_logout
+            ), drawerLayout
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navView.setupWithNavController(navController)
+
+
+
+        Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
+        setGlobalUser(User("Nils", "nils.gormsen@googlemail.com"))
+
+        // Create game
+        setGame(solver)
+        println("document in database:")
+
+
+
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun convertGamestateToFirebase(): ArrayList<Int>{
@@ -155,59 +213,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return game
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        val solver = Sudoku( arrayOf( //
-            intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
-            intArrayOf(0, 6, 0, 2, 1, 0, 0, 0, 4),
-            intArrayOf(9, 0, 2, 0, 0, 6, 0, 1, 3),
-            intArrayOf(0, 0, 0, 4, 0, 0, 1, 8, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 5, 7, 0, 0, 2, 0, 0, 0),
-            intArrayOf(7, 3, 0, 6, 0, 0, 2, 0, 1),
-            intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
-            intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
-        ))
-
-//        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase //TODO uncomment
-//        mOpenCvCameraView?.apply {
-//            visibility = SurfaceView.VISIBLE
-//            setCvCameraViewListener(this@MainActivity)
-//        }
-
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-
-        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
-        navView= findViewById(R.id.nav_view)
-        val navController = findNavController(R.id.nav_host_fragment)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.nav_home, R.id.nav_history, R.id.nav_friends,
-                R.id.nav_play, R.id.nav_login, R.id.nav_logout
-            ), drawerLayout
-        )
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
-
-
-
-        Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
-        setGlobalUser(User("Nils", "nils.gormsen@googlemail.com"))
-
-        // Create game
-        setGame(solver)
-        println("document in database:")
-
-
-
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
@@ -217,27 +222,21 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle presses on the action bar menu items
+        println(item.itemId)
         when (item.itemId) {
-            R.id.action_settings -> {
-                println("Hello logout")
-                setGlobalUser(User("name", "email"))
-//                firebase.auth().signOut().then(function() {
-//                    // Sign-out successful.
-//                }).catch(function(error) {
-//                    // An error happened.
-//                });
-
+            R.id.nav_logout -> {
+                println("hello")
                 return true
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
-
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
+
 
 
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

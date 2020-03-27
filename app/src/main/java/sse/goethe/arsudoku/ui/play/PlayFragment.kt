@@ -167,20 +167,38 @@ class PlayFragment : Fragment() {
 
                     selectedField = displayNumber
                     if (selectedField != lastFieldSelected){
-                        textView.setBackgroundColor(Color.parseColor("#ACCBE1"))
+                        textView.setBackgroundResource(R.drawable.input_number_bg3)
+
                         if (lastFieldSelected == "Default"){
                             lastFieldSelected = 12.toString()
                         }
                         val lastTextField = root.findViewById<TextView>(lastFieldSelected.toInt())
 //                        lastTextField.setBackground(sd)
-                        lastTextField.setBackgroundResource(R.drawable.input_number_bg)
+                        println("HELLO WORLD")
+                        println(lastFieldSelected)
+                        var lastFieldSelectedRow = parseInt(lastFieldSelected[0].toString())
+                        var lastFieldSelectedCol = parseInt(lastFieldSelected[1].toString())
+
+                        if((lastFieldSelectedRow in 4..6 && lastFieldSelectedCol in 4..6) ||
+                            (lastFieldSelectedRow in 1..3 || lastFieldSelectedRow in 7..9 )&&
+                            (lastFieldSelectedCol in 1..3 || lastFieldSelectedCol in 7..9)) {
+                            lastTextField.setBackgroundResource(R.drawable.input_number_bg2)
+                        }else{
+                            lastTextField.setBackgroundResource(R.drawable.input_number_bg)
+
+                        }
 
                         lastFieldSelected = displayNumber
                     }
                 })
 
 //                textView.setBackground(sd)
-                textView.setBackgroundResource(R.drawable.input_number_bg)
+                if((row in 4..6 && column in 4..6) || (row in 1..3 || row in 7..9 )&& (column in 1..3 || column in 7..9)){
+                    textView.setBackgroundResource(R.drawable.input_number_bg2)
+                }
+                else{
+                    textView.setBackgroundResource(R.drawable.input_number_bg)
+                }
 
 
                 tableRow.addView(textView)
@@ -234,6 +252,7 @@ class PlayFragment : Fragment() {
         textViewUndo.width = 110
         textViewUndo.height = 110
         textViewUndo.textSize = 20F
+
         textViewUndo.gravity = Gravity.CENTER_VERTICAL
         textViewUndo.gravity = Gravity.CENTER_HORIZONTAL
         //theChild in this case is the child of TableRow

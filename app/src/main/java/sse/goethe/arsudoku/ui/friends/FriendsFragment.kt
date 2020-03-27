@@ -143,6 +143,8 @@ class FriendsFragment : Fragment() {
         // Attaches the Creator and Adapter to the Swipe Menu
         listView.setMenuCreator(creator)
         listView.setAdapter(adapter)
+        populateGameArray()
+        adapter.notifyDataSetChanged()  // Results in a bug that prevents menu from closing
 
         // Access the MainActivity
         val activity = activity as MainActivity?
@@ -180,12 +182,10 @@ class FriendsFragment : Fragment() {
                             .delete()
                             .addOnSuccessListener { Log.d("success", "success") }
                             .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
-                         adapter.notifyDataSetChanged()  // Results in a bug that prevents menu from closing
 
                     }
                     1 -> {
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
-                        populateGameArray()
                         buildGameList(root.context, users[position])
                     }
                 }// open
