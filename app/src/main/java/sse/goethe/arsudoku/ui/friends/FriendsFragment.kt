@@ -38,6 +38,12 @@ class FriendsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        // Access the MainActivity
+        val activity = activity as MainActivity?
+
+        if (activity != null) {
+            activity.stopCamera()
+        }
         friendsViewModel =
             ViewModelProviders.of(this).get(FriendsViewModel::class.java)
 
@@ -146,8 +152,6 @@ class FriendsFragment : Fragment() {
         populateGameArray()
         adapter.notifyDataSetChanged()  // Results in a bug that prevents menu from closing
 
-        // Access the MainActivity
-        val activity = activity as MainActivity?
 
         // Set database listener for friend data
         db.collection("users").document(activity!!.getGlobalUser().getEmail())

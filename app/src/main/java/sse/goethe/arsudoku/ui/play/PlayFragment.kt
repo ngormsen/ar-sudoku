@@ -130,6 +130,9 @@ class PlayFragment : Fragment() {
     ): View? {
         // Get current Gamestate from mainactivity
         val activity = activity as MainActivity
+        if (activity != null) {
+            activity.stopCamera()
+        }
         gamestate = activity.getGame().getGamestate()
 
 

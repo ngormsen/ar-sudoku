@@ -38,6 +38,10 @@ class LoginFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val activity = activity as MainActivity?
+        if (activity != null) {
+            activity.stopCamera()
+        }
         loginViewModel =
             ViewModelProviders.of(this).get(LoginViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_login, container, false)
@@ -48,7 +52,6 @@ class LoginFragment : Fragment() {
         val nameTextView: TextView = root.findViewById(R.id.loginName)
         val db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-        val activity = activity as MainActivity?
 //        val currentUser = auth.currentUser
 //        updateUI(currentUser)
 

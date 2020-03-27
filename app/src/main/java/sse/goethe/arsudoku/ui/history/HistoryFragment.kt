@@ -43,11 +43,14 @@ class HistoryFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val activity = activity as MainActivity?
+        if (activity != null) {
+            activity.stopCamera()
+        }
 
         historyViewModel =
             ViewModelProviders.of(this).get(HistoryViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_history, container, false)
-        val activity = activity as MainActivity?
 
         val textView: TextView = root.findViewById(R.id.text_history)
 

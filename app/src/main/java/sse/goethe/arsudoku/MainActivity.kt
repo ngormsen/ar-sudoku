@@ -18,7 +18,10 @@ import android.view.Menu
 import android.os.Build
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.OnLifecycleEvent
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.LoaderCallbackInterface
@@ -40,7 +43,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     /* Instance of Recognition Class */
     var recognition = Recognition(this)
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,11 +62,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             )
         )
 
-//        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase //TODO uncomment
-//        mOpenCvCameraView?.apply {
-//            visibility = SurfaceView.VISIBLE
-//            setCvCameraViewListener(this@MainActivity)
-//        }
+        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase //TODO uncomment
+        mOpenCvCameraView?.apply {
+            visibility = SurfaceView.VISIBLE
+            setCvCameraViewListener(this@MainActivity)
+        }
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -96,6 +98,13 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     }
 
+    fun restartCamera(){
+        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
+        mOpenCvCameraView?.apply {
+            visibility = SurfaceView.VISIBLE
+            setCvCameraViewListener(this@MainActivity)
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun convertGamestateToFirebase(): ArrayList<Int>{
@@ -130,6 +139,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return newState
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getSolvedSudoku(): Array<IntArray>{
+        return game.getGamestate().getSolvedState()
+    }
 
     fun printState(state: Array<IntArray>){
         var n = 9
@@ -316,10 +329,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     }
 
-    override fun onPause() {
+    public override fun onPause() {
         super.onPause()
         mOpenCvCameraView?.disableView()
-
     }
 
     override fun onDestroy() {
