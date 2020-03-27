@@ -23,7 +23,7 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val activity = activity as MainActivity
-
+        activity.resumeCamera()
 
 
         homeViewModel =

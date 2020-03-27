@@ -93,18 +93,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         // Create game
         setGame(solver)
         println("document in database:")
-
-
-
     }
 
-    fun restartCamera(){
-        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
-        mOpenCvCameraView?.apply {
-            visibility = SurfaceView.VISIBLE
-            setCvCameraViewListener(this@MainActivity)
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun convertGamestateToFirebase(): ArrayList<Int>{
@@ -280,6 +270,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     fun stopCamera(){
         mOpenCvCameraView?.disableView()
         println("Camera stopped")
+    }
+
+    fun resumeCamera(){
+        mOpenCvCameraView?.enableView()
+        println("Camera resumed")
     }
 
 
