@@ -21,7 +21,7 @@
         android:id="@+id/testbutton"
         android:layout_width="100dp"
         android:layout_height="70dp"
-        android:text="Test Button"
+        android:text="Stop Camera"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/text_home"></Button>

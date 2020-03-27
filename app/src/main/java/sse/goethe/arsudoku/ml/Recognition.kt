@@ -38,6 +38,7 @@ import kotlin.math.floor
 class Recognition(context: Context) {
     private var digitClassifier = DigitClassifier(context)
     var computerVision = ComputerVision()
+
     var sudokuIsExistent: Boolean = false // For Kelvin
     lateinit var sudokuSquare: Mat // whole sudoku for Kelvin
 
@@ -91,7 +92,7 @@ class Recognition(context: Context) {
                                     arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1) )
 
 
-        testbitmap = digitClassifier.getBitmapFromAsset(context, "test_dataset3.png")
+        testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
 
         //var predictedClass: Int = digitClassifier.classify(testbitmap)
         //Log.d(TAG, "The predicted class is: " + predictedClass)
@@ -101,9 +102,15 @@ class Recognition(context: Context) {
      * The run() function is the final wrapper function which
      * combines the recognition and inference logic.
      *
-     * More description: It runs the analyzeFrame() function
-     * which sets all needed variables and properties to
-     * continue with the classification.
+     * More description:
+     * First we run anaylzeFrame(). This must be called once fore every
+     * frame before doing Character Recognition. It set computerVision's
+     * class attributes. All of those as nullable, so you MUST check for
+     * null value!! If there are any null values, that means no Sudoku
+     * could be found.
+     * If a Sudoku was (presumably) found, we continue to do Character
+     * Recognition.
+     *
      *
      * Input: frame of the camera
      *
@@ -112,6 +119,10 @@ class Recognition(context: Context) {
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
 
+        // How to do null-checks:
+        if (computerVision.SudokuBoxesBitmap == null) return
+        else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
+/*
         try {
             croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
         } catch (e: IOException)  {
@@ -119,11 +130,9 @@ class Recognition(context: Context) {
         }
 
         classifyAll()
-        //var predictedClass: Int = digitClassifier.classify(testbitmap)
-        //Log.d(TAG, "The predicted class is: " + predictedClass)
-
         //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
-        //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[9] ) )
+
+ */
     }
 
     /**
@@ -143,9 +152,8 @@ class Recognition(context: Context) {
             try {
                 for (block in croppedSudokuBlocks!!) {
                     var digit = digitClassifier.classify(block)
-                    Log.d(TAG + " - classifyAll()", "classified class: " + digit)
+                    Log.d(TAG + " - classifyAll()", "digit: " + digit)
                     blockCoord = calculateSudokuDigitCells(count)
-                    Log.d(TAG, "Sudoku coord row " + blockCoord[0] + " col:" + blockCoord[1])
                     addResult(blockCoord, digit)
                     count++
                 }
@@ -224,12 +232,8 @@ class Recognition(context: Context) {
                 machineHandOrNothing = 0
                 digit = 0
             }
-            10 -> {
-                machineHandOrNothing = 0 // evtl. noch ändern!!
-                digit = 0
-            }
+            //10 -> ...
         }
-        Log.d(TAG, "predicted digit: " + digit)
         sudokuPredictedDigits[coordinate[0]][coordinate[1]] = digit
         sudokuHandOrMachinePrintedFields[coordinate[0]][coordinate[1]] = machineHandOrNothing
     }

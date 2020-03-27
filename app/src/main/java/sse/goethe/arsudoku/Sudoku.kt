@@ -2,16 +2,41 @@ package sse.goethe.arsudoku
 
 class Sudoku(private val sudoku: Array<IntArray>) {
     private val n = 9
+
+    fun getCurrentState(): Array<IntArray>{
+        return sudoku
+    }
+
+    fun setNumber(row: Int, column: Int, value: Int){
+        sudoku[row][column] = value
+    }
+
+    fun printCurrentState(){
+        for (i in 0 until n) {
+            for (j in 0 until n) {
+                print(sudoku[i][j].toString())
+                if (Math.floorMod(j, 3) == 2 && j < n - 1)
+                    print(" ")
+            }
+            println()
+            if (Math.floorMod(i, 3) == 2 && i < n - 1) println()
+        }
+    }
+
     fun solve() {
         if (!backtrackSolve()) {
             println("This sudoku can't be solved.")
         }
-        for (i in 0 until n) {
-            for (j in 0 until n) {
-                print(sudoku[i][j].toString() + " ")
-            }
-            println()
-        }
+//        for (i in 0 until n) {
+//            for (j in 0 until n) {
+//                print(sudoku[i][j].toString())
+//                if (Math.floorMod(j, 3) == 2 && j < n - 1)
+//                    print(" ")
+//            }
+//            println()
+//            if (Math.floorMod(i, 3) == 2 && i < n - 1) println()
+//        }
+
     }
 
     fun isSuitableToPutXThere(i: Int, j: Int, x: Int): Boolean {
@@ -73,6 +98,146 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         }
         return false // Backtracking
     }
+
+    /**
+     * Search for the field with the lowest number of possibilities regarding the three major
+     * constraints (row, column & grid) in constant time (for fixed n). Returns the field's
+     * indices and as it's value or zero if all fields are filled.
+     *
+     * The function traverses the Sudoku left-to-right & top-to-bottom (reading order) and returns
+     * the first encountered minimum if there are multiple.
+     *
+     * @author Manuel Stoeckel
+     * @param current The sudoku in its current state with empty fields.
+     * @return A Triple(indexRow, indexColumn, value)
+     */
+    fun hint(current: Array<IntArray>): Triple<Int, Int, Int> {
+        var min = 10
+        var indexRow = -1
+        var indexColumn = -1
+        for (i in 0 until n) {
+            for (j in 0 until n) {
+                if (current[i][j] == 0) {
+                    val localMin = getCellPossibilityCount(current, i, j)
+
+                    if (localMin < min) {
+                        min = localMin
+                        indexRow = i
+                        indexColumn = j
+
+                        // Early stopping if there is only one possible number
+                        if (localMin == 1) {
+                            return Triple(indexRow, indexColumn, sudoku[indexRow][indexColumn])
+                        }
+                    }
+                }
+            }
+        }
+        val value = (if (indexColumn >= 0 && indexRow >= 0) sudoku[indexRow][indexColumn] else 0)
+        return Triple(indexRow, indexColumn, value)
+    }
+
+    /**
+     * Returns the number of possibilities across row, column and grid constraints for a
+     * given sudoku state and cell.
+     *
+     * @author Manuel Stoeckel
+     * @param current The current sudoku state
+     * @param row The row index
+     * @param col The column index
+     * Default: true
+     * @return The minimum number of possibilities
+     */
+    private fun getCellPossibilityCount(
+        current: Array<IntArray>,
+        row: Int,
+        col: Int
+    ): Int {
+        val offsetRow = Math.floorDiv(row, 3) * 3
+        val offsetColumn = Math.floorDiv(col, 3) * 3
+
+        val occurringNumbers = HashSet<Int>()
+
+        // Add numbers that occur in the current row and column
+        occurringNumbers.addAll(getRowNumbers(current, row))
+        occurringNumbers.addAll(getColumnNumbers(current, col))
+
+        // Add numbers, that occur in the current minor grid
+        for (i in offsetRow until offsetRow + 3) {
+            for (j in offsetColumn until offsetColumn + 3) {
+                occurringNumbers.add(current[i][j])
+            }
+        }
+
+        val remainingPossible = getRemainingPossible(occurringNumbers)
+
+        // Get the set of numbers that occur in all conjugate rows and columns.
+        // If this set is not empty, filter the remaining possible numbers for them.
+        if (remainingPossible.size > 1) {
+            val conjugates = getConjugateNumbers(current, row, offsetRow, col, offsetColumn)
+
+            if (conjugates.isNotEmpty() && remainingPossible.intersect(conjugates).isNotEmpty())
+                remainingPossible.retainAll(conjugates)
+        }
+
+        return remainingPossible.size
+    }
+
+    private fun getRowNumbers(current: Array<IntArray>, row: Int): HashSet<Int> {
+        val occurringNumbers = HashSet<Int>()
+        occurringNumbers.addAll(current[row].asIterable())
+        return occurringNumbers
+    }
+
+    private fun getColumnNumbers(current: Array<IntArray>, col: Int): HashSet<Int> {
+        val occurringNumbers = HashSet<Int>()
+        for (i in 0 until n) {
+            occurringNumbers.add(current[i][col])
+        }
+        return occurringNumbers
+    }
+
+    private fun getConjugateNumbers(
+        current: Array<IntArray>,
+        row: Int,
+        gridOffsetRow: Int,
+        col: Int,
+        gridOffsetColumn: Int
+    ): HashSet<Int> {
+        var c = true
+        val conjugateOccurring = HashSet<Int>()
+        for (i in gridOffsetRow until gridOffsetRow + 3) {
+            if (i != row) {
+                if (c) {
+                    conjugateOccurring.addAll(getRowNumbers(current, i))
+                    c = false
+                } else {
+                    conjugateOccurring.retainAll(getRowNumbers(current, i))
+                }
+            }
+        }
+
+        for (j in gridOffsetColumn until gridOffsetColumn + 3) {
+            if (j != col) {
+                conjugateOccurring.retainAll(getColumnNumbers(current, j))
+            }
+        }
+        conjugateOccurring.remove(0)
+        return conjugateOccurring
+    }
+
+    /**
+     * Returns the remaining possible numbers for a given set of occurring numbers
+     *
+     * @param occurringNumbers The set of occurring numbers
+     * @return The remaining possible numbers as a new HashSet(Int)
+     */
+    private fun getRemainingPossible(occurringNumbers: HashSet<Int>): HashSet<Int> {
+        val remainingNumbers = HashSet<Int>(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
+        remainingNumbers.removeAll(occurringNumbers)
+        return remainingNumbers
+    }
+
 
     companion object {
         @JvmStatic
