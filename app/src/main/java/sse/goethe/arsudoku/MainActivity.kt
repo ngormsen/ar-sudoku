@@ -1,5 +1,4 @@
 package sse.goethe.arsudoku
-import android.content.Context
 import sse.goethe.arsudoku.ml.Recognition
 import android.os.Bundle
 import android.util.Log
@@ -14,33 +13,15 @@ import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import android.view.Menu
-import android.content.res.AssetManager
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Camera
 import android.os.Build
-import java.io.IOException
-import java.io.InputStream
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
-import kotlinx.android.synthetic.main.fragment_home.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
-
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame // test function onCameraFrame
-
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.*
-import org.opencv.imgcodecs.Imgcodecs
-//import org.opencv.imgproc.Imgproc.findContours
-import org.opencv.imgproc.Imgproc
-import kotlin.math.abs
 
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
@@ -56,6 +37,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     //var recognition = Recognition(this)
     // If this does not work delete the following line
     private lateinit var recognition: Recognition
+    private lateinit var visualisation: Visualisation
 
     var frameCounter = 0
 
@@ -66,6 +48,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         /* Recognition class has to be initialized here bc context is ready after "onCreate".. */
         recognition = Recognition(this)
+        visualisation = Visualisation(recognition)
 
         val solver = Sudoku( arrayOf(
             intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
@@ -109,7 +92,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
 
         setGlobalUser(User("name", "email"))
-
 
     }
 
@@ -313,48 +295,17 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         // This method is invoked when delivery of the frame needs to be done.
         // The returned values - is a modified frame which needs to be displayed on the screen
         this.frameCounter += 1
-
-        if(inputFrame == null){
-            Log.e(TAG, "Input frame is null!!")
-        }
-
-        var outputFrame: Mat
-        if (inputFrame != null) {
-            //Imgproc.adaptiveThreshold(inputFrame.gray(), outputFrame, 255.0,1,1,11,2.0)
-
-            // TODO: Call the function each X-th frame where X > k? frame
-            // X < 10 will cause threadng problems
-            if (this.frameCounter > 0 ) { // k = 25 for now
+        return if (inputFrame != null) {
+            var outputFrame: Mat
+            if (this.frameCounter > 0) {
                 recognition.run(inputFrame)
-                //test code to display a single sudoku digit box
-
-                outputFrame = testBoxDisplay(recognition.computerVision.SudokuBoxes, inputFrame.rgba())
+                outputFrame = visualisation.runVisualisation(inputFrame)
                 this.frameCounter = 0
-                return outputFrame
-
-            } else { return inputFrame!!.rgba() }
-
+                outputFrame
+            } else inputFrame.rgba()
         } else {
-            return Mat()
-        }
-        //return outputFrame!! // comment the other return then
-
-        //return inputFrame!!.rgba()
-        //return inputFrame!!.gray()
-    }
-
-    var boxCounter = 0
-
-    fun testBoxDisplay(boxes: Array<Mat>?, frame: Mat): Mat{
-        // do null check if there is a sudoku found
-        if (boxes == null){
-            return frame
-        }else {
-            // to iterate through and check all 81 boxes we increment a counter
-            boxCounter++
-            val dst = Mat.zeros(frame.size(), frame.type())
-            Imgproc.resize(boxes[boxCounter%81], dst, dst.size())
-            return dst
+            Log.e(TAG, "Input frame is null!!")
+            Mat()
         }
     }
 }

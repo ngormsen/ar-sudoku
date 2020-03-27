@@ -38,6 +38,7 @@ import kotlin.math.floor
 class Recognition(context: Context) {
     private var digitClassifier = DigitClassifier(context)
     var computerVision = ComputerVision()
+
     var sudokuIsExistent: Boolean = false // For Kelvin
     lateinit var sudokuSquare: Mat // whole sudoku for Kelvin
 
