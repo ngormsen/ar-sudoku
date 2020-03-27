@@ -2,6 +2,7 @@ package sse.goethe.arsudoku.ui.friends
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.ContentValues.TAG
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.TextUtils
@@ -66,12 +67,28 @@ class FriendDialog : DialogFragment() {
                     "email" to editText.text.toString()
                 )
                 val activity = activity as MainActivity?
-                db.collection("users").document(activity!!.getGlobalUser().getEmail())
-                    .collection("friends").document(editText.text.toString())
-                    .set(game)
-                    .addOnSuccessListener { Log.d("success", "DocumentSnapshot successfully written!") }
-                    .addOnFailureListener { e -> Log.w("success", "Error writing document", e) }
-                dismiss()
+
+                db.collection("users")
+                    .whereEqualTo("email", editText.text.toString())
+                    .get()
+                    .addOnSuccessListener { documents ->
+                        if (!documents.documents.isEmpty()){
+                            println("not empty")
+                            db.collection("users").document(activity!!.getGlobalUser().getEmail())
+                                .collection("friends").document(editText.text.toString())
+                                .set(game)
+                                .addOnSuccessListener { Log.d("success", "DocumentSnapshot successfully written!") }
+                                .addOnFailureListener { e -> Log.w("success", "Error writing document", e) }
+                            dismiss()
+                        }
+                        for (document in documents) {
+                            Log.d(TAG, "${document.id} => ${document.data}")
+                        }
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.w(TAG, "Error getting documents: ", exception)
+                    }
+
 //                Snackbar.make(view.rootView, "added", Snackbar.LENGTH_LONG)
 //                    .setAction("Action", null).show()
 

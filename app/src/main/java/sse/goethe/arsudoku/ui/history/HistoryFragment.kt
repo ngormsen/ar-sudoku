@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,7 +13,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -23,6 +26,7 @@ import com.baoyz.swipemenulistview.SwipeMenuListView
 import com.google.firebase.firestore.FirebaseFirestore
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
+import sse.goethe.arsudoku.Sudoku
 import sse.goethe.arsudoku.ui.friends.FriendsViewModel
 import java.util.*
 import kotlin.collections.ArrayList
@@ -39,11 +43,14 @@ class HistoryFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val activity = activity as MainActivity?
+        if (activity != null) {
+            activity.stopCamera()
+        }
 
         historyViewModel =
             ViewModelProviders.of(this).get(HistoryViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_history, container, false)
-        val activity = activity as MainActivity?
 
         val textView: TextView = root.findViewById(R.id.text_history)
 
@@ -66,42 +73,47 @@ class HistoryFragment : Fragment() {
                 root.context
             )
             // set item background
-            deleteItem.background = ColorDrawable(
-                Color.rgb(
-                    0xF9, 0x3F,
-                    0x25
-                )
-            )
+//            deleteItem.background = ColorDrawable(
+//                Color.rgb(
+//                    0xF9, 0x3F,
+//                    0x25
+//                )
+//            )
             // set item width
             deleteItem.width = 170
             // set item title
             deleteItem.title = "Delete"
 //            // set a icon
-//            deleteItem.setIcon(R.drawable.ic_menu_send)
+            deleteItem.setIcon(R.drawable.cancel)
 
             // set item title fontsize
-            deleteItem.titleSize = 18
+            deleteItem.titleSize = 15
             // set item title font color
             deleteItem.titleColor = Color.BLACK
             // add to menu
             menu.addMenuItem(deleteItem)
 
-            // create "Send" item
+            // create "Play" item
             val sendItem = SwipeMenuItem(
 //                root.getApplicationContext<Context>()
                 root.context
             )
             // set item background
-            sendItem.background = ColorDrawable(
-                Color.rgb(
-                    75,
-                    219, 87
-                )
-            )
+//            sendItem.background = ColorDrawable(
+//                Color.rgb(
+//                    75,
+//                    219, 87
+//                )
+//            )
             // set item width
+            sendItem.title = "Play"
+            sendItem.titleColor = Color.BLACK
+            sendItem.titleSize = 15
+
+
             sendItem.width = 170
             // set a icon
-            sendItem.setIcon(R.drawable.ic_menu_send)
+            sendItem.setIcon(R.drawable.play_circle)
             // add to menu
             menu.addMenuItem(sendItem)
         }
@@ -130,8 +142,10 @@ class HistoryFragment : Fragment() {
 
         // Set action for menu swipe buttons
         listViewHistory.setOnMenuItemClickListener(object : SwipeMenuListView.OnMenuItemClickListener {
+            @RequiresApi(Build.VERSION_CODES.O)
             override
             fun onMenuItemClick(position: Int, menu: SwipeMenu, index: Int): Boolean {
+                val activity = activity as MainActivity?
                 when (index) {
                     0 -> {
                         val activity = activity as MainActivity?
@@ -140,16 +154,23 @@ class HistoryFragment : Fragment() {
                             .collection("games").document(history[position])
                             .delete()
 
-                            .addOnSuccessListener {                              adapter.notifyDataSetChanged()
+                            .addOnSuccessListener {
+                                adapter.notifyDataSetChanged()
                             }
                             .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
-
-
-
                     }
                     1 -> {
                         Log.d("succes", "onMenuItemClick: clicked item " + index)
-                        showFriendList(root.context, history[position])
+                        Log.d("which item", history[position])
+                        db.collection("users").document(activity!!.getGlobalUser().getEmail())
+                            .collection("games").document(history[position])
+                            .get()
+                            .addOnSuccessListener {document ->
+                                activity.printState( activity.convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>))
+                                activity.setGame(Sudoku(activity.convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>)))
+                                activity.navigateToPlay()
+                            }
+                            .addOnFailureListener { e -> Log.w("error", "Error deleting document", e) }
 
                     }
                 }// open
@@ -170,23 +191,53 @@ class HistoryFragment : Fragment() {
         val db = FirebaseFirestore.getInstance()
         val selectedItems = ArrayList<Int>() // Where we track the selected items
 //        var users = ArrayList<String>()
-        var users = arrayOf("test@gmail.com", "test2@gmail.com", "hello@gmail.com")
+//        var users = arrayOf("1@gmail.com", "", "", "","", "", "", "","", "", "", "")
+//        var users = arrayOfNulls<String>(10)
 
-//        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("friends")
-//            .get()
-//            .addOnSuccessListener { documents ->
-//                for (document in documents) {
-//                    Log.d("Data", "${document.id} => ${document.data}")
-//                    users.add(document.data.get("email" ).toString())
-//                }
-////                System.out.println(users.size)
-////                System.out.println(users.toArray().toString())
-////                System.out.println(users.toTypedArray())
-//
-//            }
-//            .addOnFailureListener { exception ->
-//                Log.w(TAG, "Error getting documents: ", exception)
-//            }
+        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("friends")
+            .get()
+            .addOnSuccessListener { documents ->
+                for ((idx, document) in documents.withIndex()) {
+                    Log.d("Data", "${document.id} => ${document.data}")
+                    users.add(idx, document.data.get("email" ).toString())
+                }
+
+
+            }
+            .addOnFailureListener { exception ->
+                Log.w(TAG, "Error getting documents: ", exception)
+            }
+
+        val array = Array(users.size) {
+            users[it]
+        }
+
+        builder.setTitle("Send to a friend:")
+//            .setMessage("Login not successful! Please input valid data.")
+
+            .setItems(array,
+                DialogInterface.OnClickListener { dialog, which ->
+                    System.out.println("Send " + item + " to friend: " + users.get(which))
+                    val gameData = hashMapOf(
+                        "date" to item
+                    )
+                    println(gameData["date"])
+//                    db.collection("users").document(users.get(which)).collection("games").document(item)
+//                        .set(gameData)
+//                        .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
+//                        .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+
+                    // The 'which' argument contains the index position
+                    // of the selected item
+                })
+
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+}
+
 
 //        val userArray = arra
 //        val userArray = arrayOfNulls<String>(users.size)
@@ -214,26 +265,9 @@ class HistoryFragment : Fragment() {
 //        var userArray = users.toTypedArray()
 //        println(array.toCollection())
 
-        val array = Array(users.size) {
-            users[it]
-        }
-        builder.setTitle("Send to a friend:")
-//            .setMessage("Login not successful! Please input valid data.")
 
-            .setItems(array,
-                DialogInterface.OnClickListener { dialog, which ->
-                    System.out.println("Send " + item + " to friend: " + users.get(which))
-                    val gameData = hashMapOf(
-                        "date" to item
-                    )
-                    db.collection("users").document(users.get(which)).collection("games").document(item)
-                        .set(gameData)
-                        .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
-                        .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
 
-                    // The 'which' argument contains the index position
-                    // of the selected item
-                })
+
 
 //            .setCancelable(false)
 //            .setPositiveButton("OK",
@@ -254,9 +288,3 @@ class HistoryFragment : Fragment() {
 ////                                            ).show()
 ////                                        })
 //        //Creating dialog box
-        val dialog = builder.create()
-        dialog.show()
-    }
-
-}
-
