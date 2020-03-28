@@ -8,7 +8,10 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks.call
 import org.opencv.imgproc.Imgproc
@@ -52,6 +55,7 @@ class DigitClassifier(private val context: Context) {
         val assetManager = context.assets // load model
         val model = loadModelFile(assetManager)
         val options = Interpreter.Options()
+        options.setNumThreads(1) // NUMBER OF THREADS USED ...
         options.setUseNNAPI(true) // NNAPI provides acceleration for devices GPU; DSP, NPU
         val interpreter = Interpreter(model, options)
 
@@ -125,6 +129,7 @@ class DigitClassifier(private val context: Context) {
      *
      * */
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun classify(bitmap: Bitmap): Int {
         if (!isInitialized) {
             throw IllegalStateException(" TF Lite Interpreter is not initialized yet. ")
@@ -133,9 +138,18 @@ class DigitClassifier(private val context: Context) {
         var startTime: Long
         var elapsedTime: Long
 
+        //
+        // IF ISEMPTYFIELD
+        //     DONT RECOGNIZE
+        //
+
         // measure preprocessing time
         startTime = System.nanoTime()
         val resizedImage = Bitmap.createScaledBitmap(bitmap, inputImageWidth, inputImageHeight, true)
+
+        // check if field is empty, if yes do not classify this image
+        var isEmpty = isEmptyField(resizedImage)
+
         val byteBuffer = convertBitmapToBytebuffer(resizedImage)
         val result = Array(1) { FloatArray(OUTPUT_CLASSES_COUNT) }
         elapsedTime = (System.nanoTime() - startTime) / 1000000
@@ -145,14 +159,14 @@ class DigitClassifier(private val context: Context) {
         startTime = System.nanoTime()
 
         interpreter?.run(byteBuffer, result)
-
+        /*
         Log.d(TAG, "result array: res 1: " + result[0][0] + " res 2: " + result[0][1] + "res 3: " + result[0][2]
                 + " res 2: " + result[0][3] + " res 2: " + result[0][4] + " res 2: " + result[0][5] + " res 2: " + result[0][6]
                 + " res 2: " + result[0][7] + " res 2: " + result[0][8] + " res 2: " + result[0][9] + " res 2: " + result[0][10]
                 + " res 2: " + result[0][11] + " res 2: " + result[0][12] + " res 2: " + result[0][13] + " res 2: " + result[0][14]
                 + " res 2: " + result[0][15] + " res 2: " + result[0][16] + " res 2: " + result[0][17] + " res 2: " + result[0][18]
                 + " res 2: " + result[0][19] )
-
+        */
         elapsedTime = (System.nanoTime() - startTime) / 1000000
         Log.d(TAG, "Inference time = " + elapsedTime + "ms")
 
@@ -160,8 +174,29 @@ class DigitClassifier(private val context: Context) {
     }
 
     /**
+     * The classifier has some issues to classify
+     * the empty squares.
      *
      * */
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun isEmptyField(bitmap: Bitmap): Boolean {
+        var px = 0
+        var lbound = 0.9
+
+        for (row in 0..27) {
+            for (col in 0..27) {
+                px = Color.red(bitmap.getPixel(row, col))
+                Log.d(TAG, "Pixel: $px")
+            }
+        }
+
+        return false
+    }
+
+    /**
+     *
+     * */
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun classifyAsynchronous(bitmap: Bitmap): Task<Int> {
         return call(executorService, Callable<Int> {classify(bitmap)} )
     }
@@ -216,7 +251,7 @@ class DigitClassifier(private val context: Context) {
 
     companion object {
         private const val TAG = "DigitClassifier"
-        private const val MODEL_FILE = "mnist_model2.tflite"
+        //private const val MODEL_FILE = "mnist_model2.tflite"
         private const val FLOAT_TYPE_SIZE = 4
         private const val PIXEL_SIZE = 1
         private const val OUTPUT_CLASSES_COUNT = 20 // to 10
