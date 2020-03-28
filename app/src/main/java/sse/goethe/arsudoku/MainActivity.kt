@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
         ))
         println(solver.solve())
-        
+
         cameraPermission = requestPermission.check()
         initializeCameraView()
 
