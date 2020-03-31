@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -23,7 +22,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
-
+/**
+ * Implements a fragment that shows all the friends of the current user.
+ * Allows for adding, deleting friends and sending recently scanned games to them.
+ *
+ * @author Nils Gormsen
+ */
 class FriendsFragment : Fragment() {
 
     private lateinit var friendsViewModel: FriendsViewModel
@@ -65,28 +69,8 @@ class FriendsFragment : Fragment() {
             }
             ft.addToBackStack(null)
             dialogFragment.show(ft, "dialog")
-
-//            // Creates dialog fragment to add new friends
-//            val dialogFragment = FriendDialog()
-//
-//            val ft = (activity as AppCompatActivity).supportFragmentManager.beginTransaction()
-//            val prev = (activity as AppCompatActivity).supportFragmentManager.findFragmentByTag("dialog")
-//            if (prev != null)
-//            {
-//                ft.remove(prev)
-//            }
-//            ft.addToBackStack(null)
-//            dialogFragment.show(ft, "dialog")
-//
-//            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                .setAction("Action", null).show()
         }
 
-//
-//        val textView: TextView = root.findViewById(R.id.text_friends)
-//        friendsViewModel.text.observe(this, Observer {
-//            textView.text = it
-//        })
         // Creates the SwipeMenu
         val listView : SwipeMenuListView = root.findViewById(R.id.swipeMenu)
         // Get access to the database
@@ -99,13 +83,6 @@ class FriendsFragment : Fragment() {
             val openItem = SwipeMenuItem(
                 root.context
             )
-            // set item background
-//            openItem.background = ColorDrawable(
-//                Color.rgb(
-//                    0xF9, 0x3F,
-//                    0x25
-//                )
-//            )
             // set item width
             openItem.width = 170
             // set item title
@@ -122,16 +99,8 @@ class FriendsFragment : Fragment() {
 
             // create "delete" item
             val sendItem = SwipeMenuItem(
-//                root.getApplicationContext<Context>()
                 root.context
             )
-            // set item background
-//            sendItem.background = ColorDrawable(
-//                Color.rgb(
-//                    75,
-//                    219, 87
-//                )
-//            )
             sendItem.title = "Send"
             // set item title fontsize
             sendItem.titleSize = 15
@@ -150,7 +119,7 @@ class FriendsFragment : Fragment() {
         listView.setMenuCreator(creator)
         listView.setAdapter(adapter)
         populateGameArray()
-        adapter.notifyDataSetChanged()  // Results in a bug that prevents menu from closing
+        adapter.notifyDataSetChanged()
 
 
         // Set database listener for friend data
@@ -195,16 +164,14 @@ class FriendsFragment : Fragment() {
                 }// open
                 // delete
                 // false : close the menu; true : not close the menu
-
                 return false
-
             }
-
         })
-
         return root
     }
-
+    /**
+     * Populates the game array with the data from the firebase.
+     */
     fun populateGameArray(){
         val activity = activity as MainActivity?
         db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("games")
@@ -220,6 +187,14 @@ class FriendsFragment : Fragment() {
             }
     }
 
+    /**
+     * Creates a dialog containing the games scanned by the user in the past.
+     * Clicking on an item will send the game to the respective friend and update the
+     * database.
+     *
+     * @param context the current context
+     * @param item the friend who receives the game
+     */
     fun buildGameList(context: Context, item: String){
         val builder = AlertDialog.Builder(context)
         val selectedItems = ArrayList<Int>() // Where we track the selected items
@@ -228,8 +203,6 @@ class FriendsFragment : Fragment() {
         }
         // Get game data from current user and populate game array with correct data
         builder.setTitle("Game to send:")
-//            .setMessage("Login not successful! Please input valid data.")
-
             .setItems(array,
                 DialogInterface.OnClickListener { dialog, which ->
                     // Updates database
@@ -245,7 +218,6 @@ class FriendsFragment : Fragment() {
                     // The 'which' argument contains the index position
                     // of the selected item
                 })
-
 
         val dialog = builder.create()
         dialog.show()

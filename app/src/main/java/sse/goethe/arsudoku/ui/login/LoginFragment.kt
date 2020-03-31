@@ -25,7 +25,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
 import sse.goethe.arsudoku.User
-
+/**
+ * Implements a fragment that enables the user to register and login using the firebase DB.
+ * After inputting his credentials, the firebase checks whether the data is valid. On success
+ * the user is set and can proceed to receive his data (friends and games scanned in the past)
+ * in the respective views.
+ *
+ * @author Nils Gormsen
+ */
 class LoginFragment : Fragment() {
 
     private lateinit var loginViewModel: LoginViewModel
@@ -52,18 +59,8 @@ class LoginFragment : Fragment() {
         val nameTextView: TextView = root.findViewById(R.id.loginName)
         val db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-//        val currentUser = auth.currentUser
-//        updateUI(currentUser)
 
-
-
-
-
-//        val name: TextView = root.findViewById(R.id.loginName)
-//        loginViewModel.userEmail.observe(this, Observer {
-//            name.text = it
-//        })
-
+        // Set on click action for register button.
         registerButton.setOnClickListener(object : View.OnClickListener{
             override fun onClick(v: View?) {
                 try {
@@ -72,37 +69,28 @@ class LoginFragment : Fragment() {
                             if (task.isSuccessful) {
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d("success", "createUserWithEmail:success")
-//                                Toast.makeText(root.context, "Register successful.",
-//                                    Toast.LENGTH_LONG).show()
                                 val user = auth.currentUser
+                                // Create map of user data for firebase
                                 val userData = hashMapOf(
                                     "email" to emailTextView.text.toString(),
                                     "name" to nameTextView.text.toString()
                                 )
+                                // Save data to firebase
                                 db.collection("users").document(emailTextView.text.toString())
                                     .set(userData)
                                     .addOnSuccessListener {
                                         Log.d("success", "DocumentSnapshot successfully written!")
-//                                    Snackbar.make(root.rootView, "added", Snackbar.LENGTH_LONG)
-//                                        .setAction("Action", null).show()
                                         activity!!.setGlobalUser(User(nameTextView.text.toString(), emailTextView.text.toString()))
                                         showRegisterSuccessDialog(root.context)
                                         activity.navigateHome()
                                     }
                                     .addOnFailureListener { e -> Log.w("error", "Error writing document", e) }
-
-
-//                    updateUI(user)
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Log.w(ContentValues.TAG, "createUserWithEmail:failure", task.exception)
                                 showRegisterErrorDialog(root.context)
-//                            Toast.makeText(root.context, "Authentication failed.",
-//                                Toast.LENGTH_SHORT).show()
-//                    updateUI(null)
                             }
 
-                            // ...
                         }
                 }
                 catch (e: IllegalArgumentException){
@@ -113,6 +101,7 @@ class LoginFragment : Fragment() {
             }
         })
 
+        // Set on click action for login functionality
         loginButton.setOnClickListener(object : View.OnClickListener{
             override fun onClick(v: View?) {
                 try {
@@ -128,16 +117,12 @@ class LoginFragment : Fragment() {
                                 showLoginSuccessDialog(root.context)
                                 activity.navigateHome()
 
-//                            updateUI(user)
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Log.w("success", "signInWithEmail:failure", task.exception)
                                 showLoginErrorDialog(root.context)
 
 
-//                            Toast.makeText(root.context, "Authentication failed.",
-//                                Toast.LENGTH_SHORT).show()
-//                            updateUI(null)
                             }
 
                             // ...
@@ -158,6 +143,9 @@ class LoginFragment : Fragment() {
         return root
     }
 
+    /**
+     * Shows a register success message to the user.
+     */
     fun showRegisterSuccessDialog(context: Context){
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Success")
@@ -165,24 +153,17 @@ class LoginFragment : Fragment() {
             .setCancelable(false)
             .setPositiveButton("Continue",
                 DialogInterface.OnClickListener { dialog, which ->
-//                    Toast.makeText(
-//                        context,
-//                        "Selected Option: Continue",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
+
                 })
-//                                    .setNegativeButton("No",
-//                                        DialogInterface.OnClickListener { dialog, which ->
-//                                            Toast.makeText(
-//                                                root.context,
-//                                                "Selected Option: No",
-//                                                Toast.LENGTH_SHORT
-//                                            ).show()
-//                                        })
+
         //Creating dialog box
         val dialog = builder.create()
         dialog.show()
     }
+
+    /**
+     * Shows a register failure message to the user.
+     */
     fun showRegisterErrorDialog(context: Context){
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Error")
@@ -190,24 +171,16 @@ class LoginFragment : Fragment() {
             .setCancelable(false)
             .setPositiveButton("OK",
                 DialogInterface.OnClickListener { dialog, which ->
-                    //                    Toast.makeText(
-//                        context,
-//                        "Selected Option: Continue",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
+
                 })
-//                                    .setNegativeButton("No",
-//                                        DialogInterface.OnClickListener { dialog, which ->
-//                                            Toast.makeText(
-//                                                root.context,
-//                                                "Selected Option: No",
-//                                                Toast.LENGTH_SHORT
-//                                            ).show()
-//                                        })
-        //Creating dialog box
+
         val dialog = builder.create()
         dialog.show()
     }
+
+    /**
+     * Shows a success message to the user.
+     */
     fun showLoginSuccessDialog(context: Context){
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Success")
@@ -215,24 +188,15 @@ class LoginFragment : Fragment() {
             .setCancelable(false)
             .setPositiveButton("Continue",
                 DialogInterface.OnClickListener { dialog, which ->
-                    //                    Toast.makeText(
-//                        context,
-//                        "Selected Option: Continue",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
                 })
-//                                    .setNegativeButton("No",
-//                                        DialogInterface.OnClickListener { dialog, which ->
-//                                            Toast.makeText(
-//                                                root.context,
-//                                                "Selected Option: No",
-//                                                Toast.LENGTH_SHORT
-//                                            ).show()
-//                                        })
         //Creating dialog box
         val dialog = builder.create()
         dialog.show()
     }
+
+    /**
+     * Shows a failure message to the user.
+     */
     fun showLoginErrorDialog(context: Context){
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Error")
@@ -242,27 +206,12 @@ class LoginFragment : Fragment() {
                 DialogInterface.OnClickListener { dialog, which ->
 
                     //                    Toast.makeText(
-//                        context,
-//                        "Selected Option: Continue",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
                 })
-//                                    .setNegativeButton("No",
-//                                        DialogInterface.OnClickListener { dialog, which ->
-//                                            Toast.makeText(
-//                                                root.context,
-//                                                "Selected Option: No",
-//                                                Toast.LENGTH_SHORT
-//                                            ).show()
-//                                        })
         //Creating dialog box
         val dialog = builder.create()
         dialog.show()
     }
 
-
-    fun navigateToGame(){
-    }
 }
 
 

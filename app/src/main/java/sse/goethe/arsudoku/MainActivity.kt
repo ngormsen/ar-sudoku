@@ -29,6 +29,10 @@ import org.opencv.android.OpenCVLoader
 import org.opencv.core.*
 import org.opencv.core.Mat
 import kotlin.collections.ArrayList
+/**
+ * Activity that manages the overall state of the application.
+ * Serves as the interface between the AR, ML and Data components.
+ */
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
