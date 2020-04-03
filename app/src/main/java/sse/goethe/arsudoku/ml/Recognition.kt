@@ -54,6 +54,8 @@ class Recognition(context: Context) {
 
     lateinit var testbitmap: Bitmap
 
+    var isReady: Boolean = true
+
     init {
 
         /** Initialization of the digit classifier */
@@ -80,13 +82,13 @@ class Recognition(context: Context) {
         sudokuPredictedDigits = arrayOf(
             arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
             arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 8, 0, 0, 0, 0, 0, 0),
             arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
             arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 8, 0),
             arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
             arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 9, 0, 0, 0, 0, 0) )
+            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0) )
 
         /**
          * -1 = False if it is machine printed,  1 = True if it is hand written
@@ -104,7 +106,7 @@ class Recognition(context: Context) {
                                     arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1) )
 
 
-        testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
+        //testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
 
         //var predictedClass: Int = digitClassifier.classify(testbitmap)
         //Log.d(TAG, "The predicted class is: " + predictedClass)
@@ -123,7 +125,6 @@ class Recognition(context: Context) {
      * If a Sudoku was (presumably) found, we continue to do Character
      * Recognition.
      *
-     *
      * Input: frame of the camera
      *
      * */
@@ -139,12 +140,14 @@ class Recognition(context: Context) {
         try {
             croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
             classifyAll()
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+
+            isReady = true
         } catch (e: IOException)  {
             Log.d(TAG, "SudokuBoxesBitmap initialized or null ?")
         }
-
-
-
     }
 
     /**
@@ -170,28 +173,46 @@ class Recognition(context: Context) {
                     addResult(blockCoord, digit)
                     count++
                 }
+
+                //sudokuPredictedDigits = rotateClockwise(sudokuPredictedDigits)
+
             } catch ( e: IOException ) {
                 Log.d(TAG, "Could not classify and add Results. ")
             }
         } else {
             /* TODO: Is this whole process threadsafe ?! */
 
-            //for (i in 0..80) {
+            for (i in 0..80) {
             /* test of threadsafe classifying  */
 
-            /*
+
             if ( (croppedSudokuBlocks[i] != null ) && digitClassifier.isInitialized ) {
                 digitClassifier
                     .classifyAsynchronous( croppedSudokuBlocks[i] )
                     .addOnSuccessListener { Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i])) }
             }
             Log.d("Recognition", "Error classifying")
-            */
+
 
             /* End test of threadsafe classyfying */
-            //Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
-            //}
+            Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
+            }
         }
+    }
+
+    private fun rotateCounterClock(matrix: Array<Array<Int>>): Array<Array<Int>> {
+        Log.d("rotateClockwise", "started this function")
+        val n = 9
+        for (i in 0 until n/2) {
+            for (j in i until n-i-1) {
+                var tmp = matrix[i][j]
+                matrix[i][j] = matrix[j][n-i-1]
+                matrix[j][n-i-1] = matrix[n-i-1][n-j-1]
+                matrix[n-i-1][n-j-1] = matrix[n-j-1][i]
+                matrix[n-j-1][i] = tmp
+            }
+        }
+        return matrix
     }
 
     /** Check if bitmaps are all init or check within convertMatToBitmap != null */
@@ -240,12 +261,12 @@ class Recognition(context: Context) {
                 machineHandOrNothing = 1
                 digit = result % 10
             }
-            /* empty field */
+            /* anything else */
             0 -> {
                 machineHandOrNothing = 0
                 digit = 0
             }
-            10 -> {
+            10 -> { // empty field
                 machineHandOrNothing = 0
                 digit = 0
             }
@@ -266,11 +287,14 @@ class Recognition(context: Context) {
      *
      * */
     private fun calculateSudokuDigitCells(index: Int): Array<Int> {
+        Log.d("calculateSudokuDigitCells:", " given index: " + index)
         val SIZE = 9
         var row: Int = 0
         var column: Int = 0
-        row = (index / SIZE)
+        row = (index / SIZE) // passt
+        Log.d("calculateSudokuDigitCells:", " row:" + row)
         column = index % SIZE
+        Log.d("calculateSudokuDigitCells:", " col:" + column)
         return arrayOf(row, column)
     }
 

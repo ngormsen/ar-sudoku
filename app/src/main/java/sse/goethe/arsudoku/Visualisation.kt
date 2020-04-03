@@ -128,7 +128,8 @@ class Visualisation(recognition: Recognition) {
         for (row in 0 until TOTAL_ROWS) {
             for (col in 0 until TOTAL_COLS) {
                 val digit = digits!![row][col].toString()
-                if (digit != null && digit != "0") {
+                //if (digit != null && digit != "0") {
+                if (digit != null) {
                     val x = col * cellWidth.toDouble() + cellWidth*0.3
                     val y = (row+1) * cellWidth.toDouble() - cellWidth*0.3
                     Imgproc.putText(canvas,

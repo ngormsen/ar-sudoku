@@ -55,14 +55,16 @@ class DigitClassifier(private val context: Context) {
         val assetManager = context.assets // load model
         val model = loadModelFile(assetManager)
         val options = Interpreter.Options()
-        options.setNumThreads(1) // NUMBER OF THREADS USED ...
+        //options.setNumThreads(2) // NUMBER OF THREADS USED ...
         options.setUseNNAPI(true) // NNAPI provides acceleration for devices GPU; DSP, NPU
         val interpreter = Interpreter(model, options)
 
         // Read input shape from model file
         val inputShape = interpreter.getInputTensor(0).shape()
         inputImageWidth = inputShape[1]
+        Log.d(TAG, "inputShape 1" + inputShape[1])
         inputImageHeight = inputShape[2]
+        Log.d(TAG, "inputShape 1" + inputShape[2])
         modelInputSize = FLOAT_TYPE_SIZE * inputImageWidth * inputImageHeight * PIXEL_SIZE
         Log.d(TAG, "The model input size is: " + modelInputSize)
         this.interpreter = interpreter
@@ -111,10 +113,15 @@ class DigitClassifier(private val context: Context) {
             val g = (pixelValue shr 8 and 0xFF)
             val b = (pixelValue and 0xFF)
 
-            Log.d("DigitClassifier:", "r: $r g: $g b:$b")
+            // Log.d("DigitClassifier:", "r: $r g: $g b:$b")
             // convert RGB to grayscale and normalize it
-            val normalizedPixelValue = (r + g + b) / 3.0f / 255.0f
-            Log.d(TAG, "norm pxval: $normalizedPixelValue")
+            var normalizedPixelValue = (r + g + b) / 3.0f / 255.0f
+            if (normalizedPixelValue > 0.5) {
+                normalizedPixelValue = 1.0F
+            } else {
+                normalizedPixelValue = 0.0F
+            }
+            //Log.d(TAG, "norm pxval: $normalizedPixelValue")
             byteBuffer.putFloat(normalizedPixelValue)
         }
         return byteBuffer
@@ -183,12 +190,12 @@ class DigitClassifier(private val context: Context) {
         var px = 0
         var lbound = 0.9
 
-        for (row in 0..27) {
-            for (col in 0..27) {
-                px = Color.red(bitmap.getPixel(row, col))
-                Log.d(TAG, "Pixel: $px")
-            }
-        }
+        //for (row in 0..27) {
+        //    for (col in 0..27) {
+        //       px = Color.red(bitmap.getPixel(row, col))
+        //        Log.d(TAG, "Pixel: $px")
+        //    }
+        //}
 
         return false
     }

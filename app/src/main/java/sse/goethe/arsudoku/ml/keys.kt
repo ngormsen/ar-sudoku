@@ -7,7 +7,6 @@ package sse.goethe.arsudoku.ml
 object Keys {
     const val MODEL_PATH = "cnn_full_finetuning.tflite"
     const val LABEL_PATH = "mnistLabels.txt"
-    /* TODO: DEFINE REST OF CONSTANTS */
     const val MAX_RESULTS = 3
     const val DIM_IMG_SIZE_X = 28 /* 28 like mnist */
     const val DIM_IMG_SIZE_Y = 28
