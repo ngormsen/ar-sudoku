@@ -16,13 +16,22 @@ import sse.goethe.arsudoku.Gamestate
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
 import java.lang.Integer.parseInt
-
+/**
+ * Implements a fragment that allows the user to play the game. The user can choose
+ * to play a certain game from his history or just play the most recently scanned game.
+ * The visualisation fo the Sudoku is generated dynamically.
+ *
+ * @author Nils Gormsen
+ */
 class PlayFragment : Fragment() {
 
     private lateinit var playViewModel: PlayViewModel
     private lateinit var gamestate: Gamestate
     private lateinit var currentState: Array<IntArray>
 
+    /**
+     * Helper function to print the current state for debugging purposes.
+     */
     fun printCurrentState(){
         var n = 9
         for (i in 0 until n) {
@@ -36,25 +45,38 @@ class PlayFragment : Fragment() {
         }
     }
 
+    /**
+     * Calls the redo function from the gamestate object and updates the visualisations.
+     */
     fun redo(view: View){
         gamestate.redo()
         currentState = gamestate.getCurrentState()
         updateSudokuVisualisation(view)
 
     }
-
+    /**
+     * Calls the undo function from the gamestate object and updates the visualisations.
+     */
     fun undo(view: View){
         gamestate.undo()
         currentState = gamestate.getCurrentState()
         updateSudokuVisualisation(view)
     }
-
+    /**
+     * Calls the hint function from the gamestate object and updates the visualisations.
+     */
     fun setHint(view: View){
         gamestate.setHint()
         updateSudokuVisualisation(view)
 
     }
-
+    /**
+     * Checks whether inputting the number on the choosen field is possible and sets the number.
+     *
+     * @param row row of the Sudoku
+     * @param column column of the Sudoku
+     * @param number number to set
+     */
     fun setSudokuNumber(row: Int, column: Int, number: Int) {
         if(checkSudokuNumber(row, column, number)){
             gamestate.setSudokuNumber(row, column, number)
@@ -66,10 +88,24 @@ class PlayFragment : Fragment() {
         }
     }
 
+    /**
+     * Removes the Sudoku number given a row and a column.
+     *
+     * @param row row of the Sudoku
+     * @param column column of the Sudoku
+     */
+
     fun removeSudokuNumber(row: Int, column: Int){
         gamestate.removeSudokuNumber(row, column)
     }
 
+    /**
+     * Checks whether it is possible to input the number on the given field.
+     *
+     * @param i row of the Sudoku
+     * @param j column of the Sudoku
+     * @param x number
+     */
     fun checkSudokuNumber(i: Int, j: Int, x: Int): Boolean {
         var n = 9
         // Is 'x' used in row.
@@ -103,6 +139,11 @@ class PlayFragment : Fragment() {
 //        return
 //    }
 
+    /**
+     * Updates the visualisations of the Sudoku.
+     *
+     * @param view the current view
+     */
     @SuppressLint("ResourceType")
     fun updateSudokuVisualisation(view: View){
         for (row in 1..9) { // We need to start with 1 as we set the id to row and col (row would otherwise be zero)
@@ -133,11 +174,9 @@ class PlayFragment : Fragment() {
         if (activity != null) {
             activity.stopCamera()
         }
+
         gamestate = activity.getGame().getGamestate()
-
-
         currentState = gamestate.getCurrentState()
-
         playViewModel =
             ViewModelProviders.of(this).get(PlayViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_tools, container, false)
@@ -176,9 +215,6 @@ class PlayFragment : Fragment() {
                             lastFieldSelected = 12.toString()
                         }
                         val lastTextField = root.findViewById<TextView>(lastFieldSelected.toInt())
-//                        lastTextField.setBackground(sd)
-                        println("HELLO WORLD")
-                        println(lastFieldSelected)
                         var lastFieldSelectedRow = parseInt(lastFieldSelected[0].toString())
                         var lastFieldSelectedCol = parseInt(lastFieldSelected[1].toString())
 
@@ -211,21 +247,9 @@ class PlayFragment : Fragment() {
             }
             tableRow.gravity = 11
             tableRow.setGravity(Gravity.CENTER_HORIZONTAL);
-
             upperTableRow.addView(tableRow)
             val v = View(getActivity())
-//            v.layoutParams = LinearLayout.LayoutParams(
-//                ViewGroup.LayoutParams.MATCH_PARENT,
-//                10
-//            )
-//            v.setBackgroundColor(Color.parseColor("#B3B3B3"))
-//
-//            upperTableRow.addView(v)
-
-
-
         }
-
 
         // create row for delete,hint,undo,redo buttons
         var tableRowActions = TableRow(context)
@@ -310,22 +334,10 @@ class PlayFragment : Fragment() {
         paramsDelete.span = 2 //amount of columns you will span
         textViewDelete.setLayoutParams(paramsDelete)
 
-
-
-
         tableRowActions.setGravity(Gravity.CENTER_HORIZONTAL);
 
         // Add Row to layout
         lowerTableRow.addView(tableRowActions)
-//        val paramsActionRow = tableRowActions.layoutParams as TableLayout.LayoutParams
-//        paramsActionRow.setMargins(50,0,0,0)
-//        tableRowActions.setLayoutParams(paramsActionRow)
-
-
-
-
-
-
 
         // Create row for input buttons
         val tableRowNumbers = TableRow(context)
@@ -355,20 +367,12 @@ class PlayFragment : Fragment() {
             })
 
             // Finally, add the drawable background to TextView
-//            textView.setBackground(sd)
             textView.setBackgroundResource(R.drawable.input_number_bg)
-
-
             tableRowNumbers.addView(textView)
         }
         tableRowNumbers.setGravity(Gravity.CENTER_HORIZONTAL);
-
         lowerTableRow.addView(tableRowNumbers)
 
-
-
-//        val twoOne = root.findViewById<TextView>(12)
-//        println(twoOne.setText("5"))
         return root
     }
 

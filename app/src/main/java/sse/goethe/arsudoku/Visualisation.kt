@@ -30,7 +30,10 @@ class Visualisation(recognition: Recognition) {
     private val FONT_LINETYPE = LINE_AA //antialiased line
 
     private val ROTANTION_ANGLE = 90.0
-    
+
+    /**
+     *  TODO: colour doesn't work only black and white
+     */
     // colour Scalar(Blue, Green, Red)
     private val BLACK = Scalar(0.0, 0.0,0.0)
     private val WHITE = Scalar(255.0, 255.0,255.0)
@@ -68,7 +71,7 @@ class Visualisation(recognition: Recognition) {
             createSudokuMask()
             createOutput()
             mergeMat()
-            //outputMat
+            //outputMat // outputMat is black/white -> use inputMat
             inputMat
         }
         else inputFrame.rgba()
@@ -143,7 +146,7 @@ class Visualisation(recognition: Recognition) {
                 }
             }
         }
-        //canvas = drawGrid(canvas) // for testing
+        //canvas = drawGrid(canvas) // FOR TESTING -> draws sudoku grid
         return rotateMat(canvas)
     }
 

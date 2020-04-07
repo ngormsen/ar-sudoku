@@ -1,4 +1,10 @@
 package sse.goethe.arsudoku
+/**
+ * Implements a Sudoku class that holds functions for solving the Sudoku and
+ * producing a hint given the current state of the Sudoku.
+ *
+ * @param sudoku an array of numbers representing the scanned sudoku
+ */
 
 class Sudoku(private val sudoku: Array<IntArray>) {
     private val n = 9
@@ -23,22 +29,23 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         }
     }
 
+    /**
+     * Solves the given Sudoku using a simple backtracking algorithm.
+     * Credits to: TODO
+     *
+     * @author Nils Gormsen
+     */
     fun solve() {
         if (!backtrackSolve()) {
             println("This sudoku can't be solved.")
         }
-//        for (i in 0 until n) {
-//            for (j in 0 until n) {
-//                print(sudoku[i][j].toString())
-//                if (Math.floorMod(j, 3) == 2 && j < n - 1)
-//                    print(" ")
-//            }
-//            println()
-//            if (Math.floorMod(i, 3) == 2 && i < n - 1) println()
-//        }
-
     }
-
+    /**
+     * Checks whether it is suitable to put the given number into the chosen field.
+     * @param i row of the Sudoku
+     * @param j column of the Sudoku
+     * @param x number value
+     */
     fun isSuitableToPutXThere(i: Int, j: Int, x: Int): Boolean {
         // Is 'x' used in row.
         for (jj in 0 until n) {
@@ -65,7 +72,9 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         // Everything looks good.
         return true
     }
-
+    /**
+     * Goes through all possible combinations to find the correct solution to the Sudoku.
+     */
     fun backtrackSolve(): Boolean {
         var i = 0
         var j = 0

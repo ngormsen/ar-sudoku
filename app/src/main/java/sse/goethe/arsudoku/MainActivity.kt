@@ -29,6 +29,10 @@ import org.opencv.android.OpenCVLoader
 import org.opencv.core.*
 import org.opencv.core.Mat
 import kotlin.collections.ArrayList
+/**
+ * Activity that manages the overall state of the application.
+ * Serves as the interface between the AR, ML and Data components.
+ */
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -41,11 +45,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     val TAG = MainActivity::class.java.simpleName
     var  mOpenCvCameraView : CameraBridgeViewBase? = null
 
-    /* Instance of Recognition Class */
-    //var recognition = Recognition(this)
-    // If this does not work delete the following line
+    /* Instance of Recognition and Visualisation Class */
     private lateinit var recognition: Recognition
-    private lateinit var visualisation: Visualisation
+    private lateinit var visualisation : Visualisation
+    private lateinit var requestPermission : RequestPermission
+
+    /*
+            true = permission granted
+            false = permission denied
+     */
+    private var cameraPermission : Boolean = false
 
     var frameCounter = 0
 
@@ -55,9 +64,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        /* Recognition class has to be initialized here bc context is ready after "onCreate".. */
+        /* Recognition and Visualisation class has to be initialized here bc context is ready after "onCreate".. */
         recognition = Recognition(this)
         visualisation = Visualisation(recognition)
+        requestPermission = RequestPermission(this, this)
 
         val solver = Sudoku( arrayOf(
             intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
@@ -70,14 +80,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
             intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
         ))
-        println(solver.solve())
 
-        /* Initialization of OpenCV camera */
-        mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
-        mOpenCvCameraView?.apply {
-            visibility = SurfaceView.VISIBLE
-            setCvCameraViewListener(this@MainActivity)
-        }
+        cameraPermission = requestPermission.check()
+        initializeCameraView()
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -106,6 +111,18 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         // Create game
         setGame(solver)
         println("document in database:")
+    }
+
+    /**
+     *  Kelvin Tsang
+     */
+    private fun initializeCameraView () {
+            /* Initialization of OpenCV camera */
+            mOpenCvCameraView = fragment_CameraView as CameraBridgeViewBase
+            mOpenCvCameraView?.apply {
+                visibility = SurfaceView.VISIBLE
+                setCvCameraViewListener(this@MainActivity)
+            }
     }
 
 
@@ -229,74 +246,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return game
     }
 
-    // THIS IS A FUNCTION TO TEST OPENCV AND BELONGS TO THE OPENVISION PART
-    // IF IT IS WORKING
 
-    // implementation of interface CvCameraViewFrame !
-
-    /*
-    interface CvCameraViewFrame {
-        fun rgba(): Mat
-        fun gray(): Mat
-    }
-
-    fun onRunningFrame( frame: CvCameraViewFrame ): Mat {
-        // greyscale the frame
-        var inpFrame = frame.gray()
-        // apply adaptive threshold
-        Imgproc.adaptiveThreshold(inpFrame, inpFrame, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 10.0)
-
-        var contours = ArrayList<MatOfPoint>() // destination for findContours()
-        var hierarchy = Mat() //
-
-        Imgproc.findContours(inpFrame, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
-
-        hierarchy.release() // for deallocation
-
-        var biggest = MatOfPoint2f()
-        var max_area = 0.0
-        var approxContour = Mat() // holds the approximated contour
-
-        // approx. contours by polygons
-        for (contour in contours) {
-            var area = Imgproc.contourArea(contour)
-            if (area > 100) {
-                var tmp: MatOfPoint2f = MatOfPoint2f(contour)
-                var peri = Imgproc.arcLength(tmp, true)
-                var approx: MatOfPoint2f = MatOfPoint2f()
-                Imgproc.approxPolyDP(tmp, approx, 0.02 * peri, true)
-                if ( (area > max_area) && (approx.total() == 4L) ) {
-                    biggest = approx
-                    max_area = area
-                }
-            }
-        }
-
-        // find surrounding box now
-        var displayMat: Mat = frame.rgba()
-        var points: Array<Point> = biggest.toArray()
-        var cropped: Mat = Mat()
-        var t: Int = 3
-
-        if (points.size >= 4) {
-            // draw surrounding box
-            Imgproc.line(displayMat, Point(points[0].x, points[0].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 2 )
-            Imgproc.line(displayMat, Point(points[1].x, points[1].y), Point(points[2].x, points[2].y), Scalar(255.0,0.0,0.0), 2 )
-            Imgproc.line(displayMat, Point(points[2].x, points[2].y), Point(points[3].x, points[3].y), Scalar(255.0,0.0,0.0), 2 )
-            Imgproc.line(displayMat, Point(points[3].x, points[3].y), Point(points[0].x, points[0].y), Scalar(255.0,0.0,0.0), 2 )
-
-            // crop the image
-            var r: Rect = Rect( Point(points[0].x - t, points[0].y - t), Point(points[2].x + t, points[2].y + t) )
-            if (displayMat.width() > 1 && displayMat.height() > 1) {
-                cropped = Mat(displayMat, r)
-            }
-        }
-        return displayMat
-    }
-    */
-
-
-    // +++++++++++++++++++++++++++++++++++++
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -322,19 +272,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-
-
-    /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    * functions for using the DigitClassifier from RecognitonClass
-    * author: David Machajewski
-    *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-//    override fun onDestroy() {
-//        recognition.close()
-//        super.onDestroy()
-//    }
-
-
     companion object {
         // just to use it for Log's
         private const val TAG = "MainActivity"}
@@ -359,7 +296,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         println("Camera resumed")
     }
 
-
     fun navigateHome() {
         val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigate(R.id.nav_home)
@@ -378,8 +314,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     fun getGlobalUser(): User{
         return globalUser
     }
-
-
 
     private val mLoaderCallback = object : BaseLoaderCallback(this) {
         override fun onManagerConnected(status: Int) {
@@ -403,7 +337,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             Log.d(TAG, "OpenCV library found inside package. Using it!")
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
         }
-
     }
 
     public override fun onPause() {
