@@ -55,7 +55,12 @@ class Gamestate (sudoku: Sudoku){
      */
     fun setHint(){
             val hint = sudoku.hint(currentState)
-            setSudokuNumber(hint.first, hint.second, hint.third )
+            try {
+                setSudokuNumber(hint.first, hint.second, hint.third )
+            }
+            catch (e: IndexOutOfBoundsException){
+                println("No more hints available.")
+            }
     }
 
     fun getStateHistory():MutableList<Array<IntArray>>{
