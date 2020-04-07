@@ -35,4 +35,3 @@ INJECTED from C:\Users\Natalia\projects\android-apps\sudokusolver_v3\ar-sudoku\o
 		INJECTED from C:\Users\Natalia\projects\android-apps\sudokusolver_v3\ar-sudoku\openCVLibrary349\src\main\AndroidManifest.xml
 		ADDED from C:\Users\Natalia\projects\android-apps\sudokusolver_v3\ar-sudoku\openCVLibrary349\src\main\AndroidManifest.xml
 		INJECTED from C:\Users\Natalia\projects\android-apps\sudokusolver_v3\ar-sudoku\openCVLibrary349\src\main\AndroidManifest.xml
-

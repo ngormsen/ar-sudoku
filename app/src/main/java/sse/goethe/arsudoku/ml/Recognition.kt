@@ -124,12 +124,15 @@ class Recognition(context: Context) {
         computerVision.analyzeFrame(frame)
 
         // How to do null-checks:
-        if (computerVision.SudokuBoxesBitmap == null) return
+        if (computerVision.SudokuBoxesBitmap == null) {
+            isReady = true
+            return
+        }
         else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
         //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
 
         try {
-            croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
+            croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!! // redundand
 
             classifyAll()
 
@@ -147,7 +150,7 @@ class Recognition(context: Context) {
 
             isReady = true
 
-        } catch (e: IOException)  {
+        } catch (e: IOException)  { // general exception.
             Log.d(TAG, "SudokuBoxesBitmap initialized or null ?")
         }
     }
@@ -168,17 +171,16 @@ class Recognition(context: Context) {
 
         if (!threadsafe) {
             try {
-                for (block in croppedSudokuBlocks!!) {
+                for (block in croppedSudokuBlocks) {
                     var digit = digitClassifier.classify(block)
 
                     Log.d("$TAG - classifyAll()", " block nr.$count, digit: $digit")
-
 
                     blockCoord = calculateSudokuDigitCells(count)
                     addResult(blockCoord, digit)
                     count++
                 }
-            } catch ( e: IOException ) { Log.d(TAG, "Could not classify and add Results. ") }
+            } catch ( e: IOException ) { Log.d(TAG, "Could not classify and add Results. ") } // NICHT NÖTIG
         } else {
             for (i in 0..80) {
             /* test of threadsafe classifying  */

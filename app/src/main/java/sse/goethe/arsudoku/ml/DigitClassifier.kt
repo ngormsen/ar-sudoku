@@ -146,10 +146,10 @@ class DigitClassifier(private val context: Context) {
         var elapsedTime: Long
 
         startTime = System.nanoTime()
-        val resizedImage = Bitmap.createScaledBitmap(bitmap, inputImageWidth, inputImageHeight, true)
+        val resizedImage = Bitmap.createScaledBitmap(bitmap, inputImageWidth, inputImageHeight, true) // evtl. rausnehmen
 
         // check if field is empty, if yes do not classify this image
-        var isEmpty = isEmptyField(resizedImage)
+        var isEmpty = isEmptyField(resizedImage) // evtl. rausnehmen oder verwenden
 
         val byteBuffer = convertBitmapToBytebuffer(resizedImage)
         val result = Array(1) { FloatArray(OUTPUT_CLASSES_COUNT) }
@@ -159,7 +159,7 @@ class DigitClassifier(private val context: Context) {
         // measure inference time
         startTime = System.nanoTime()
 
-        interpreter?.run(byteBuffer, result)
+        interpreter?.run(byteBuffer, result) // evtl. alle auf einmal verarbeiten
         /*
         Log.d(TAG, "result array: res 1: " + result[0][0] + " res 2: " + result[0][1] + "res 3: " + result[0][2]
                 + " res 2: " + result[0][3] + " res 2: " + result[0][4] + " res 2: " + result[0][5] + " res 2: " + result[0][6]

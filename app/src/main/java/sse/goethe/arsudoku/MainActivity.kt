@@ -286,7 +286,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         navUserEmail.text = user.getEmail()
     }
 
-    fun stopCamera(){
+    fun stopCamera() {
         mOpenCvCameraView?.disableView()
         println("Camera stopped")
     }
