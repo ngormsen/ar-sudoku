@@ -174,6 +174,7 @@ class PlayFragment : Fragment() {
         if (activity != null) {
             activity.stopCamera()
         }
+
         gamestate = activity.getGame().getGamestate()
         currentState = gamestate.getCurrentState()
         playViewModel =
