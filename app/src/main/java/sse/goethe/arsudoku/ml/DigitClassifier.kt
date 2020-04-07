@@ -145,12 +145,6 @@ class DigitClassifier(private val context: Context) {
         var startTime: Long
         var elapsedTime: Long
 
-        //
-        // IF ISEMPTYFIELD
-        //     DONT RECOGNIZE
-        //
-
-        // measure preprocessing time
         startTime = System.nanoTime()
         val resizedImage = Bitmap.createScaledBitmap(bitmap, inputImageWidth, inputImageHeight, true)
 
