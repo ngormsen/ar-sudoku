@@ -362,6 +362,20 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
         Log.d("FRAME:", "onCameraFrame() Method")
+        return if (inputFrame != null && recognition.isReady) {
+            recognition.isReady = false
+            recognition.run(inputFrame)
+            var outputFrame: Mat = visualisation.runVisualisation(inputFrame)
+            outputFrame
+        } else {
+            Log.e(TAG, "Input frame is null!!")
+            Mat()
+        }
+    }
+/*
+    @RequiresApi(Build.VERSION_CODES.Q)
+    override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
+        Log.d("FRAME:", "onCameraFrame() Method")
         // This method is invoked when delivery of the frame needs to be done.
         // The returned values - is a modified frame which needs to be displayed on the screen
         this.frameCounter += 1
@@ -378,4 +392,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             Mat()
         }
     }
+
+*/
 }

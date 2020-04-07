@@ -11,9 +11,10 @@ import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.core.Core.BORDER_CONSTANT
-import org.opencv.core.CvType.CV_8UC3
+import org.opencv.core.Core.bitwise_not
+import org.opencv.core.CvType.*
 import org.opencv.imgproc.Imgproc
-import org.opencv.imgproc.Imgproc.INTER_LINEAR
+import org.opencv.imgproc.Imgproc.*
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.tan
@@ -55,7 +56,7 @@ class ComputerVision {
 
     /* values and variables */
     private lateinit var bitmap: Bitmap
-    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 32  // the width and height of one Sudoku number square
+    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 28  // the width and height of one Sudoku number square
     private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
     /**
      * The following are class properties that are being set by analyzeFrame().
@@ -127,14 +128,19 @@ class ComputerVision {
 
         // cutting
         val boxes = cutSudoku(croppedImage)
+        var boxesRotate = boxes
+
+        for (i in 0..80) {
+            boxesRotate[i] = rotateMat(boxes[i])
+        }
 
         // ToDo: move this code to the convertMatToBitmap function!
         // convert Mat images to Bitmaps
-        val boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
-            createBitmap( boxes[0].width(), boxes[0].height() )
+        val boxesBitmap: Array<Bitmap> = Array(81) {
+            createBitmap( boxesRotate[0].width(), boxesRotate[0].height() )
         }
         for (i in 0..80) {
-            boxesBitmap[i] = convertMatToBitmap(boxes[i])
+            boxesBitmap[i] = convertMatToBitmap(boxesRotate[i])
         }
 
         // In the end, we set all the calculated data as class properties
@@ -233,6 +239,42 @@ class ComputerVision {
         Imgproc.dilate(morphedMat, dilatedMat, core)
         return Pair(dilatedMat, threshMat)
     }
+
+    // ############################################################
+    // New preprocessing bc of classifier performance reasons
+
+    private fun preprocessing_v2(frame: CameraBridgeViewBase.CvCameraViewFrame): Pair<Mat, Mat> {
+        var proc = Mat()
+        Imgproc.GaussianBlur(frame.rgba(), proc, Size(9.0,9.0), 0.0)
+        var tmp = Mat()
+        Imgproc.adaptiveThreshold(proc, tmp, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 2.0)
+        var tmp2 = Mat()
+        bitwise_not(tmp, tmp2)
+        var kernel = Mat.zeros(3,3, CV_8UC1)
+        var dst = Mat()
+        dilate(tmp2, dst, kernel)
+
+        return Pair(dst, tmp)
+    }
+
+    private fun scale_and_centre(){
+
+    }
+
+
+    private fun rotateMat (input : Mat, angle : Double = 270.0) : Mat {
+
+        val centerPoint : Point = Point(input.cols()/2.0, input.rows()/2.0)
+        val rotMat : Mat = Imgproc.getRotationMatrix2D(centerPoint, angle, 1.0)
+        var dst : Mat = Mat.zeros(input.cols(), input.rows(), input.type())
+
+        Imgproc.warpAffine(input, dst, rotMat, input.size(), Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
+
+        return dst
+    }
+
+    // ############################################################
+
 
     /**
      * Finds the largest contour in the frame
