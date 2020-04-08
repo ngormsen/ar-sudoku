@@ -50,6 +50,8 @@ import kotlin.math.tan
  * Manus ding
  * davids ding
  *
+ * Idea: experimentalContouring
+ * crop first, then do contour detection on cropped image again to search for 81 square contours
  *
  */
 class ComputerVision {
@@ -112,7 +114,7 @@ class ComputerVision {
         var corners = findCorners(img)
 
         // experimental box finding:
-        experimentalContouring(img)
+        // experimentalContouring(img)
 
         // corners is a nullable MatOfPoint2f
         // if null, there was no Sudoku in the frame
@@ -285,6 +287,8 @@ class ComputerVision {
 
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.
+
+        // ToDo: Find the first 4 largest contours, check if we can make any of them a square, then rest.
 
         val contours = ArrayList<MatOfPoint>() // destination for findContours()
 

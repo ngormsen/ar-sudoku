@@ -365,11 +365,33 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return if (inputFrame != null && recognition.isReady) {
             recognition.isReady = false
             recognition.run(inputFrame)
+            val aSudoku = Sudoku(converterarraydingens(recognition.sudokuPredictedDigits))
+            setGame(aSudoku)
             visualisation.runVisualisation(inputFrame, game.getGamestate().getSolvedState())
         } else {
             Log.e(TAG, "Input frame is null!!")
             Mat()
         }
+    }
+
+    private fun converterarraydingens(input: Array<Array<Int>>): Array<IntArray>{
+        val newState = arrayOf(
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
+        )
+        for (row in 0..8) {
+            for (col in 0..8) {
+                newState[row][col] = input[row][col]
+            }
+        }
+        return newState
     }
 /*
     @RequiresApi(Build.VERSION_CODES.Q)
