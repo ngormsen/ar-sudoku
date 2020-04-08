@@ -29,6 +29,7 @@ class Visualisation(recognition: Recognition) {
     private val FONT_THICKNESS = 1
     private val FONT_LINETYPE = LINE_AA //antialiased line
 
+    // rotate counter clockwise
     private val ROTANTION_ANGLE = 90.0
 
     /**
@@ -52,7 +53,7 @@ class Visualisation(recognition: Recognition) {
     private var transformMat : Mat? = null
     private var digits : Array<Array<Int>>? = null
 
-    private var inputSize : Size? = null
+    private lateinit var inputSize : Size
     private var inputType : Int? = null
 
     private lateinit var sudoku_mask : Mat
@@ -71,7 +72,7 @@ class Visualisation(recognition: Recognition) {
             createSudokuMask()
             createOutput()
             mergeMat()
-            //outputMat // outputMat is black/white -> use inputMat
+            //outputMat // TODO: outputMat is black/white -> use inputMat
             inputMat
         }
         else inputFrame.rgba()
@@ -85,7 +86,11 @@ class Visualisation(recognition: Recognition) {
      *       - get the sudoku digits
      */
     private fun getInput(inputFrame: CameraBridgeViewBase.CvCameraViewFrame) : Boolean {
-        return if (recognition.computerVision.CroppedSudoku != null && recognition.computerVision.TransformationMat != null && recognition.sudokuPredictedDigits != null) {
+
+        return if (recognition.computerVision.CroppedSudoku != null
+            && recognition.computerVision.TransformationMat != null
+            && recognition.sudokuPredictedDigits != null) { // TODO
+
             inputMat_rgba = inputFrame.rgba()
             //inputMat_rgba = inputFrame.gray()
             inputMat = inputMat_rgba
@@ -99,7 +104,7 @@ class Visualisation(recognition: Recognition) {
             transformMat = recognition.computerVision.TransformationMat!!.inv()
             digits = recognition.sudokuPredictedDigits
 
-            return true
+            true
         } else false
     }
 
@@ -107,10 +112,13 @@ class Visualisation(recognition: Recognition) {
      *  Function createSudokuMask
      *      - renderDigits()
      *      - transformPerspective(...)
+     *
+     *  Sudoku Mask : White digits and black background
      *      
      *      https://stackoverflow.com/questions/45131216/opencv-overlay-two-mat-drawings-not-images-with-transparency
      */
     private fun createSudokuMask () {
+
         sudoku_mask = renderDigits()
         sudoku_mask = transformPerspective()
     }
@@ -131,8 +139,7 @@ class Visualisation(recognition: Recognition) {
         for (row in 0 until TOTAL_ROWS) {
             for (col in 0 until TOTAL_COLS) {
                 val digit = digits!![row][col].toString()
-                //if (digit != null && digit != "0") {
-                if (digit != null) {
+                if (digit != null && digit != "0") {
                     val x = col * cellWidth.toDouble() + cellWidth*0.3
                     val y = (row+1) * cellWidth.toDouble() - cellWidth*0.3
                     Imgproc.putText(canvas,
