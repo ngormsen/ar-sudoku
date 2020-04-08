@@ -126,12 +126,12 @@ class Recognition(context: Context) {
     @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
-
+        frameCounter++
         if (frameCounter%run_every_x == 0) {
             isReady = true
             return
         }
-        frameCounter++
+        Log.d("checkcheck", "hihihi")
 
         // How to do null-checks:
         if (computerVision.SudokuBoxesBitmap == null) {
