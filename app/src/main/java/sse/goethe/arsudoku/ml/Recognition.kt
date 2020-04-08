@@ -127,7 +127,10 @@ class Recognition(context: Context) {
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
 
-        if (frameCounter%run_every_x == 0) return
+        if (frameCounter%run_every_x == 0) {
+            isReady = true
+            return
+        }
         frameCounter++
 
         // How to do null-checks:
