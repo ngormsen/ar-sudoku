@@ -51,7 +51,7 @@ class Visualisation(recognition: Recognition) {
 
     private var sudokuMat : Mat? = null
     private var transformMat : Mat? = null
-    private var digits : Array<Array<Int>>? = null
+    private lateinit var digits : Array<IntArray>
 
     private lateinit var inputSize : Size
     private var inputType : Int? = null
@@ -66,9 +66,9 @@ class Visualisation(recognition: Recognition) {
      *       - starts the visualisation if the sudoku is found and the input isn't null
      *       -> return outputMat as Mat
      */
-    fun runVisualisation(inputFrame: CameraBridgeViewBase.CvCameraViewFrame) : Mat {
+    fun runVisualisation(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Mat {
 
-        return if (getInput(inputFrame)) {
+        return if (getInput(inputFrame, solvedSudoku)) {
             createSudokuMask()
             createOutput()
             mergeMat()
@@ -85,11 +85,10 @@ class Visualisation(recognition: Recognition) {
      *       - get the invers transformation matrix
      *       - get the sudoku digits
      */
-    private fun getInput(inputFrame: CameraBridgeViewBase.CvCameraViewFrame) : Boolean {
+    private fun getInput(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Boolean {
 
         return if (recognition.computerVision.CroppedSudoku != null
-            && recognition.computerVision.TransformationMat != null
-            && recognition.sudokuPredictedDigits != null) { // TODO
+            && recognition.computerVision.TransformationMat != null) {
 
             inputMat_rgba = inputFrame.rgba()
             //inputMat_rgba = inputFrame.gray()
@@ -102,7 +101,7 @@ class Visualisation(recognition: Recognition) {
 
             sudokuMat = recognition.computerVision.CroppedSudoku
             transformMat = recognition.computerVision.TransformationMat!!.inv()
-            digits = recognition.sudokuPredictedDigits
+            digits = solvedSudoku
 
             true
         } else false
@@ -138,7 +137,7 @@ class Visualisation(recognition: Recognition) {
 
         for (row in 0 until TOTAL_ROWS) {
             for (col in 0 until TOTAL_COLS) {
-                val digit = digits!![row][col].toString()
+                val digit = digits[row][col].toString()
                 if (digit != null && digit != "0") {
                     val x = col * cellWidth.toDouble() + cellWidth*0.3
                     val y = (row+1) * cellWidth.toDouble() - cellWidth*0.3

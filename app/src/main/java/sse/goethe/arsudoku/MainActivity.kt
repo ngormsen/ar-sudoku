@@ -365,7 +365,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return if (inputFrame != null && recognition.isReady) {
             recognition.isReady = false
             recognition.run(inputFrame)
-            visualisation.runVisualisation(inputFrame)
+            visualisation.runVisualisation(inputFrame, game.getGamestate().getSolvedState())
         } else {
             Log.e(TAG, "Input frame is null!!")
             Mat()
