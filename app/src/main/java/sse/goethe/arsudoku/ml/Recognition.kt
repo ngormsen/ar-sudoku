@@ -55,6 +55,10 @@ class Recognition(context: Context) {
 
     var validityCounter = arrayOf<Array<Array<Int>>>()
 
+    // parameter for running digit recognition every x frames to reduce lagginess
+    val run_every_x = 10
+    var frameCounter = 0
+
     init {
         /** Initialization of the digit classifier */
         digitClassifier.initializeInterpreter()
@@ -122,6 +126,9 @@ class Recognition(context: Context) {
     @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
+
+        if (frameCounter%run_every_x == 0) return
+        frameCounter++
 
         // How to do null-checks:
         if (computerVision.SudokuBoxesBitmap == null) {

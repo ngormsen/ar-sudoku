@@ -366,7 +366,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             recognition.isReady = false
             recognition.run(inputFrame)
             val aSudoku = Sudoku(converterarraydingens(recognition.sudokuPredictedDigits))
-            setGame(aSudoku)
+            //setGame(aSudoku)
             visualisation.runVisualisation(inputFrame, game.getGamestate().getSolvedState())
         } else {
             Log.e(TAG, "Input frame is null!!")
