@@ -17,6 +17,8 @@ import sse.goethe.arsudoku.ml.Recognition
  */
 class Visualisation(recognition: Recognition) {
 
+    private val TAG : String = "Visualisation"
+
     // colums and row size
     private val TOTAL_ROWS = 9
     private val TOTAL_COLS = 9
@@ -264,10 +266,8 @@ class Visualisation(recognition: Recognition) {
         startTime = System.nanoTime()
     }
 
-    private fun stopTime(tag : String = "TTTTTTTTTTTTTTTTTTTTTTTT", start : Long = startTime) {
+    private fun stopTime(tag : String = TAG, start : Long = startTime) {
         var elapsedTime = (System.nanoTime() - start).toDouble() / 1000000
-        averageTime = (averageTime + elapsedTime) / 2
-        //Log.d(tag, elapsedTime.toString() + " ms")
-        Log.e(tag, averageTime.toString() + " ms")
+        Log.d(tag, elapsedTime.toString() + " ms")
     }
 }
