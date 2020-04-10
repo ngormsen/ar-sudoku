@@ -34,22 +34,17 @@ class Visualisation(recognition: Recognition) {
     // rotate counter clockwise
     private val ROTANTION_ANGLE = 90.0
 
-    /**
-     *  TODO: colour doesn't work only black and white
-     */
     // colour Scalar(Blue, Green, Red)
-    //private val BLACK = Scalar(0.0, 0.0,0.0)
-    private val WHITE = Scalar(255.0, 255.0,255.0)
-    //private val BLUE = Scalar(255.0, 0.0,0.0)
-    //private val GREEN = Scalar(0.0, 255.0,0.0)
-    //private val RED = Scalar(0.0, 0.0,255.0)
+    private val BLACK = Scalar(0.0, 0.0,0.0, 0.0)
+    private val WHITE = Scalar(255.0, 255.0,255.0, 0.0)
+    private val RED = Scalar(255.0, 0.0,0.0, 0.0)
+    private val GREEN = Scalar(0.0, 255.0,0.0, 0.0)
+    private val BLUE = Scalar(0.0, 0.0,255.0, 0.0)
     
     // connection to Recognition and ComputerVision
     private var recognition: Recognition = recognition
 
     private lateinit var inputMat : Mat
-    //private lateinit var inputMat_rgba : Mat
-    //private lateinit var inputMat_gray : Mat
 
     private var sudokuMat : Mat? = null
     private var transformMat : Mat? = null
@@ -62,7 +57,6 @@ class Visualisation(recognition: Recognition) {
     private lateinit var outputMat : Mat
 
     private var startTime : Long = 0
-    private var averageTime : Double = 0.0
 
     /**
      *   Function startVisualisation (input is the current video stream as Mat)
@@ -96,13 +90,12 @@ class Visualisation(recognition: Recognition) {
         return if (sudokuMat != null && transformMat != null) {
 
             inputMat = inputFrame.rgba()
-            //inputMat_rgba = inputFrame.gray()
-            //inputMat = inputMat_rgba
             inputSize = inputMat.size()
             inputType = inputMat.type()
 
-            sudoku_mask = Mat.zeros(inputSize, inputType!!)
-            outputMat = Mat.zeros(inputSize, inputType!!)
+            sudoku_mask = Mat.zeros(inputSize, 24)
+            outputMat = Mat.zeros(inputSize, 24)
+            transformMat = transformMat!!.inv()
 
             digits = solvedSudoku
 
@@ -134,7 +127,7 @@ class Visualisation(recognition: Recognition) {
 
         val matSize = sudoku.size()
         val matType = sudoku.type()
-        var canvas = Mat.zeros(matSize, inputType!!)
+        var canvas = Mat.zeros(matSize, 24)
 
         val cellWidth = sudoku.width() / 9
 
@@ -194,7 +187,7 @@ class Visualisation(recognition: Recognition) {
     private fun transformPerspective (input : Mat = sudoku_mask) : Mat{
 
         var dst : Mat = Mat.zeros(inputSize, inputType!!)
-        Imgproc.warpPerspective(input, dst, transformMat!!.inv(), inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
+        Imgproc.warpPerspective(input, dst, transformMat!!, inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
 
         return dst
     }
@@ -206,7 +199,8 @@ class Visualisation(recognition: Recognition) {
     private fun createOutput () {
 
         val whiteMat : Mat = createColouredMat()
-        subtract(whiteMat, sudoku_mask, outputMat)
+        //subtract(whiteMat, sudoku_mask, outputMat)
+        outputMat = whiteMat.setTo(RED, sudoku_mask)
     }
 
     /** TODO: DOESN'T WORK!!! ONLY WITH WHITE COLOUR
@@ -215,7 +209,7 @@ class Visualisation(recognition: Recognition) {
      */
     private fun createColouredMat (colour : Scalar = WHITE) : Mat {
 
-        val dst : Mat = Mat.zeros(inputSize, inputType!!)
+        val dst : Mat = Mat.zeros(inputSize, 24)
 
         return dst.setTo(colour)
     }
