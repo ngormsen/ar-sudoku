@@ -20,6 +20,7 @@ class Visualisation(recognition: Recognition) {
     private val TAG : String = "Visualisation"
 
     // colums and row size
+    private val n = 9
     private val TOTAL_ROWS = 9
     private val TOTAL_COLS = 9
 
@@ -123,16 +124,16 @@ class Visualisation(recognition: Recognition) {
      *       - creates a Mat with the size of the cropped sudoku on a black background
      *       - renders the solved digits on their location in white colour
      */
-    private fun renderDigits (sudoku : Mat = sudokuMat!!) : Mat{
+    private fun renderDigits (FONT_COLOUR : Scalar = WHITE, BACKGROUND_COLOUR : Scalar = BLACK, sudoku : Mat = sudokuMat!!) : Mat{
 
         val matSize = sudoku.size()
-        val matType = sudoku.type()
         var canvas = Mat.zeros(matSize, 24)
+        if (BACKGROUND_COLOUR != BLACK) canvas.setTo(BACKGROUND_COLOUR)
 
-        val cellWidth = sudoku.width() / 9
+        val cellWidth = sudoku.width() / n
 
-        for (row in 0 until TOTAL_ROWS) {
-            for (col in 0 until TOTAL_COLS) {
+        for (row in 0 until n) {
+            for (col in 0 until n) {
                 val digit = digits[row][col].toString()
                 if (digit != null && digit != "0") {
                     val x = col * cellWidth.toDouble() + cellWidth*0.3
@@ -142,7 +143,7 @@ class Visualisation(recognition: Recognition) {
                                     Point(x,y),
                                     FONT_FACE,
                                     FONT_SCALE,
-                                    FONT_COLOR_WHITE,
+                                    FONT_COLOUR,
                                     FONT_THICKNESS,
                                     FONT_LINETYPE)
                 }
