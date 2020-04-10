@@ -1,4 +1,9 @@
 package sse.goethe.arsudoku
+
+import java.util.*
+import kotlin.collections.HashSet
+import kotlin.concurrent.schedule
+
 /**
  * Implements a Sudoku class that holds functions for solving the Sudoku and
  * producing a hint given the current state of the Sudoku.
@@ -9,6 +14,7 @@ package sse.goethe.arsudoku
 class Sudoku(private val sudoku: Array<IntArray>) {
     private val n = 9
     private var solvable = true;
+    private var time = true;
 
     fun getSolvableState(): Boolean{
         return solvable;
@@ -41,8 +47,12 @@ class Sudoku(private val sudoku: Array<IntArray>) {
      * @author Nils Gormsen
      */
     fun solve() {
+        Timer("stopSolver", false).schedule(100) {
+//            println("Timer started")
+            time = false;
+        }
         if (!backtrackSolve()) {
-            println("This sudoku can't be solved.")
+            println("This sudoku can't be solved or execution time to long.")
             solvable = false;
         }
     }
@@ -105,7 +115,7 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         for (x in 1..9) {
             if (isSuitableToPutXThere(i, j, x)) {
                 sudoku[i][j] = x
-                if (backtrackSolve()) {
+                if (time && backtrackSolve()) {
                     return true
                 }
                 sudoku[i][j] = 0 // We've failed.
