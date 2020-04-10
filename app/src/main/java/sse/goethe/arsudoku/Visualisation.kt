@@ -22,7 +22,7 @@ class Visualisation(recognition: Recognition) {
     private val TOTAL_COLS = 9
 
     // font attributes
-    private val FONT_COLOR_BLACK = Scalar(0.0, 0.0, 0.0, 0.0)
+    //private val FONT_COLOR_BLACK = Scalar(0.0, 0.0, 0.0, 0.0)
     private val FONT_COLOR_WHITE = Scalar(255.0, 255.0, 255.0, 0.0)
     private val FONT_FACE = FONT_HERSHEY_DUPLEX // https://codeyarns.github.io/tech/2015-03-11-fonts-in-opencv.html
     private val FONT_SCALE = 0.6
@@ -36,17 +36,17 @@ class Visualisation(recognition: Recognition) {
      *  TODO: colour doesn't work only black and white
      */
     // colour Scalar(Blue, Green, Red)
-    private val BLACK = Scalar(0.0, 0.0,0.0)
+    //private val BLACK = Scalar(0.0, 0.0,0.0)
     private val WHITE = Scalar(255.0, 255.0,255.0)
-    private val BLUE = Scalar(255.0, 0.0,0.0)
-    private val GREEN = Scalar(0.0, 255.0,0.0)
-    private val RED = Scalar(0.0, 0.0,255.0)
+    //private val BLUE = Scalar(255.0, 0.0,0.0)
+    //private val GREEN = Scalar(0.0, 255.0,0.0)
+    //private val RED = Scalar(0.0, 0.0,255.0)
     
     // connection to Recognition and ComputerVision
     private var recognition: Recognition = recognition
 
     private lateinit var inputMat : Mat
-    private lateinit var inputMat_rgba : Mat
+    //private lateinit var inputMat_rgba : Mat
     //private lateinit var inputMat_gray : Mat
 
     private var sudokuMat : Mat? = null
@@ -59,7 +59,8 @@ class Visualisation(recognition: Recognition) {
     private lateinit var sudoku_mask : Mat
     private lateinit var outputMat : Mat
 
-
+    private var startTime : Long = 0
+    private var averageTime : Double = 0.0
 
     /**
      *   Function startVisualisation (input is the current video stream as Mat)
@@ -87,20 +88,20 @@ class Visualisation(recognition: Recognition) {
      */
     private fun getInput(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Boolean {
 
-        return if (recognition.computerVision.CroppedSudoku != null
-            && recognition.computerVision.TransformationMat != null) {
+        sudokuMat = recognition.computerVision.CroppedSudoku
+        transformMat = recognition.computerVision.TransformationMat
 
-            inputMat_rgba = inputFrame.rgba()
+        return if (sudokuMat != null && transformMat != null) {
+
+            inputMat = inputFrame.rgba()
             //inputMat_rgba = inputFrame.gray()
-            inputMat = inputMat_rgba
-            inputSize = inputMat_rgba.size()
-            inputType = inputMat_rgba.type()
+            //inputMat = inputMat_rgba
+            inputSize = inputMat.size()
+            inputType = inputMat.type()
 
             sudoku_mask = Mat.zeros(inputSize, inputType!!)
             outputMat = Mat.zeros(inputSize, inputType!!)
 
-            sudokuMat = recognition.computerVision.CroppedSudoku
-            transformMat = recognition.computerVision.TransformationMat!!.inv()
             digits = solvedSudoku
 
             true
@@ -191,7 +192,7 @@ class Visualisation(recognition: Recognition) {
     private fun transformPerspective (input : Mat = sudoku_mask) : Mat{
 
         var dst : Mat = Mat.zeros(inputSize, inputType!!)
-        Imgproc.warpPerspective(input, dst, transformMat, inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
+        Imgproc.warpPerspective(input, dst, transformMat!!.inv(), inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
 
         return dst
     }
@@ -257,5 +258,16 @@ class Visualisation(recognition: Recognition) {
         Imgproc.resize(input, dst, output.size())
 
         return dst
+    }
+
+    private  fun startTime() {
+        startTime = System.nanoTime()
+    }
+
+    private fun stopTime(tag : String = "TTTTTTTTTTTTTTTTTTTTTTTT", start : Long = startTime) {
+        var elapsedTime = (System.nanoTime() - start).toDouble() / 1000000
+        averageTime = (averageTime + elapsedTime) / 2
+        //Log.d(tag, elapsedTime.toString() + " ms")
+        Log.e(tag, averageTime.toString() + " ms")
     }
 }

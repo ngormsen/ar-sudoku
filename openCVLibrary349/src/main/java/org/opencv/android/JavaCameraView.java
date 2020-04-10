@@ -67,7 +67,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
     }
 
     protected boolean initializeCamera(int width, int height) {
-        Log.d(TAG, "Initialize java camera");
+        //Log.d(TAG, "Initialize java camera");
         boolean result = true;
         synchronized (this) {
             mCamera = null;
@@ -161,7 +161,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
 
                     mPreviewFormat = params.getPreviewFormat();
 
-                    Log.d(TAG, "Set preview size to " + Integer.valueOf((int)frameSize.width) + "x" + Integer.valueOf((int)frameSize.height));
+                    //Log.d(TAG, "Set preview size to " + Integer.valueOf((int)frameSize.width) + "x" + Integer.valueOf((int)frameSize.height));
                     params.setPreviewSize((int)frameSize.width, (int)frameSize.height);
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH && !android.os.Build.MODEL.equals("GT-I9100"))
@@ -212,7 +212,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                        mCamera.setPreviewDisplay(null);
 
                     /* Finally we are ready to start the preview */
-                    Log.d(TAG, "startPreview");
+                    //Log.d(TAG, "startPreview");
                     mCamera.startPreview();
                 }
                 else
@@ -262,7 +262,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
         mCameraFrameReady = false;
 
         /* now we can start update thread */
-        Log.d(TAG, "Starting processing thread");
+        //Log.d(TAG, "Starting processing thread");
         mStopThread = false;
         mThread = new Thread(new CameraWorker());
         mThread.start();
@@ -275,14 +275,14 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
         /* 1. We need to stop thread which updating the frames
          * 2. Stop camera and release it
          */
-        Log.d(TAG, "Disconnecting from camera");
+        //Log.d(TAG, "Disconnecting from camera");
         try {
             mStopThread = true;
             Log.d(TAG, "Notify thread");
             synchronized (this) {
                 this.notify();
             }
-            Log.d(TAG, "Waiting for thread");
+            //Log.d(TAG, "Waiting for thread");
             if (mThread != null)
                 mThread.join();
         } catch (InterruptedException e) {
@@ -300,7 +300,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
     @Override
     public void onPreviewFrame(byte[] frame, Camera arg1) {
         if (BuildConfig.DEBUG)
-            Log.d(TAG, "Preview Frame received. Frame size: " + frame.length);
+            //Log.d(TAG, "Preview Frame received. Frame size: " + frame.length);
         synchronized (this) {
             mFrameChain[mChainIdx].put(0, 0, frame);
             mCameraFrameReady = true;
@@ -373,7 +373,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
                         deliverAndDrawFrame(mCameraFrame[1 - mChainIdx]);
                 }
             } while (!mStopThread);
-            Log.d(TAG, "Finish processing thread");
+            //Log.d(TAG, "Finish processing thread");
         }
     }
 }
