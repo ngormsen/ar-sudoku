@@ -8,6 +8,11 @@ package sse.goethe.arsudoku
 
 class Sudoku(private val sudoku: Array<IntArray>) {
     private val n = 9
+    private var solvable = true;
+
+    fun getSolvableState(): Boolean{
+        return solvable;
+    }
 
     fun getCurrentState(): Array<IntArray>{
         return sudoku
@@ -38,6 +43,7 @@ class Sudoku(private val sudoku: Array<IntArray>) {
     fun solve() {
         if (!backtrackSolve()) {
             println("This sudoku can't be solved.")
+            solvable = false;
         }
     }
     /**

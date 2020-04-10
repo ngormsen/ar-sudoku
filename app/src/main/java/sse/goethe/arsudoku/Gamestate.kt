@@ -12,19 +12,78 @@ import java.lang.IndexOutOfBoundsException
 class Gamestate (sudoku: Sudoku){
 
     private var sudoku: Sudoku = sudoku
-    private lateinit var solvedState: Array<IntArray>
+    private var solvedState: Array<IntArray> = arrayOf(
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
+    )
+    private var visualizeSate: Array<IntArray> = arrayOf(
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
+    )
+
     private lateinit var currentState: Array<IntArray>
     private var historyOfStates: MutableList<Array<IntArray>> = arrayListOf()
     private var historyPointer: Int = 0
+    private var solvableState = true;
 
     init {
         // Setting current state to inital state
         currentState = createDeepStateClone(sudoku.getCurrentState())
         // Solve sudoku
         sudoku.solve()
-        solvedState = createDeepStateClone(sudoku.getCurrentState())
-        // Add inital state to history
-        historyOfStates.add(createDeepStateClone(currentState))
+        solvableState = sudoku.getSolvableState();
+        if(solvableState){
+            solvedState = createDeepStateClone(sudoku.getCurrentState())
+            // Add inital state to history
+            historyOfStates.add(createDeepStateClone(currentState))
+            visualizeSate = createVisualizeState(currentState, solvedState);
+        }
+    }
+
+    fun getSolvable(): Boolean{
+        return solvableState;
+    };
+
+    fun getVisualizeState(): Array<IntArray>{
+        return visualizeSate;
+    };
+
+    fun createVisualizeState(unsolvedState: Array<IntArray>, solvedState: Array<IntArray>): Array<IntArray>{
+        var newState = arrayOf(
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
+        )
+        var listIdx = 0
+        for (row in 0..8) {
+            for (column in 0..8) {
+                if (unsolvedState[row][column] != solvedState[row][column]){
+                    newState[row][column] = solvedState[row][column]
+                }
+                listIdx += 1
+            }
+        }
+        return newState
     }
 
     /**
@@ -69,7 +128,7 @@ class Gamestate (sudoku: Sudoku){
 
 
     fun getSolvedState(): Array<IntArray>{
-        return sudoku.getCurrentState()
+        return solvedState
     }
 
     /**

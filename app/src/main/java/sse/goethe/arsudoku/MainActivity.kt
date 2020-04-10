@@ -110,7 +110,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         // Create game
         setGame(solver)
-        println("document in database:")
+
+
+
     }
 
     /**
