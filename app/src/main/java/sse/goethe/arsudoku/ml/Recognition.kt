@@ -5,30 +5,20 @@
  *
  */
 package sse.goethe.arsudoku.ml
-import sse.goethe.arsudoku.ml.ComputerVision
-import sse.goethe.arsudoku.ml.DigitClassifier
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Camera
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.get
-import com.google.common.primitives.UnsignedBytes.toInt
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.Utils
 import org.opencv.core.Core.bitwise_not
 import org.opencv.core.Mat
-import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
-import sse.goethe.arsudoku.MainActivity
 import java.io.*
-import java.lang.IllegalStateException
-import kotlin.math.floor
 
 /**
  * The Recognition Class instantiate the DigitClassifier
@@ -127,12 +117,19 @@ class Recognition(context: Context) {
      * */
     @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
+        START_SOLVER = false
         computerVision.analyzeFrame(frame)
+        computerVision.checkCorners()
+
+        /*
         frameCounter++
         if (frameCounter%run_every_x == 0) {
             isReady = true
+            computerVision.setDigitClassifier(true)
             return
         }
+         */
+
         // Log.d("checkcheck", "hihihi")
         // How to do null-checks:
         if (computerVision.SudokuBoxesBitmap == null) {
@@ -141,25 +138,31 @@ class Recognition(context: Context) {
         }
         else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
 
-        try {
+        if (computerVision.getDigitClassifier()) {
+            Log.e(TAG, "Start Classification") // TODO
+            try {
 
-            classifyAll()
-            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
-            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
-            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+                classifyAll()
+                computerVision.setDigitClassifier(false)
+                START_SOLVER = true
+                sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+                sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+                sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
 
-            /**
-             * At this position we need a function that
-             * ensures stability and validates the results.
-             * So we have to hold on results that do
-             * not change that often.
-             *
-             * */
-            isReady = true
+                /**
+                 * At this position we need a function that
+                 * ensures stability and validates the results.
+                 * So we have to hold on results that do
+                 * not change that often.
+                 *
+                 * */
+                isReady = true
 
-        } catch (e: IOException)  { // general exception.
-            Log.d(TAG, "SudokuBoxesBitmap initialized or null ?")
+            } catch (e: IOException) { // general exception.
+                Log.d(TAG, "SudokuBoxesBitmap initialized or null ?")
+            }
         }
+        isReady = true
     }
 
     /**
@@ -302,9 +305,9 @@ class Recognition(context: Context) {
         var row: Int = 0
         var column: Int = 0
         row = (index / SIZE) // passt
-        Log.d("calculateSudokuDigitCells:", " row:" + row)
+        //Log.d("calculateSudokuDigitCells:", " row:" + row)
         column = index % SIZE
-        Log.d("calculateSudokuDigitCells:", " col:" + column)
+        //Log.d("calculateSudokuDigitCells:", " col:" + column)
         return arrayOf(row, column)
     }
 
@@ -377,5 +380,10 @@ class Recognition(context: Context) {
 
     companion object {
         private const val TAG = "Recognition"
+    }
+
+    var START_SOLVER : Boolean = true
+    fun getStartSolver () : Boolean {
+        return START_SOLVER
     }
 }

@@ -151,6 +151,7 @@ class ComputerVision {
         // TransformationMat = ... // setting of this var is handled in cropImage()
         SudokuBoxes = boxes
         SudokuBoxesBitmap = boxesBitmap
+
     }
 
     fun lineDetection(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
@@ -459,5 +460,38 @@ class ComputerVision {
         val bmp: Bitmap = Bitmap.createBitmap(frameMat.cols(), frameMat.rows(), Bitmap.Config.ARGB_8888)
         Utils.matToBitmap(frameMat, bmp)
         return bmp
+    }
+
+    var DIGIT_CLASSIFIER = true
+
+    /**
+     *  This public funtion set the var DIGIT_CLASSIFIER to true/false.
+     */
+    fun setDigitClassifier(bool : Boolean) {
+        DIGIT_CLASSIFIER = bool
+    }
+
+    /**
+     *  This public funtion get the value of DIGIT_CLASSIFIER.
+     */
+    fun getDigitClassifier() : Boolean {
+        return DIGIT_CLASSIFIER
+    }
+
+    /**
+     *  This private function checks if there a sudoku corners.
+     *  If there are not sudoku corner, the next time if it found sudoku corners it start the digit recognition.
+     */
+     fun checkCorners() {
+        if (!DIGIT_CLASSIFIER) {
+            if (SudokuCorners == null) {
+                DIGIT_CLASSIFIER = true
+                Log.e("Computer Vision", "Corners are not null" )
+            }
+            else {
+                DIGIT_CLASSIFIER = false
+                Log.e("Computer Vision", "Corners are null" )
+            }
+        }
     }
 }

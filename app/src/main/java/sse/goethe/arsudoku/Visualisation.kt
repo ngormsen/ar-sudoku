@@ -24,13 +24,15 @@ class Visualisation(recognition: Recognition) {
     private val n = 9
 
     // mat attributes
-    private val SUDOKU_MAT_SIZE : Int = 900
+    private val SUDOKU_MAT_SIZE : Double = 450.0
+    private val SUDOKU_MAT_SIZE_2D : Size = Size(SUDOKU_MAT_SIZE, SUDOKU_MAT_SIZE)
+    private val CELL_WIDTH : Double = SUDOKU_MAT_SIZE / n
     private val matType = 24 // https://ninghang.blogspot.com/2012/11/list-of-mat-type-in-opencv.html
 
     // font attributes
     private val FONT_FACE = FONT_HERSHEY_SIMPLEX // https://codeyarns.github.io/tech/2015-03-11-fonts-in-opencv.html
-    private val FONT_SCALE = 2.7
-    private val FONT_THICKNESS = 2
+    private val FONT_SCALE = 1.45
+    private val FONT_THICKNESS = 1
     private val FONT_LINETYPE = LINE_AA
 
     // rotate counter clockwise
@@ -84,29 +86,31 @@ class Visualisation(recognition: Recognition) {
             createSudokuMask()
             createOutput(digitColour)
             mergeMat()
-            outputMat
         }
         else inputMat
     }
 
     /**
-     *  This public function checks if the computer vision part found sudoku corners
-     *  and calculates the transformation matrix with the help of a corners of a square and the corners of the sudoku.
+     *  This private function checks if the computer vision part found sudoku corners
+     *  and calculates the transformation matrix with the help of a corners of a square and the location of corners of the sudoku.
      *  The transformation matrix is for the perspective transformation.
      */
     private fun getTransformationMat () : Boolean {
         return if (sudokuCorners != null) {
             val sudokuCoords: MatOfPoint2f = (MatOfPoint2f(
                 Point(0.0,0.0),
-                Point(SUDOKU_MAT_SIZE.toDouble(), 0.0),
-                Point(0.0, SUDOKU_MAT_SIZE.toDouble()),
-                Point(SUDOKU_MAT_SIZE.toDouble(), SUDOKU_MAT_SIZE.toDouble())
+                Point(SUDOKU_MAT_SIZE, 0.0),
+                Point(0.0, SUDOKU_MAT_SIZE),
+                Point(SUDOKU_MAT_SIZE, SUDOKU_MAT_SIZE)
                 ))
 
             transformMat =  Imgproc.getPerspectiveTransform(sudokuCoords, sudokuCorners)
             true
         }
-        else false
+        else {
+            Log.e(TAG, "sudokuCorners is null")
+            false
+        }
     }
 
     /**
@@ -118,8 +122,7 @@ class Visualisation(recognition: Recognition) {
      */
     private fun createSudokuMask () {
 
-        sudoku_mask = renderDigits()
-        sudoku_mask = transformPerspective()
+        sudoku_mask = transformPerspective(renderDigits())
     }
 
     /**
@@ -132,22 +135,21 @@ class Visualisation(recognition: Recognition) {
      */
     private fun renderDigits (FONT_COLOUR : Scalar = WHITE, BACKGROUND_COLOUR : Scalar = BLACK) : Mat{
 
-        var canvas = Mat.zeros(SUDOKU_MAT_SIZE, SUDOKU_MAT_SIZE, matType)
+        var canvas = Mat.zeros(SUDOKU_MAT_SIZE_2D, matType)
         if (BACKGROUND_COLOUR != BLACK) canvas.setTo(BACKGROUND_COLOUR)
-
-        val cellWidth = SUDOKU_MAT_SIZE / n
 
         for (row in 0 until n) {
             for (col in 0 until n) {
                 val digit = digits[row][col].toString()
                 if (digit != null && digit != "0") {
-                    val x = col * cellWidth.toDouble() + cellWidth*0.22
-                    val y = (row+1) * cellWidth.toDouble() - cellWidth*0.22
+                    val x = col * CELL_WIDTH + CELL_WIDTH*0.22
+                    val y = (row+1) * CELL_WIDTH - CELL_WIDTH*0.22
 
                     Imgproc.putText(canvas, digit, Point(x,y), FONT_FACE, FONT_SCALE, FONT_COLOUR, FONT_THICKNESS, FONT_LINETYPE)
                 }
             }
         }
+
         /**
          *      FOR TESTING -> DRAW SUDOKU GRID
          */
@@ -178,19 +180,24 @@ class Visualisation(recognition: Recognition) {
      *  This private function merges the inputMat with the outputMat with help of the sudoku mask.
      *  @param input is the camera input as mat
      *  @param mask is by default the sudoku mask
+     *
+     *  @return merged mat
      */
-    private fun mergeMat (input : Mat = inputMat, mask : Mat = sudoku_mask) {
+    private fun mergeMat (input1 : Mat = inputMat, input2 : Mat = outputMat, mask : Mat = sudoku_mask) : Mat {
 
-        val dst : Mat = input
-        outputMat.copyTo(dst, mask)
-        outputMat = dst
+        val dst : Mat = input1
+        input2.copyTo(dst, mask)
+
+        return dst
     }
 
     /**
      *  This private function does the perspective transformation of the sudoku with help of the transformation matrix
-     *  @param input is by default sudoku mask
+     *  @param input is the mat that does the perspective transformation
+     *
+     *  @return perpective transformed mat
      */
-    private fun transformPerspective (input : Mat = sudoku_mask) : Mat{
+    private fun transformPerspective (input : Mat) : Mat{
 
         var dst : Mat = Mat.zeros(inputSize, matType)
         Imgproc.warpPerspective(input, dst, transformMat!!, inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
@@ -211,13 +218,14 @@ class Visualisation(recognition: Recognition) {
 
     /**
      *  This private function creates a coloured mat with the size of the input frame
+     *  @param size of the mat
      *  @param colour is by default white
      *
      *  @return colored mat
      */
-    private fun createColouredMat (colour : Scalar = WHITE) : Mat {
+    private fun createColouredMat (size : Size = inputSize, colour : Scalar = WHITE) : Mat {
 
-        val dst : Mat = Mat.zeros(inputSize, matType)
+        val dst : Mat = Mat.zeros(size, matType)
 
         return dst.setTo(colour)
     }
@@ -227,8 +235,8 @@ class Visualisation(recognition: Recognition) {
      *
      */
     private fun createOutputMask () : Mat {
-        var canvas = Mat.zeros(SUDOKU_MAT_SIZE, SUDOKU_MAT_SIZE, matType)
-        return transformPerspective(canvas)
+        var canvas = createColouredMat(SUDOKU_MAT_SIZE_2D)
+        return resizeMat(canvas)
     }
 
     /**
@@ -273,16 +281,16 @@ class Visualisation(recognition: Recognition) {
     /**
      *  FOR TESTING
      *
-     *  This private function a mat to another size
+     *  This private function resizes a mat to another size.
      *  @param input is the mat which is to resize
-     *  @param output is the output size
+     *  @param output is the output size. Default value is the camera view size.
      *
      *  @return resized mat
      */
-    private fun resizeMat (input : Mat, output : Mat) : Mat {
+    private fun resizeMat (input : Mat, outputSize : Size = inputSize) : Mat {
 
-        var dst : Mat = Mat.zeros(output.size(), output.type())
-        Imgproc.resize(input, dst, output.size())
+        var dst : Mat = Mat.zeros(outputSize, matType)
+        Imgproc.resize(input, dst, outputSize)
 
         return dst
     }
@@ -290,7 +298,7 @@ class Visualisation(recognition: Recognition) {
     /**
      *  FOR TESTING
      *
-     *  This purblic function starts the timer.
+     *  This public function starts the timer.
      */
     fun startTime() {
         startTime = System.nanoTime()
@@ -304,5 +312,19 @@ class Visualisation(recognition: Recognition) {
     fun stopTime(tag : String = TAG, start : Long = startTime) {
         var elapsedTime = (System.nanoTime() - start).toDouble() / 1000000
         Log.d(tag, elapsedTime.toString() + " ms")
+    }
+
+    /**
+     *  FOR TESTING
+     *
+     *  This public function draws a circle in the center of the screen
+     */
+    private fun drawCircle (input : Mat = inputMat, colour : Scalar = digitColour, thickness: Int = 10) : Mat {
+        val centerPoint : Point = Point(inputSize.width/2, inputSize.height/2)
+        val radius : Int = inputSize.width.toInt()/10
+        var canvas = input
+        Imgproc.circle(canvas,centerPoint, radius, colour, thickness, LINE_AA, 0 )
+
+        return canvas
     }
 }
