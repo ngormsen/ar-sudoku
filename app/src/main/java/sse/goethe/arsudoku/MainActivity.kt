@@ -1,34 +1,34 @@
 package sse.goethe.arsudoku
-import android.content.ClipData
 import android.content.ContentValues
-import sse.goethe.arsudoku.ml.Recognition
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.SurfaceView
+import android.view.View
+import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import android.view.Menu
-import android.os.Build
-import android.widget.TextView
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.OnLifecycleEvent
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
-import org.opencv.core.*
 import org.opencv.core.Mat
-import kotlin.collections.ArrayList
+//import sse.goethe.arsudoku.dlx.NaiveSudokuSolver
+import sse.goethe.arsudoku.ml.Recognition
+import kotlin.system.measureTimeMillis
+
 /**
  * Activity that manages the overall state of the application.
  * Serves as the interface between the AR, ML and Data components.
@@ -110,8 +110,45 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
         // Create game
         setGame(solver)
-        println("document in database:")
+//
+//
+//        val hardest = arrayOf(
+//            intArrayOf(8, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 3, 6, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 7, 0, 0, 9, 0, 2, 0, 0),
+//            intArrayOf(0, 5, 0, 0, 0, 7, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 4, 5, 7, 0, 0),
+//            intArrayOf(0, 0, 0, 1, 0, 0, 0, 3, 0),
+//            intArrayOf(0, 0, 1, 0, 0, 0, 0, 6, 8),
+//            intArrayOf(0, 0, 8, 5, 0, 0, 0, 1, 0),
+//            intArrayOf(0, 9, 0, 0, 0, 0, 4, 0, 0)
+//        )
+//
+//        var empty = arrayOf(
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
+//        )
+//
+//        SudokuDLX sudoku = new SudokuDLX();
+//        sudoku.solve(hardest);
+
+//        println("debugger1")
+//        val time1 = measureTimeMillis {
+//            setGame(Sudoku(hardest))
+//            println(game.getGamestate().getSolvable())
+//        }
+//        println("time1")
+//        println(time1)
+
     }
+
 
     /**
      *  Kelvin Tsang
@@ -365,9 +402,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return if (inputFrame != null && recognition.isReady) {
             recognition.isReady = false
             recognition.run(inputFrame)
+
             val aSudoku = Sudoku(converterarraydingens(recognition.sudokuPredictedDigits))
             setGame(aSudoku)
-            visualisation.runVisualisation(inputFrame, game.getGamestate().getSolvedState())
+            visualisation.run(inputFrame, game.getGamestate().getVisualizeState())
         } else {
             Log.e(TAG, "Input frame is null!!")
             Mat()
