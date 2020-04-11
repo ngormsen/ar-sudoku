@@ -138,10 +138,8 @@ class Recognition(context: Context) {
             return
         }
         else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
-        //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
 
         try {
-            croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!! // redundand
 
             classifyAll()
 
@@ -182,9 +180,6 @@ class Recognition(context: Context) {
             try {
                 for (block in croppedSudokuBlocks) {
                     var digit = digitClassifier.classify(block)
-
-                    //Log.d("$TAG - classifyAll()", " block nr.$count, digit: $digit")
-
                     blockCoord = calculateSudokuDigitCells(count)
                     addResult(blockCoord, digit)
                     count++
@@ -203,7 +198,7 @@ class Recognition(context: Context) {
             }
             Log.d("Recognition", "Error classifying")
             /* End test of threadsafe classyfying */
-            //Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
+            Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
             }
         }
     }
@@ -212,7 +207,7 @@ class Recognition(context: Context) {
      *
      * */
     private fun rotateCounterClock(matrix: Array<Array<Int>>): Array<Array<Int>> {
-        //Log.d("rotateClockwise", "started this function")
+        Log.d("rotateClockwise", "started this function")
         val n = 9
         for (i in 0 until n/2) {
             for (j in i until n-i-1) {
@@ -226,30 +221,6 @@ class Recognition(context: Context) {
         return matrix
     }
 
-    /** Check if bitmaps are all init or check within convertMatToBitmap != null */
-    private fun atLeastOneBlockIsNull(): Boolean{
-        var itIs: Boolean = true
-        //
-        //
-        //
-        return itIs
-    }
-
-    /** Use this function to validate over multiple frames
-     *  if the inference is correct.
-     *
-     *  Input: Optional parameter of frames which has to be compared
-     *  Output:
-     *
-     * */
-    private fun digitRecognitionIsValid(nFrames: Int = 5): Boolean {
-        // This function has to validate the classification.
-        // Take another x frames and
-        // run the inference again
-        // Only if all x frames inferred the same classification
-        // provide the data to AR and solver
-        return false
-    }
 
     /**
      * The addResult add a class infered by classify()
