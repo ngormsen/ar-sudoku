@@ -53,6 +53,8 @@ import kotlin.math.tan
  * Idea: experimentalContouring
  * crop first, then do contour detection on cropped image again to search for 81 square contours
  *
+ * What eats time: Adaptive Threshold, Gaussian Blur ( ~18ms / ~30ms total)
+ *
  */
 class ComputerVision {
 
@@ -242,27 +244,6 @@ class ComputerVision {
         return Pair(dilatedMat, threshMat)
     }
 
-    // ############################################################
-    // New preprocessing bc of classifier performance reasons
-
-    private fun preprocessing_v2(frame: CameraBridgeViewBase.CvCameraViewFrame): Pair<Mat, Mat> {
-        var proc = Mat()
-        Imgproc.GaussianBlur(frame.rgba(), proc, Size(9.0,9.0), 0.0)
-        var tmp = Mat()
-        Imgproc.adaptiveThreshold(proc, tmp, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 2.0)
-        var tmp2 = Mat()
-        bitwise_not(tmp, tmp2)
-        var kernel = Mat.zeros(3,3, CV_8UC1)
-        var dst = Mat()
-        dilate(tmp2, dst, kernel)
-
-        return Pair(dst, tmp)
-    }
-
-    private fun scale_and_centre(){
-
-    }
-
 
     private fun rotateMat (input : Mat, angle : Double = 270.0) : Mat {
 
@@ -274,8 +255,6 @@ class ComputerVision {
 
         return dst
     }
-
-    // ############################################################
 
 
     /**

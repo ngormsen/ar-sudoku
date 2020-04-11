@@ -51,7 +51,7 @@ class DigitClassifier(private val context: Context) {
      * Do not forget to close() the Interpreter
      * */
     fun initializeInterpreter() {
-        Log.d("DigitClassifier", "initializeInterpreter()")
+        //Log.d("DigitClassifier", "initializeInterpreter()")
         val assetManager = context.assets // load model
         val model = loadModelFile(assetManager)
         val options = Interpreter.Options()
@@ -62,14 +62,14 @@ class DigitClassifier(private val context: Context) {
         // Read input shape from model file
         val inputShape = interpreter.getInputTensor(0).shape()
         inputImageWidth = inputShape[1]
-        Log.d(TAG, "inputShape 1" + inputShape[1])
+        //Log.d(TAG, "inputShape 1" + inputShape[1])
         inputImageHeight = inputShape[2]
-        Log.d(TAG, "inputShape 1" + inputShape[2])
+        //Log.d(TAG, "inputShape 1" + inputShape[2])
         modelInputSize = FLOAT_TYPE_SIZE * inputImageWidth * inputImageHeight * PIXEL_SIZE
-        Log.d(TAG, "The model input size is: " + modelInputSize)
+        //Log.d(TAG, "The model input size is: " + modelInputSize)
         this.interpreter = interpreter
         isInitialized = true
-        Log.d(TAG, " >> Initialized TFLite interpreter! << ")
+        //Log.d(TAG, " >> Initialized TFLite interpreter! << ")
     }
 
     /**
@@ -154,7 +154,7 @@ class DigitClassifier(private val context: Context) {
         val byteBuffer = convertBitmapToBytebuffer(resizedImage)
         val result = Array(1) { FloatArray(OUTPUT_CLASSES_COUNT) }
         elapsedTime = (System.nanoTime() - startTime) / 1000000
-        Log.d(TAG, "Preprocessing time = " + elapsedTime + "ms")
+        //Log.d(TAG, "Preprocessing time = " + elapsedTime + "ms")
 
         // measure inference time
         startTime = System.nanoTime()
@@ -169,7 +169,7 @@ class DigitClassifier(private val context: Context) {
                 + " res 2: " + result[0][19] )
         */
         elapsedTime = (System.nanoTime() - startTime) / 1000000
-        Log.d(TAG, "Inference time = " + elapsedTime + "ms")
+        //Log.d(TAG, "Inference time = " + elapsedTime + "ms")
 
         return getOutputInt(result[0])
     }

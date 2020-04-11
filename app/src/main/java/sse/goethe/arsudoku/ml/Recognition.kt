@@ -131,7 +131,6 @@ class Recognition(context: Context) {
             isReady = true
             return
         }
-        Log.d("checkcheck", "hihihi")
 
         // How to do null-checks:
         if (computerVision.SudokuBoxesBitmap == null) {
@@ -160,7 +159,7 @@ class Recognition(context: Context) {
 
             isReady = true
 
-        } catch (e: IOException)  { // general exception.
+        } catch (e: Exception)  { // general exception.
             Log.d(TAG, "SudokuBoxesBitmap initialized or null ?")
         }
     }
@@ -184,7 +183,7 @@ class Recognition(context: Context) {
                 for (block in croppedSudokuBlocks) {
                     var digit = digitClassifier.classify(block)
 
-                    Log.d("$TAG - classifyAll()", " block nr.$count, digit: $digit")
+                    //Log.d("$TAG - classifyAll()", " block nr.$count, digit: $digit")
 
                     blockCoord = calculateSudokuDigitCells(count)
                     addResult(blockCoord, digit)
@@ -204,7 +203,7 @@ class Recognition(context: Context) {
             }
             Log.d("Recognition", "Error classifying")
             /* End test of threadsafe classyfying */
-            Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
+            //Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
             }
         }
     }
@@ -213,7 +212,7 @@ class Recognition(context: Context) {
      *
      * */
     private fun rotateCounterClock(matrix: Array<Array<Int>>): Array<Array<Int>> {
-        Log.d("rotateClockwise", "started this function")
+        //Log.d("rotateClockwise", "started this function")
         val n = 9
         for (i in 0 until n/2) {
             for (j in i until n-i-1) {
@@ -299,14 +298,14 @@ class Recognition(context: Context) {
      *
      * */
     private fun calculateSudokuDigitCells(index: Int): Array<Int> {
-        Log.d("calculateSudokuDigitCells:", " given index: " + index)
+        //Log.d("calculateSudokuDigitCells:", " given index: " + index)
         val SIZE = 9
         var row: Int = 0
         var column: Int = 0
         row = (index / SIZE) // passt
-        Log.d("calculateSudokuDigitCells:", " row:" + row)
+        //Log.d("calculateSudokuDigitCells:", " row:" + row)
         column = index % SIZE
-        Log.d("calculateSudokuDigitCells:", " col:" + column)
+        //Log.d("calculateSudokuDigitCells:", " col:" + column)
         return arrayOf(row, column)
     }
 
@@ -318,7 +317,7 @@ class Recognition(context: Context) {
     }
 
     private fun saveBitmapPng(context: Context, bitmap: Bitmap, name: String): Uri{
-        Log.d(TAG, "saveBitmapPng()")
+        //Log.d(TAG, "saveBitmapPng()")
 
         var filename = "output_" + name + ".png"
         //var sudokuDirectory = File("/DCIM/sudoku/")
