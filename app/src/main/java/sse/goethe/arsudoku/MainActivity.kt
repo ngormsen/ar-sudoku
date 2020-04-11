@@ -402,18 +402,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return if (inputFrame != null && recognition.isReady) {
             recognition.isReady = false
             recognition.run(inputFrame)
-            println("debugger")
-            val time = measureTimeMillis {
-                val aSudoku = Sudoku(converterarraydingens(recognition.sudokuPredictedDigits))
-                setGame(aSudoku)
-                println("solvable:")
-                println(game.getGamestate().getSolvable())
 
-            }
-            println("time")
-            println(time)
-
-            visualisation.runVisualisation(inputFrame, game.getGamestate().getSolvedState())
+            val aSudoku = Sudoku(converterarraydingens(recognition.sudokuPredictedDigits))
+            setGame(aSudoku)
+            visualisation.run(inputFrame, game.getGamestate().getVisualizeState())
         } else {
             Log.e(TAG, "Input frame is null!!")
             Mat()

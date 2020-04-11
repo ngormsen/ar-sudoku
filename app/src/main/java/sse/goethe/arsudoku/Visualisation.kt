@@ -1,7 +1,8 @@
+/**
+ *  @author Kelvin Tsang
+ */
 package sse.goethe.arsudoku
 
-import android.content.ContentValues.TAG
-import android.graphics.Color
 import android.util.Log
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.core.*
@@ -10,112 +11,110 @@ import org.opencv.imgproc.Imgproc
 import sse.goethe.arsudoku.ml.Recognition
 
 /**
- *      author: Kelvin Tsang
+ *  @author Kelvin Tsang
  *
- *      Class Visualisation
- *          - Rendering digits in to the sudoku
+ *  This class does the visualisation.
+ *  It renders digits und merges the edit sudoku with the camera view.
  */
 class Visualisation(recognition: Recognition) {
 
+    private val TAG : String = "Visualisation"
+
     // colums and row size
-    private val TOTAL_ROWS = 9
-    private val TOTAL_COLS = 9
+    private val n = 9
+
+    // mat attributes
+    private val SUDOKU_MAT_SIZE : Int = 900
+    private val matType = 24 // https://ninghang.blogspot.com/2012/11/list-of-mat-type-in-opencv.html
 
     // font attributes
-    //private val FONT_COLOR_BLACK = Scalar(0.0, 0.0, 0.0, 0.0)
-    private val FONT_COLOR_WHITE = Scalar(255.0, 255.0, 255.0, 0.0)
-    private val FONT_FACE = FONT_HERSHEY_DUPLEX // https://codeyarns.github.io/tech/2015-03-11-fonts-in-opencv.html
-    private val FONT_SCALE = 0.6
-    private val FONT_THICKNESS = 1
-    private val FONT_LINETYPE = LINE_AA //antialiased line
+    private val FONT_FACE = FONT_HERSHEY_SIMPLEX // https://codeyarns.github.io/tech/2015-03-11-fonts-in-opencv.html
+    private val FONT_SCALE = 2.7
+    private val FONT_THICKNESS = 2
+    private val FONT_LINETYPE = LINE_AA
 
     // rotate counter clockwise
     private val ROTANTION_ANGLE = 90.0
 
-    /**
-     *  TODO: colour doesn't work only black and white
-     */
-    // colour Scalar(Blue, Green, Red)
-    //private val BLACK = Scalar(0.0, 0.0,0.0)
-    private val WHITE = Scalar(255.0, 255.0,255.0)
-    //private val BLUE = Scalar(255.0, 0.0,0.0)
-    //private val GREEN = Scalar(0.0, 255.0,0.0)
-    //private val RED = Scalar(0.0, 0.0,255.0)
-    
+    // colour as Scalar(RED, Green, BLUE)
+    private val BLACK = Scalar(0.0, 0.0,0.0, 0.0)
+    private val WHITE = Scalar(255.0, 255.0,255.0, 0.0)
+    private val RED = Scalar(255.0, 0.0,0.0, 0.0)
+    private val GREEN = Scalar(0.0, 255.0,0.0, 0.0)
+    private val BLUE = Scalar(0.0, 0.0,255.0, 0.0)
+
+    private var digitColour = RED
+
     // connection to Recognition and ComputerVision
     private var recognition: Recognition = recognition
 
     private lateinit var inputMat : Mat
-    //private lateinit var inputMat_rgba : Mat
-    //private lateinit var inputMat_gray : Mat
-
-    private var sudokuMat : Mat? = null
-    private var transformMat : Mat? = null
+    private lateinit var transformMat : Mat
     private lateinit var digits : Array<IntArray>
 
+    private var sudokuCorners : MatOfPoint2f? =  null
+
     private lateinit var inputSize : Size
-    private var inputType : Int? = null
 
     private lateinit var sudoku_mask : Mat
+    private lateinit var outputMat_mask : Mat
     private lateinit var outputMat : Mat
 
     private var startTime : Long = 0
-    private var averageTime : Double = 0.0
 
     /**
-     *   Function startVisualisation (input is the current video stream as Mat)
-     *       - starts the visualisation if the sudoku is found and the input isn't null
-     *       -> return outputMat as Mat
-     */
-    fun runVisualisation(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Mat {
-
-        return if (getInput(inputFrame, solvedSudoku)) {
-            createSudokuMask()
-            createOutput()
-            mergeMat()
-            //outputMat // TODO: outputMat is black/white -> use inputMat
-            inputMat
-        }
-        else inputFrame.rgba()
-    }
-
-    /**
-     *   Function getInput
-     *       - get the current video stream as Mat
-     *       - get the cropped and square sudoku as Mat
-     *       - get the invers transformation matrix
-     *       - get the sudoku digits
-     */
-    private fun getInput(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Boolean {
-
-        sudokuMat = recognition.computerVision.CroppedSudoku
-        transformMat = recognition.computerVision.TransformationMat
-
-        return if (sudokuMat != null && transformMat != null) {
-
-            inputMat = inputFrame.rgba()
-            //inputMat_rgba = inputFrame.gray()
-            //inputMat = inputMat_rgba
-            inputSize = inputMat.size()
-            inputType = inputMat.type()
-
-            sudoku_mask = Mat.zeros(inputSize, inputType!!)
-            outputMat = Mat.zeros(inputSize, inputType!!)
-
-            digits = solvedSudoku
-
-            true
-        } else false
-    }
-
-    /**
-     *  Function createSudokuMask
-     *      - renderDigits()
-     *      - transformPerspective(...)
+     *  This function starts the visualisation if sudoku corners are found.
+     *  It creates the sudoku mask and the outputMat and merges it with the inputMat
+     *  @param inputFrame is the camera input of the camera view
+     *  @param solvedSudoku is a array with the digits of the solved sudoku
      *
-     *  Sudoku Mask : White digits and black background
-     *      
-     *      https://stackoverflow.com/questions/45131216/opencv-overlay-two-mat-drawings-not-images-with-transparency
+     *  @return edit input with rendered digits
+     */
+    fun run(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Mat {
+
+        inputMat = inputFrame.rgba()
+        inputSize = inputMat.size()
+        outputMat = Mat.zeros(inputSize, matType)
+        sudoku_mask = Mat.zeros(inputSize, matType)
+
+        digits = solvedSudoku
+        sudokuCorners = recognition.computerVision.SudokuCorners
+
+        return if (getTransformationMat()) {
+            createSudokuMask()
+            createOutput(digitColour)
+            mergeMat()
+            outputMat
+        }
+        else inputMat
+    }
+
+    /**
+     *  This public function checks if the computer vision part found sudoku corners
+     *  and calculates the transformation matrix with the help of a corners of a square and the corners of the sudoku.
+     *  The transformation matrix is for the perspective transformation.
+     */
+    private fun getTransformationMat () : Boolean {
+        return if (sudokuCorners != null) {
+            val sudokuCoords: MatOfPoint2f = (MatOfPoint2f(
+                Point(0.0,0.0),
+                Point(SUDOKU_MAT_SIZE.toDouble(), 0.0),
+                Point(0.0, SUDOKU_MAT_SIZE.toDouble()),
+                Point(SUDOKU_MAT_SIZE.toDouble(), SUDOKU_MAT_SIZE.toDouble())
+                ))
+
+            transformMat =  Imgproc.getPerspectiveTransform(sudokuCoords, sudokuCorners)
+            true
+        }
+        else false
+    }
+
+    /**
+     *  This private function creates a sudoku mask.
+     *  It renders digits on a square mat and does a perspective transformation.
+     *  The sudoku mask has white digits and an black blackground.
+     *
+     *  https://stackoverflow.com/questions/45131216/opencv-overlay-two-mat-drawings-not-images-with-transparency
      */
     private fun createSudokuMask () {
 
@@ -124,44 +123,45 @@ class Visualisation(recognition: Recognition) {
     }
 
     /**
-     *   Function renderDigits
-     *       - creates a Mat with the size of the cropped sudoku on a black background
-     *       - renders the solved digits on their location in white colour
+     *   This private function creates a mat with size SUDOKU_MAT_SIZE
+     *   and renders the digits on their location in white colour.
+     *   @param FONT_COLOUR is the font colour. Default colour is white
+     *   @param BACKGROUND_COLOUR is the background colour. Default colour is black
+     *
+     *   @return rotate mat with rendered digits
      */
-    private fun renderDigits (sudoku : Mat = sudokuMat!!) : Mat{
+    private fun renderDigits (FONT_COLOUR : Scalar = WHITE, BACKGROUND_COLOUR : Scalar = BLACK) : Mat{
 
-        val matSize = sudoku.size()
-        val matType = sudoku.type()
-        var canvas = Mat.zeros(matSize, inputType!!)
+        var canvas = Mat.zeros(SUDOKU_MAT_SIZE, SUDOKU_MAT_SIZE, matType)
+        if (BACKGROUND_COLOUR != BLACK) canvas.setTo(BACKGROUND_COLOUR)
 
-        val cellWidth = sudoku.width() / 9
+        val cellWidth = SUDOKU_MAT_SIZE / n
 
-        for (row in 0 until TOTAL_ROWS) {
-            for (col in 0 until TOTAL_COLS) {
+        for (row in 0 until n) {
+            for (col in 0 until n) {
                 val digit = digits[row][col].toString()
                 if (digit != null && digit != "0") {
-                    val x = col * cellWidth.toDouble() + cellWidth*0.3
-                    val y = (row+1) * cellWidth.toDouble() - cellWidth*0.3
-                    Imgproc.putText(canvas,
-                                    digit,
-                                    Point(x,y),
-                                    FONT_FACE,
-                                    FONT_SCALE,
-                                    FONT_COLOR_WHITE,
-                                    FONT_THICKNESS,
-                                    FONT_LINETYPE)
+                    val x = col * cellWidth.toDouble() + cellWidth*0.22
+                    val y = (row+1) * cellWidth.toDouble() - cellWidth*0.22
+
+                    Imgproc.putText(canvas, digit, Point(x,y), FONT_FACE, FONT_SCALE, FONT_COLOUR, FONT_THICKNESS, FONT_LINETYPE)
                 }
             }
         }
-        //canvas = drawGrid(canvas) // FOR TESTING -> draws sudoku grid
+        /**
+         *      FOR TESTING -> DRAW SUDOKU GRID
+         */
+        //canvas = drawGrid(canvas)
+
         return rotateMat(canvas)
     }
 
     /**
-     *  Function rotateMat (input: Mat)
-     *      - rotate Mat by 90 degrees
+     *  This private function rotates the mat by 90 degrees by default.
+     *  @param input is the mat that rotetes
+     *  @param angle is the rotation angle. Default value is 90 degrees
      *
-     *      https://stackoverflow.com/questions/15043152/rotate-opencv-matrix-by-90-180-270-degrees
+     *  https://stackoverflow.com/questions/15043152/rotate-opencv-matrix-by-90-180-270-degrees
      */
     private fun rotateMat (input : Mat, angle : Double = ROTANTION_ANGLE) : Mat {
 
@@ -175,8 +175,9 @@ class Visualisation(recognition: Recognition) {
     }
 
     /**
-     *   Function mergeMat
-     *       - merged the input video stream with the edit sudoku with help of a mask
+     *  This private function merges the inputMat with the outputMat with help of the sudoku mask.
+     *  @param input is the camera input as mat
+     *  @param mask is by default the sudoku mask
      */
     private fun mergeMat (input : Mat = inputMat, mask : Mat = sudoku_mask) {
 
@@ -186,45 +187,68 @@ class Visualisation(recognition: Recognition) {
     }
 
     /**
-     *  Function perspectiveTransform
-     *      - does a perspective transformation of the sudoku with help a the invers of the transform matrix
+     *  This private function does the perspective transformation of the sudoku with help of the transformation matrix
+     *  @param input is by default sudoku mask
      */
     private fun transformPerspective (input : Mat = sudoku_mask) : Mat{
 
-        var dst : Mat = Mat.zeros(inputSize, inputType!!)
-        Imgproc.warpPerspective(input, dst, transformMat!!.inv(), inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
+        var dst : Mat = Mat.zeros(inputSize, matType)
+        Imgproc.warpPerspective(input, dst, transformMat!!, inputSize, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
 
         return dst
     }
 
     /**
-     *  Function createOutput
-     *      - creates output
+     *  This private function creates the output mat with help of the sudoku mask.
+     *  It creates a white mat and change the colour in the location of the mask where it is white.
+     *  @param colour is the colour of the digits
      */
-    private fun createOutput () {
+    private fun createOutput (colour : Scalar) {
 
         val whiteMat : Mat = createColouredMat()
-        subtract(whiteMat, sudoku_mask, outputMat)
+        outputMat = whiteMat.setTo(colour, sudoku_mask)
     }
 
-    /** TODO: DOESN'T WORK!!! ONLY WITH WHITE COLOUR
-     *  Function createColouredMat(input colour : default white)
-     *      - creates a coulored Mat with the size of the input frame
+    /**
+     *  This private function creates a coloured mat with the size of the input frame
+     *  @param colour is by default white
+     *
+     *  @return colored mat
      */
     private fun createColouredMat (colour : Scalar = WHITE) : Mat {
 
-        val dst : Mat = Mat.zeros(inputSize, inputType!!)
+        val dst : Mat = Mat.zeros(inputSize, matType)
 
         return dst.setTo(colour)
     }
 
     /**
+     *  Function TODO
+     *
+     */
+    private fun createOutputMask () : Mat {
+        var canvas = Mat.zeros(SUDOKU_MAT_SIZE, SUDOKU_MAT_SIZE, matType)
+        return transformPerspective(canvas)
+    }
+
+    /**
+     *  This public function changes the rendered digit colour
+     *  @param colour
+     */
+    fun setDigitColour (colour : Scalar) {
+
+        digitColour = colour
+    }
+
+    /**
      *  FOR TESTING
      *
-     *  Function drawGrid()
-     *      - draws a sudoku grid on Mat
+     *  This private function draws a sudoku grid on mat.
+     *  @param input
+     *  @param colour
+     *  @param thickness
      */
-    private fun drawGrid(input : Mat = sudoku_mask, color : Scalar = WHITE, thickness : Int = 2) : Mat {
+    private fun drawGrid(input : Mat = sudoku_mask, colour : Scalar = WHITE, thickness : Int = 2) : Mat {
 
         val height = input.height().toDouble()-1
         val width = input.width().toDouble()-1
@@ -234,13 +258,13 @@ class Visualisation(recognition: Recognition) {
         var output : Mat = input
 
         // draw frame
-        Imgproc.rectangle(output, Point(0.0, 0.0), Point(width, height), color, thickness, LINE_AA)
+        Imgproc.rectangle(output, Point(0.0, 0.0), Point(width, height), colour, thickness, LINE_AA)
         // draw inner grid
-        for (i in 1 until TOTAL_ROWS) {
+        for (i in 1 until n) {
             val y = i * cellHeight
             val x = i * cellWidth
-            Imgproc.line(output, Point(0.0, y), Point(width, y), color, thickness, LINE_AA)
-            Imgproc.line(output, Point(x, 0.0), Point(x, height), color, thickness, LINE_AA)
+            Imgproc.line(output, Point(0.0, y), Point(width, y), colour, thickness, LINE_AA)
+            Imgproc.line(output, Point(x, 0.0), Point(x, height), colour, thickness, LINE_AA)
         }
 
         return output
@@ -249,8 +273,11 @@ class Visualisation(recognition: Recognition) {
     /**
      *  FOR TESTING
      *
-     *  Function resizeMat (input: Mat to resize, output: output Mat size)
-     *      - resize input to output size
+     *  This private function a mat to another size
+     *  @param input is the mat which is to resize
+     *  @param output is the output size
+     *
+     *  @return resized mat
      */
     private fun resizeMat (input : Mat, output : Mat) : Mat {
 
@@ -260,14 +287,22 @@ class Visualisation(recognition: Recognition) {
         return dst
     }
 
-    private  fun startTime() {
+    /**
+     *  FOR TESTING
+     *
+     *  This purblic function starts the timer.
+     */
+    fun startTime() {
         startTime = System.nanoTime()
     }
 
-    private fun stopTime(tag : String = "TTTTTTTTTTTTTTTTTTTTTTTT", start : Long = startTime) {
+    /**
+     *  FOR TESTING
+     *
+     *  This public function stops the timer.
+     */
+    fun stopTime(tag : String = TAG, start : Long = startTime) {
         var elapsedTime = (System.nanoTime() - start).toDouble() / 1000000
-        averageTime = (averageTime + elapsedTime) / 2
-        //Log.d(tag, elapsedTime.toString() + " ms")
-        Log.e(tag, averageTime.toString() + " ms")
+        Log.d(tag, elapsedTime.toString() + " ms")
     }
 }
