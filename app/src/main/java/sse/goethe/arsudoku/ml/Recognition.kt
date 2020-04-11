@@ -59,6 +59,11 @@ class Recognition(context: Context) {
     val run_every_x = 10
     var frameCounter = 0
 
+    // validate interpreted sudokus
+    private var ABS_CHECKED_FRAMES = 10
+    private var TMP_CHECKED_FRAMES = 0
+    private var validationIsFinished = false
+
     init {
         /** Initialization of the digit classifier */
         digitClassifier.initializeInterpreter()
@@ -102,9 +107,6 @@ class Recognition(context: Context) {
                                     arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
                                     arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1) )
 
-        //testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
-        //var predictedClass: Int = digitClassifier.classify(testbitmap)
-        //Log.d(TAG, "The predicted class is: " + predictedClass)
     }
 
     /**
@@ -132,20 +134,16 @@ class Recognition(context: Context) {
             return
         }
         // Log.d("checkcheck", "hihihi")
-
         // How to do null-checks:
         if (computerVision.SudokuBoxesBitmap == null) {
             isReady = true
             return
         }
         else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
-        //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
 
         try {
-            croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!! // redundand
 
             classifyAll()
-
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
@@ -182,9 +180,7 @@ class Recognition(context: Context) {
             try {
                 for (block in croppedSudokuBlocks) {
                     var digit = digitClassifier.classify(block)
-
                     // Log.d("$TAG - classifyAll()", " block nr.$count, digit: $digit")
-
                     blockCoord = calculateSudokuDigitCells(count)
                     addResult(blockCoord, digit)
                     count++
@@ -208,6 +204,32 @@ class Recognition(context: Context) {
         }
     }
 
+    /** Use this function to validate over multiple frames
+     *  and get the most likely class.
+     * */
+    private fun validateDigitRecognition() {
+        if (TMP_CHECKED_FRAMES < ABS_CHECKED_FRAMES) {
+            for (row in 0..8) {
+                for (col in 0..8) {
+                    var index = sudokuPredictedDigits[row][col]
+                    validityCounter[row][col][index]++
+                }
+            }
+            TMP_CHECKED_FRAMES++
+        } else if (TMP_CHECKED_FRAMES == ABS_CHECKED_FRAMES) {
+            for (row in 0..8) {
+                for (col in 0..8) {
+                    var maxIndex = validityCounter[row][col].indexOf(validityCounter[row][col].max())
+                    sudokuPredictedDigits[row][col] = maxIndex
+                }
+            }
+            validationIsFinished = true
+            TMP_CHECKED_FRAMES++
+        } else {
+            TMP_CHECKED_FRAMES = 0
+        }
+    }
+
     /**
      *
      * */
@@ -226,21 +248,6 @@ class Recognition(context: Context) {
         return matrix
     }
 
-    /** Use this function to validate over multiple frames
-     *  if the inference is correct.
-     *
-     *  Input: Optional parameter of frames which has to be compared
-     *  Output:
-     *
-     * */
-    private fun digitRecognitionIsValid(nFrames: Int = 5): Boolean {
-        // This function has to validate the classification.
-        // Take another x frames and
-        // run the inference again
-        // Only if all x frames inferred the same classification
-        // provide the data to AR and solver
-        return false
-    }
 
     /**
      * The addResult add a class infered by classify()
