@@ -131,7 +131,7 @@ class Recognition(context: Context) {
             isReady = true
             return
         }
-        Log.d("checkcheck", "hihihi")
+        // Log.d("checkcheck", "hihihi")
 
         // How to do null-checks:
         if (computerVision.SudokuBoxesBitmap == null) {
@@ -157,7 +157,6 @@ class Recognition(context: Context) {
              * not change that often.
              *
              * */
-
             isReady = true
 
         } catch (e: IOException)  { // general exception.
@@ -184,7 +183,7 @@ class Recognition(context: Context) {
                 for (block in croppedSudokuBlocks) {
                     var digit = digitClassifier.classify(block)
 
-                    Log.d("$TAG - classifyAll()", " block nr.$count, digit: $digit")
+                    // Log.d("$TAG - classifyAll()", " block nr.$count, digit: $digit")
 
                     blockCoord = calculateSudokuDigitCells(count)
                     addResult(blockCoord, digit)
@@ -202,9 +201,9 @@ class Recognition(context: Context) {
                                 + "block " + i + ": "
                                 + digitClassifier.classify(croppedSudokuBlocks[i])) }
             }
-            Log.d("Recognition", "Error classifying")
+            // Log.d("Recognition", "Error classifying")
             /* End test of threadsafe classyfying */
-            Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
+            // Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
             }
         }
     }
@@ -213,7 +212,7 @@ class Recognition(context: Context) {
      *
      * */
     private fun rotateCounterClock(matrix: Array<Array<Int>>): Array<Array<Int>> {
-        Log.d("rotateClockwise", "started this function")
+        // Log.d("rotateClockwise", "started this function")
         val n = 9
         for (i in 0 until n/2) {
             for (j in i until n-i-1) {
@@ -225,15 +224,6 @@ class Recognition(context: Context) {
             }
         }
         return matrix
-    }
-
-    /** Check if bitmaps are all init or check within convertMatToBitmap != null */
-    private fun atLeastOneBlockIsNull(): Boolean{
-        var itIs: Boolean = true
-        //
-        //
-        //
-        return itIs
     }
 
     /** Use this function to validate over multiple frames
@@ -299,7 +289,7 @@ class Recognition(context: Context) {
      *
      * */
     private fun calculateSudokuDigitCells(index: Int): Array<Int> {
-        Log.d("calculateSudokuDigitCells:", " given index: " + index)
+        // Log.d("calculateSudokuDigitCells:", " given index: " + index)
         val SIZE = 9
         var row: Int = 0
         var column: Int = 0
@@ -318,7 +308,7 @@ class Recognition(context: Context) {
     }
 
     private fun saveBitmapPng(context: Context, bitmap: Bitmap, name: String): Uri{
-        Log.d(TAG, "saveBitmapPng()")
+        // Log.d(TAG, "saveBitmapPng()")
 
         var filename = "output_" + name + ".png"
         //var sudokuDirectory = File("/DCIM/sudoku/")

@@ -154,7 +154,7 @@ class DigitClassifier(private val context: Context) {
         val byteBuffer = convertBitmapToBytebuffer(resizedImage)
         val result = Array(1) { FloatArray(OUTPUT_CLASSES_COUNT) }
         elapsedTime = (System.nanoTime() - startTime) / 1000000
-        Log.d(TAG, "Preprocessing time = " + elapsedTime + "ms")
+        //Log.d(TAG, "Preprocessing time = " + elapsedTime + "ms")
 
         // measure inference time
         startTime = System.nanoTime()
@@ -169,7 +169,7 @@ class DigitClassifier(private val context: Context) {
                 + " res 2: " + result[0][19] )
         */
         elapsedTime = (System.nanoTime() - startTime) / 1000000
-        Log.d(TAG, "Inference time = " + elapsedTime + "ms")
+        //Log.d(TAG, "Inference time = " + elapsedTime + "ms")
 
         return getOutputInt(result[0])
     }

@@ -1,6 +1,8 @@
 package sse.goethe.arsudoku
 
 import java.lang.IndexOutOfBoundsException
+import kotlin.properties.Delegates
+
 /**
  * Implements a Gamestate class that manages the current and solved state of a given Sudoku.
  * Implements a history for using undo and redo when playing the game.
