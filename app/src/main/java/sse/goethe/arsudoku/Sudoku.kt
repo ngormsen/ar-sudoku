@@ -40,6 +40,27 @@ class Sudoku(private val sudoku: Array<IntArray>) {
         }
     }
 
+
+    fun checkSudokuConstraints(sudoku: Array<IntArray>): Boolean{
+        var nonZeros = 0
+        val exists: MutableSet<Int> = mutableSetOf()
+        for (row in 0..8) {
+            exists.clear()
+            for (column in 0..8) {
+                if (sudoku[row][column] != 0){
+                    if (exists.contains(sudoku[row][column])){
+                        println("number exists already")
+                        return false
+                    }
+                    exists.add(sudoku[row][column])
+                    nonZeros += 1
+                }
+            }
+        }
+        return nonZeros > 15
+    };
+
+
     /**
      * Solves the given Sudoku using a simple backtracking algorithm.
      * Credits to: TODO
@@ -47,13 +68,18 @@ class Sudoku(private val sudoku: Array<IntArray>) {
      * @author Nils Gormsen
      */
     fun solve() {
-        Timer("stopSolver", false).schedule(100) {
-//            println("Timer started")
-            time = false;
-        }
-        if (!backtrackSolve()) {
-            println("This sudoku can't be solved or execution time to long.")
-            solvable = false;
+//        Timer("stopSolver", false).schedule(100) {
+////            println("Timer started")
+//            time = false;
+//        }
+        if(checkSudokuConstraints(sudoku)){
+            if (!backtrackSolve()) {
+                println("This sudoku can't be solved")
+                solvable = false;
+            }
+        }else{
+            solvable = false
+            println("No valid sudoku form (too many 0 or same number in row.")
         }
     }
     /**
