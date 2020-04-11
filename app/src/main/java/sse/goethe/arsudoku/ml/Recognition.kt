@@ -208,6 +208,7 @@ class Recognition(context: Context) {
      *  and get the most likely class.
      * */
     private fun validateDigitRecognition() {
+        // ...
         if (TMP_CHECKED_FRAMES < ABS_CHECKED_FRAMES) {
             for (row in 0..8) {
                 for (col in 0..8) {
