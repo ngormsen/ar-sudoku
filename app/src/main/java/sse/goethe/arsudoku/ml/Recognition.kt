@@ -56,7 +56,7 @@ class Recognition(context: Context) {
     var validityCounter = arrayOf<Array<Array<Int>>>()
 
     // parameter for running digit recognition every x frames to reduce lagginess
-    val run_every_x = 10
+    val run_every_x = 30
     var frameCounter = 0
 
     // validate interpreted sudokus
@@ -129,7 +129,7 @@ class Recognition(context: Context) {
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
         computerVision.analyzeFrame(frame)
         frameCounter++
-        if (frameCounter%run_every_x == 0) {
+        if (frameCounter%run_every_x != 0) {
             isReady = true
             return
         }
