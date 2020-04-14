@@ -462,20 +462,20 @@ class ComputerVision {
         return bmp
     }
 
-    var DIGIT_CLASSIFIER = true
+    var START_DIGIT_CLASSIFIER = true // if true, Digit Classifier can start
 
     /**
      *  This public funtion set the var DIGIT_CLASSIFIER to true/false.
      */
-    fun setDigitClassifier(bool : Boolean) {
-        DIGIT_CLASSIFIER = bool
+    fun setStartDigitClassifier(bool : Boolean) {
+        START_DIGIT_CLASSIFIER = bool
     }
 
     /**
      *  This public funtion get the value of DIGIT_CLASSIFIER.
      */
-    fun getDigitClassifier() : Boolean {
-        return DIGIT_CLASSIFIER
+    fun getStartDigitClassifier() : Boolean {
+        return START_DIGIT_CLASSIFIER
     }
 
     /**
@@ -483,8 +483,8 @@ class ComputerVision {
      *  If there are not sudoku corner, the next time if it found sudoku corners it start the digit recognition.
      */
      fun checkCorners() {
-        if (!DIGIT_CLASSIFIER) {
-            DIGIT_CLASSIFIER = SudokuCorners == null
+        if (!START_DIGIT_CLASSIFIER) {
+            START_DIGIT_CLASSIFIER = SudokuCorners == null
         }
     }
 }

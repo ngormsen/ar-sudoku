@@ -28,7 +28,7 @@ import java.io.*
 class Recognition(context: Context) {
     private var digitClassifier = DigitClassifier(context)
     var computerVision = ComputerVision()
-    
+
     var sudokuPredictedDigits: Array<IntArray>
     var sudokuHandOrMachinePrintedFields: Array<Array<Int>>
 
@@ -125,14 +125,14 @@ class Recognition(context: Context) {
         }
          */
 
-        if (computerVision.SudokuBoxesBitmap != null && computerVision.getDigitClassifier()) {
-            Log.e(TAG, "Start Classification") // TODO
+        if (computerVision.SudokuBoxesBitmap != null && computerVision.getStartDigitClassifier()) {
 
             croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
 
             classifyAll()
-            computerVision.setDigitClassifier(false)
+            computerVision.setStartDigitClassifier(false)
             START_SOLVER = true
+            
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
@@ -356,7 +356,11 @@ class Recognition(context: Context) {
         private const val TAG = "Recognition"
     }
 
-    var START_SOLVER : Boolean = true
+    var START_SOLVER : Boolean = true // if true, sudoku solver can start
+
+    /**
+     *  This function gets the value of START_SOLVER
+     */
     fun getStartSolver () : Boolean {
         return START_SOLVER
     }
