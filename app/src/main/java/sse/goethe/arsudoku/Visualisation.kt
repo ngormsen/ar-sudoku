@@ -74,10 +74,12 @@ class Visualisation(recognition: Recognition) {
      *
      *  @return edit input with rendered digits
      */
-    fun run(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Mat {
+    fun run(inputFrame : Mat, solvedSudoku : Array<IntArray>) : Mat {
 
-        inputMat = inputFrame.rgba()
+        inputMat = inputFrame
         inputSize = inputMat.size()
+
+        if (SUDOKU_CORNER_IS_NULL) inputMat = drawScannerFrame()
 
         outputMat = Mat.zeros(inputSize, matType)
         sudoku_mask = Mat.zeros(inputSize, matType)
@@ -235,6 +237,49 @@ class Visualisation(recognition: Recognition) {
     }
 
     /**
+     *  This private function draws the scanner frame.
+     *  @param size is by default the inputSize
+     *  @param colour is the colour of the scanner frame
+     *  @param thickness of the line
+     *
+     *  @return the merged input with the scanner frame
+     */
+    private fun drawScannerFrame (size : Size = inputSize, colour : Scalar = RED, thickness: Int = 5) : Mat {
+
+        val corners = scannerFrameCorners()
+
+        var mask = Mat.zeros(size, matType)
+
+        Imgproc.line(mask, corners[0], corners[1], WHITE, thickness)
+        Imgproc.line(mask, corners[1], corners[2], WHITE, thickness)
+        Imgproc.line(mask, corners[2], corners[3], WHITE, thickness)
+        Imgproc.line(mask, corners[3], corners[0], WHITE, thickness)
+
+        val colouredMat = createColouredMat().setTo(colour, mask)
+
+        return mergeMat(inputMat, colouredMat, mask)
+    }
+
+    /**
+     *  This private function calculates the corners of the scanner frame
+     *  @param input is by default the inputMat
+     *
+     *  @return the four corners of the scanner frame in a array
+     */
+    private fun scannerFrameCorners (input : Mat = inputMat) : Array<Point> {
+
+        val topRight = Point(input.width()*0.3, input.height()*0.3)
+        val topLeft = Point(topRight.x, input.height()-topRight.y)
+        val buttomLeft = Point(topLeft.x+topLeft.y-topRight.y, topLeft.y)
+        val buttomRight = Point(buttomLeft.x, topRight.y)
+
+        val length = (topLeft.y-topRight.y).toInt().toString()
+        Log.d("Scanner Solution", (length + "x" + length))
+
+        return arrayOf(topRight, topLeft , buttomLeft, buttomRight)
+    }
+
+    /**
      *  Function TODO not done yet...
      *
      */
@@ -263,9 +308,9 @@ class Visualisation(recognition: Recognition) {
      *  FOR TESTING
      *
      *  This private function draws a sudoku grid on mat.
-     *  @param input
-     *  @param colour
-     *  @param thickness
+     *  @param input is by default sudoku_mask
+     *  @param colour of the line
+     *  @param thickness of the line
      */
     private fun drawGrid(input : Mat = sudoku_mask, colour : Scalar = WHITE, thickness : Int = 2) : Mat {
 
@@ -326,7 +371,7 @@ class Visualisation(recognition: Recognition) {
     }
 
     /**
-     *  FOR TESTING
+     *  FOR TESTING TODO does not work properly
      *
      *  This public function draws a circle in the center of the screen
      */

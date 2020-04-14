@@ -149,7 +149,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     }
 
-
     /**
      *  Kelvin Tsang
      */
@@ -161,7 +160,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 setCvCameraViewListener(this@MainActivity)
             }
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun convertGamestateToFirebase(): ArrayList<Int>{
@@ -283,14 +281,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return game
     }
 
-
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
         return true
     }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle presses on the action bar menu items
@@ -395,7 +390,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     }
 
-
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
 
@@ -406,7 +400,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             if(recognition.getStartSolver()) {
                 setGame(aSudoku)
             }
-            visualisation.run(inputFrame, game.getGamestate().getVisualizeState())
+            visualisation.run(inputFrame.rgba(), game.getGamestate().getVisualizeState())
         } else {
             Log.e(TAG, "Input frame is null!!")
             Mat()

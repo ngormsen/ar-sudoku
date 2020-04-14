@@ -345,27 +345,6 @@ class ComputerVision {
         Imgproc.warpPerspective(image, dst, TransformationMat, dst.size(), INTER_LINEAR, BORDER_CONSTANT) // ToDo: is the zoom problem here, that the warp is too close up
         return dst
     }
-    /**
-     * IGNORE this function!
-     * this funtion is similar to the above and to be used for testing purposes
-     */
-    private fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
-        // destination vertices
-        //val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
-        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
-        // the destination buffer
-        val dst = Mat.zeros(image.size(), CV_8UC3)
-        // create the perspective transform
-        val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
-        // apply to the image
-        Imgproc.warpPerspective(image, dst, perspectiveTransform, image.size(), INTER_LINEAR, BORDER_CONSTANT)
-        Log.d("Points", "first x: ${dstCoords.toList()[0].x}, first y: ${dstCoords.toList()[0].y}, second x: ${dstCoords.toList()[3].x}, second y: ${dstCoords.toList()[3].y}")
-        //val r = Rect(dstCoords.toList()[0], dstCoords.toList()[3])
-        //val wowi = Mat(dst, r)
-        //dst = Mat.zeros(dst.size(), CV_8UC3)
-        //Imgproc.resize(wowi, dst, dst.size())
-        return dst
-    }
 
     /**
      * Takes the image of a sudoku and cuts it into 81 sub-images,
@@ -376,12 +355,12 @@ class ComputerVision {
      *
      */
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
-        val squares: Array<Mat> = Array(81) { Mat.zeros(Size(SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), sudoku.type())}
+        val squares: Array<Mat> = Array(81) { Mat.zeros(Size(SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE, SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE), sudoku.type())}
 
         for (row in 0..8){ // each row
             for (column in 0..8){ // each column of the current row
                 // make a rectangle from the left upper and the right lower point
-                val r = Rect(Point(column*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), row*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), Point((column+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), (row+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()))
+                val r = Rect(Point(column*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE, row*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE), Point((column+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE, (row+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE))
                 // use rect to cut out roi from sudoku
                 val oneSquare = Mat(sudoku, r)
                 squares[row*9+column] = oneSquare
