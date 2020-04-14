@@ -28,10 +28,7 @@ import java.io.*
 class Recognition(context: Context) {
     private var digitClassifier = DigitClassifier(context)
     var computerVision = ComputerVision()
-
-    var sudokuIsExistent: Boolean = false
-    lateinit var sudokuSquare: Mat
-
+    
     var sudokuPredictedDigits: Array<IntArray>
     var sudokuHandOrMachinePrintedFields: Array<Array<Int>>
 
@@ -40,8 +37,6 @@ class Recognition(context: Context) {
     private lateinit var croppedSudokuBlocks: Array<Bitmap>
 
     lateinit var testbitmap: Bitmap
-
-    var isReady: Boolean = true // is used to signal that recognition process is ready
 
     var validityCounter = arrayOf<Array<Array<Int>>>()
 
@@ -130,39 +125,18 @@ class Recognition(context: Context) {
         }
          */
 
-        // Log.d("checkcheck", "hihihi")
-        // How to do null-checks:
-        if (computerVision.SudokuBoxesBitmap == null) {
-            isReady = true
-            return
-        }
-        else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
-
-        if (computerVision.getDigitClassifier()) {
+        if (computerVision.SudokuBoxesBitmap != null && computerVision.getDigitClassifier()) {
             Log.e(TAG, "Start Classification") // TODO
-            try {
 
-                classifyAll()
-                computerVision.setDigitClassifier(false)
-                START_SOLVER = true
-                sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
-                sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
-                sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+            croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
 
-                /**
-                 * At this position we need a function that
-                 * ensures stability and validates the results.
-                 * So we have to hold on results that do
-                 * not change that often.
-                 *
-                 * */
-                isReady = true
-
-            } catch (e: IOException) { // general exception.
-                Log.d(TAG, "SudokuBoxesBitmap initialized or null ?")
-            }
+            classifyAll()
+            computerVision.setDigitClassifier(false)
+            START_SOLVER = true
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
         }
-        isReady = true
     }
 
     /**

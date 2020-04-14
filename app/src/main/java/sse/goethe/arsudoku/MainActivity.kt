@@ -400,8 +400,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
         Log.d("FRAME:", "onCameraFrame() Method")
         var starttimer : Long = 0
-        return if (inputFrame != null && recognition.isReady) {
-            recognition.isReady = false
+        return if (inputFrame != null) {
             recognition.run(inputFrame)
 
             val aSudoku = Sudoku(recognition.sudokuPredictedDigits)
