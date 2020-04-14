@@ -32,7 +32,7 @@ class Recognition(context: Context) {
     var sudokuIsExistent: Boolean = false
     lateinit var sudokuSquare: Mat
 
-    var sudokuPredictedDigits: Array<Array<Int>>
+    var sudokuPredictedDigits: Array<IntArray>
     var sudokuHandOrMachinePrintedFields: Array<Array<Int>>
 
     lateinit var croppedSudokuMats: Array<Mat>
@@ -72,15 +72,15 @@ class Recognition(context: Context) {
         }
 
         sudokuPredictedDigits = arrayOf(
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            arrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0) )
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0) )
 
         /**
          * -1 = False if it is machine printed,  1 = True if it is hand written
@@ -237,7 +237,7 @@ class Recognition(context: Context) {
     /**
      *
      * */
-    private fun rotateCounterClock(matrix: Array<Array<Int>>): Array<Array<Int>> {
+    private fun rotateCounterClock(matrix: Array<IntArray>): Array<IntArray> {
         // Log.d("rotateClockwise", "started this function")
         val n = 9
         for (i in 0 until n/2) {

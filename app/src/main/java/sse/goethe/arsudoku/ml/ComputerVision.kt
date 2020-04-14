@@ -484,14 +484,7 @@ class ComputerVision {
      */
      fun checkCorners() {
         if (!DIGIT_CLASSIFIER) {
-            if (SudokuCorners == null) {
-                DIGIT_CLASSIFIER = true
-                Log.e("Computer Vision", "Corners are not null" )
-            }
-            else {
-                DIGIT_CLASSIFIER = false
-                Log.e("Computer Vision", "Corners are null" )
-            }
+            DIGIT_CLASSIFIER = SudokuCorners == null
         }
     }
 }

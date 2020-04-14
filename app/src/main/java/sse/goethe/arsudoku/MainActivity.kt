@@ -404,7 +404,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             recognition.isReady = false
             recognition.run(inputFrame)
 
-            val aSudoku = Sudoku(converterarraydingens(recognition.sudokuPredictedDigits))
+            val aSudoku = Sudoku(recognition.sudokuPredictedDigits)
             if(recognition.getStartSolver()) {
                 setGame(aSudoku)
                 Log.e(TAG, "Start Solver")
@@ -416,45 +416,4 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
-    private fun converterarraydingens(input: Array<Array<Int>>): Array<IntArray>{
-        val newState = arrayOf(
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
-        )
-        for (row in 0..8) {
-            for (col in 0..8) {
-                newState[row][col] = input[row][col]
-            }
-        }
-        return newState
-    }
-/*
-    @RequiresApi(Build.VERSION_CODES.Q)
-    override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
-        Log.d("FRAME:", "onCameraFrame() Method")
-        // This method is invoked when delivery of the frame needs to be done.
-        // The returned values - is a modified frame which needs to be displayed on the screen
-        this.frameCounter += 1
-        return if (inputFrame != null) {
-            var outputFrame: Mat
-            if (this.frameCounter > 0) {
-                recognition.run(inputFrame)
-                outputFrame = visualisation.runVisualisation(inputFrame)
-                this.frameCounter = 0
-                outputFrame
-            } else inputFrame.rgba()
-        } else {
-            Log.e(TAG, "Input frame is null!!")
-            Mat()
-        }
-    }
-
-*/
 }
