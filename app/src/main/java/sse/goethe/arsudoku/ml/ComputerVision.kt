@@ -58,8 +58,9 @@ class ComputerVision {
 
     /* values and variables */
     private lateinit var bitmap: Bitmap
-    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 28  // the width and height of one Sudoku number square
+    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 28.0  // the width and height of one Sudoku number square
     private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
+    private val CROPPEDSUDOKUSIZE_2D = Size(CROPPEDSUDOKUSIZE,CROPPEDSUDOKUSIZE)
     /**
      * The following are class properties that are being set by analyzeFrame().
      * They are nullable. You MUST check for null value. If null value is found, that
@@ -70,11 +71,6 @@ class ComputerVision {
     var TransformationMat: Mat? = null
     var SudokuBoxes: Array<Mat>? = null
     var SudokuBoxesBitmap: Array<Bitmap>? = null
-
-    /* init is called once if class is instantiated */
-    init {
-        /* don't forgett to init lateinit variables */
-    }
 
     /**###############################################################
      * class functions
@@ -340,9 +336,9 @@ class ComputerVision {
      */
     private fun cropImage(image: Mat, srcCoords: MatOfPoint2f): Mat{
         // destination vertices
-        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
+        val dstCoords: MatOfPoint2f = MatOfPoint2f( Point(0.0,0.0), Point(CROPPEDSUDOKUSIZE, 0.0), Point(0.0, CROPPEDSUDOKUSIZE), Point(CROPPEDSUDOKUSIZE, CROPPEDSUDOKUSIZE) )
         // the destination buffer
-        val dst = Mat.zeros(CROPPEDSUDOKUSIZE, CROPPEDSUDOKUSIZE, CV_8UC3) // TODO: not 100% sure about the type here...
+        val dst = Mat.zeros(CROPPEDSUDOKUSIZE_2D, CV_8UC3) // TODO: not 100% sure about the type here...
         // create the perspective transform
         TransformationMat = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image

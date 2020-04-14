@@ -398,7 +398,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
-        Log.d("FRAME:", "onCameraFrame() Method")
 
         return if (inputFrame != null) {
             recognition.run(inputFrame)

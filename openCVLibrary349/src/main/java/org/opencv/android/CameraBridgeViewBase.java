@@ -413,7 +413,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                 //this is the rotation part
 
                 if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT && mCameraIndex == -1) {
-                    Log.d(TAG, "INDEX IS: " + mCameraIndex);
+                    //Log.d(TAG, "INDEX IS: " + mCameraIndex);
                     canvas.save();
                     canvas.rotate(90,  (canvas.getWidth()/ 2),(canvas.getHeight()/ 2));
                 }
