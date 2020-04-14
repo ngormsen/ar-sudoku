@@ -61,6 +61,7 @@ class ComputerVision {
     private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 28.0  // the width and height of one Sudoku number square
     private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
     private val CROPPEDSUDOKUSIZE_2D = Size(CROPPEDSUDOKUSIZE,CROPPEDSUDOKUSIZE)
+
     /**
      * The following are class properties that are being set by analyzeFrame().
      * They are nullable. You MUST check for null value. If null value is found, that
@@ -71,6 +72,9 @@ class ComputerVision {
     var TransformationMat: Mat? = null
     var SudokuBoxes: Array<Mat>? = null
     var SudokuBoxesBitmap: Array<Bitmap>? = null
+
+    private lateinit var SCANNERFRAME_CORNERS : MatOfPoint2f
+
 
     /**###############################################################
      * class functions
@@ -102,6 +106,8 @@ class ComputerVision {
         TransformationMat = null
         SudokuBoxes = null
         SudokuBoxesBitmap = null
+
+        SCANNERFRAME_CORNERS =scannerFrameCorners(frame.gray())
 
         // Preprocessing:
         val (img, forML) = preprocessing(frame)
@@ -256,11 +262,6 @@ class ComputerVision {
         return Pair(dst, tmp)
     }
 
-    private fun scale_and_centre(){
-
-    }
-
-
     private fun rotateMat (input : Mat, angle : Double = 270.0) : Mat {
 
         val centerPoint : Point = Point(input.cols()/2.0, input.rows()/2.0)
@@ -280,7 +281,9 @@ class ComputerVision {
      * and gets the four corners of it, should it be similar to a square.
      *
      */
-    private fun findCorners(frame: Mat): MatOfPoint2f? {
+    private fun findCorners(frame : Mat): MatOfPoint2f? {
+
+        //var frame = cropImage(input, SCANNERFRAME_CORNERS)
 
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.
@@ -309,7 +312,7 @@ class ComputerVision {
         if (biggest.toList().size < 4) return null
 
         // convert to MatOfPoint2f from MatOfPoint (which was the result of findContours. But approxDP needs 2f)
-        val approx = MatOfPoint2f()
+        var approx = MatOfPoint2f()
         val x = MatOfPoint2f()
         biggest.convertTo(approx, CvType.CV_32F)
         biggest.convertTo(x, CvType.CV_32F)
@@ -325,6 +328,13 @@ class ComputerVision {
 
         // this check is necessary, because we might go from >4 points to <4 in a single increment of d
         if (approx.toList().size < 4) return null
+
+        //val topRight = SCANNERFRAME_CORNERS.toArray()[0]
+        //Log.e("VISUALILKFJSLJD", approx.toArray()[0].toString())
+        /*approx = MatOfPoint2f(  Point(approx.toArray()[0].x + topRight.x, approx.toArray()[0].y + topRight.y),
+                                Point(approx.toArray()[1].x + topRight.x, approx.toArray()[1].y + topRight.y),
+                                Point(approx.toArray()[2].x + topRight.x, approx.toArray()[2].y + topRight.y),
+                                Point(approx.toArray()[3].x + topRight.x, approx.toArray()[3].y + topRight.y))*/
 
         return approx
     }
@@ -461,5 +471,23 @@ class ComputerVision {
         if (!START_DIGIT_CLASSIFIER) {
             START_DIGIT_CLASSIFIER = SudokuCorners == null
         }
+    }
+
+    /**
+     *  This private function calculates the corners of the scanner frame
+     *  @param input is by default the inputMat
+     *
+     *  @return the four corners of the scanner frame in a array
+     */
+    private fun scannerFrameCorners (input : Mat) : MatOfPoint2f {
+
+        val topRight = Point(input.width()*0.25, input.height()*0.25)
+        val topLeft = Point(topRight.x, input.height()-topRight.y)
+        val buttomLeft = Point(topLeft.x+topLeft.y-topRight.y, topLeft.y)
+        val buttomRight = Point(buttomLeft.x, topRight.y)
+
+        val length = (topLeft.y-topRight.y).toInt().toString()
+
+        return MatOfPoint2f(topRight, topLeft , buttomLeft, buttomRight)
     }
 }

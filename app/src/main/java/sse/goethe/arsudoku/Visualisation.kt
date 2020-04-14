@@ -4,7 +4,6 @@
 package sse.goethe.arsudoku
 
 import android.util.Log
-import org.opencv.android.CameraBridgeViewBase
 import org.opencv.core.*
 import org.opencv.core.Core.*
 import org.opencv.imgproc.Imgproc
@@ -62,7 +61,7 @@ class Visualisation(recognition: Recognition) {
     private lateinit var outputMat_mask : Mat
     private lateinit var outputMat : Mat
 
-    private var SUDOKU_CORNER_IS_NULL = true // TODO not used yet
+    private var SUDOKU_CORNER_IS_NULL = true
 
     private var startTime : Long = 0
 
@@ -103,12 +102,13 @@ class Visualisation(recognition: Recognition) {
     private fun getTransformationMat () : Boolean {
         return if (sudokuCorners != null) {
             SUDOKU_CORNER_IS_NULL =  false
-            val sudokuCoords: MatOfPoint2f = (MatOfPoint2f(
+
+            val sudokuCoords: MatOfPoint2f = MatOfPoint2f(
                 Point(0.0,0.0),
                 Point(SUDOKU_MAT_SIZE, 0.0),
                 Point(0.0, SUDOKU_MAT_SIZE),
                 Point(SUDOKU_MAT_SIZE, SUDOKU_MAT_SIZE)
-                ))
+                )
 
             transformMat =  Imgproc.getPerspectiveTransform(sudokuCoords, sudokuCorners)
             true
@@ -173,7 +173,7 @@ class Visualisation(recognition: Recognition) {
      */
     private fun rotateMat (input : Mat, angle : Double = ROTANTION_ANGLE) : Mat {
 
-        val centerPoint : Point = Point(input.cols()/2.0, input.rows()/2.0)
+        val centerPoint = Point(input.cols()/2.0, input.rows()/2.0)
         val rotMat : Mat = Imgproc.getRotationMatrix2D(centerPoint, angle, 1.0)
         var dst : Mat = Mat.zeros(input.cols(), input.rows(), input.type())
 
@@ -244,16 +244,34 @@ class Visualisation(recognition: Recognition) {
      *
      *  @return the merged input with the scanner frame
      */
-    private fun drawScannerFrame (size : Size = inputSize, colour : Scalar = RED, thickness: Int = 5) : Mat {
+    private fun drawScannerFrame (size : Size = inputSize, colour : Scalar = digitColour, thickness: Int = 5) : Mat {
 
         val corners = scannerFrameCorners()
+        val length = (corners[1].y-corners[0].y)*0.25
 
         var mask = Mat.zeros(size, matType)
 
-        Imgproc.line(mask, corners[0], corners[1], WHITE, thickness)
+        // Top Right Corner
+        Imgproc.line(mask, corners[0], Point(corners[0].x + length, corners[0].y), WHITE, thickness)
+        Imgproc.line(mask, corners[0], Point(corners[0].x, corners[0].y + length), WHITE, thickness)
+
+        // Top Left Corner
+        Imgproc.line(mask, corners[1], Point(corners[1].x + length, corners[1].y), WHITE, thickness)
+        Imgproc.line(mask, corners[1], Point(corners[1].x, corners[1].y - length), WHITE, thickness)
+
+        // Buttom Left Corner
+        Imgproc.line(mask, corners[2], Point(corners[2].x - length, corners[2].y), WHITE, thickness)
+        Imgproc.line(mask, corners[2], Point(corners[2].x, corners[2].y - length), WHITE, thickness)
+
+        // Buttom Right Corner
+        Imgproc.line(mask, corners[3], Point(corners[3].x - length, corners[3].y), WHITE, thickness)
+        Imgproc.line(mask, corners[3], Point(corners[3].x, corners[3].y + length), WHITE, thickness)
+
+
+        /*Imgproc.line(mask, corners[0], corners[1], WHITE, thickness)
         Imgproc.line(mask, corners[1], corners[2], WHITE, thickness)
         Imgproc.line(mask, corners[2], corners[3], WHITE, thickness)
-        Imgproc.line(mask, corners[3], corners[0], WHITE, thickness)
+        Imgproc.line(mask, corners[3], corners[0], WHITE, thickness)*/
 
         val colouredMat = createColouredMat().setTo(colour, mask)
 
@@ -272,9 +290,6 @@ class Visualisation(recognition: Recognition) {
         val topLeft = Point(topRight.x, input.height()-topRight.y)
         val buttomLeft = Point(topLeft.x+topLeft.y-topRight.y, topLeft.y)
         val buttomRight = Point(buttomLeft.x, topRight.y)
-
-        val length = (topLeft.y-topRight.y).toInt().toString()
-        Log.d("Scanner Solution", (length + "x" + length))
 
         return arrayOf(topRight, topLeft , buttomLeft, buttomRight)
     }
@@ -371,16 +386,21 @@ class Visualisation(recognition: Recognition) {
     }
 
     /**
-     *  FOR TESTING TODO does not work properly
+     *  FOR TESTING
      *
      *  This public function draws a circle in the center of the screen
      */
-    private fun drawCircle (input : Mat = inputMat, colour : Scalar = digitColour, thickness: Int = 10) : Mat {
-        val centerPoint : Point = Point(inputSize.width/2, inputSize.height/2)
-        val radius : Int = inputSize.width.toInt()/10
-        var canvas = input
-        Imgproc.circle(canvas,centerPoint, radius, colour, thickness, LINE_AA, 0 )
+    private fun drawCircle (input : Mat = inputMat, size : Size = inputSize, colour : Scalar = digitColour, thickness: Int = 10) : Mat {
 
-        return canvas
+        val centerPoint : Point = Point(size.width/2, size.height/2)
+        val radius : Int = size.width.toInt()/10
+
+        var mask = Mat.zeros(input.size(), matType)
+
+        Imgproc.circle(mask,centerPoint, radius, WHITE, thickness, LINE_AA, 0 )
+
+        val colouredMat = createColouredMat().setTo(colour, mask)
+
+        return mergeMat(input, colouredMat, mask)
     }
 }
