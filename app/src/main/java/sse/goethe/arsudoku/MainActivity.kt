@@ -399,14 +399,13 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
         Log.d("FRAME:", "onCameraFrame() Method")
-        var starttimer : Long = 0
+
         return if (inputFrame != null) {
             recognition.run(inputFrame)
 
             val aSudoku = Sudoku(recognition.sudokuPredictedDigits)
             if(recognition.getStartSolver()) {
                 setGame(aSudoku)
-                Log.e(TAG, "Start Solver")
             }
             visualisation.run(inputFrame, game.getGamestate().getVisualizeState())
         } else {

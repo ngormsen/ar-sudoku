@@ -62,7 +62,7 @@ class Visualisation(recognition: Recognition) {
     private lateinit var outputMat_mask : Mat
     private lateinit var outputMat : Mat
 
-    private var SUDOKU_CORNER_IS_NULL = true
+    private var SUDOKU_CORNER_IS_NULL = true // TODO not used yet
 
     private var startTime : Long = 0
 
@@ -76,10 +76,9 @@ class Visualisation(recognition: Recognition) {
      */
     fun run(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Mat {
 
-        Log.e(TAG, "Start Visualisation")
-
         inputMat = inputFrame.rgba()
         inputSize = inputMat.size()
+
         outputMat = Mat.zeros(inputSize, matType)
         sudoku_mask = Mat.zeros(inputSize, matType)
 
@@ -113,7 +112,6 @@ class Visualisation(recognition: Recognition) {
             true
         }
         else {
-            Log.e(TAG, "sudokuCorners is null")
             SUDOKU_CORNER_IS_NULL = true
             false
         }

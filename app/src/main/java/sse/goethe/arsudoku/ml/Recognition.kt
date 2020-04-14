@@ -40,10 +40,6 @@ class Recognition(context: Context) {
 
     var validityCounter = arrayOf<Array<Array<Int>>>()
 
-    // parameter for running digit recognition every x frames to reduce lagginess
-    val run_every_x = 10
-    var frameCounter = 0
-
     // validate interpreted sudokus
     private var ABS_CHECKED_FRAMES = 10
     private var TMP_CHECKED_FRAMES = 0
@@ -116,15 +112,6 @@ class Recognition(context: Context) {
         computerVision.analyzeFrame(frame)
         computerVision.checkCorners()
 
-        /*
-        frameCounter++
-        if (frameCounter%run_every_x == 0) {
-            isReady = true
-            computerVision.setDigitClassifier(true)
-            return
-        }
-         */
-
         if (computerVision.SudokuBoxesBitmap != null && computerVision.getStartDigitClassifier()) {
 
             croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
@@ -132,7 +119,7 @@ class Recognition(context: Context) {
             classifyAll()
             computerVision.setStartDigitClassifier(false)
             START_SOLVER = true
-            
+
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
             sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)

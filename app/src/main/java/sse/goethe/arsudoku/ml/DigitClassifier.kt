@@ -8,13 +8,11 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks.call
-import org.opencv.imgproc.Imgproc
 import org.tensorflow.lite.Interpreter
 import sse.goethe.arsudoku.ml.Keys.MODEL_PATH
 import java.lang.IllegalStateException
