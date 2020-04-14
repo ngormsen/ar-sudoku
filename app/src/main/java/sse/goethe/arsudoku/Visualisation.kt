@@ -50,17 +50,19 @@ class Visualisation(recognition: Recognition) {
     // connection to Recognition and ComputerVision
     private var recognition: Recognition = recognition
 
-    private lateinit var inputMat : Mat
-    private lateinit var transformMat : Mat
+    private lateinit var inputMat : Mat // input picture as matrix
+    private lateinit var transformMat : Mat // transformation matrix
     private lateinit var digits : Array<IntArray>
 
-    private var sudokuCorners : MatOfPoint2f? =  null
+    private var sudokuCorners : MatOfPoint2f? =  null // location/points of the sudoku corners
 
-    private lateinit var inputSize : Size
+    private lateinit var inputSize : Size // size of the input matrix
 
     private lateinit var sudoku_mask : Mat
     private lateinit var outputMat_mask : Mat
     private lateinit var outputMat : Mat
+
+    private var SUDOKU_CORNER_IS_NULL = true
 
     private var startTime : Long = 0
 
@@ -73,6 +75,8 @@ class Visualisation(recognition: Recognition) {
      *  @return edit input with rendered digits
      */
     fun run(inputFrame: CameraBridgeViewBase.CvCameraViewFrame, solvedSudoku : Array<IntArray>) : Mat {
+
+        Log.e(TAG, "Start Visualisation")
 
         inputMat = inputFrame.rgba()
         inputSize = inputMat.size()
@@ -97,6 +101,7 @@ class Visualisation(recognition: Recognition) {
      */
     private fun getTransformationMat () : Boolean {
         return if (sudokuCorners != null) {
+            SUDOKU_CORNER_IS_NULL =  false
             val sudokuCoords: MatOfPoint2f = (MatOfPoint2f(
                 Point(0.0,0.0),
                 Point(SUDOKU_MAT_SIZE, 0.0),
@@ -109,6 +114,7 @@ class Visualisation(recognition: Recognition) {
         }
         else {
             Log.e(TAG, "sudokuCorners is null")
+            SUDOKU_CORNER_IS_NULL = true
             false
         }
     }
@@ -231,7 +237,7 @@ class Visualisation(recognition: Recognition) {
     }
 
     /**
-     *  Function TODO
+     *  Function TODO not done yet...
      *
      */
     private fun createOutputMask () : Mat {
@@ -246,6 +252,13 @@ class Visualisation(recognition: Recognition) {
     fun setDigitColour (colour : Scalar) {
 
         digitColour = colour
+    }
+
+    /**
+     *  This public funtion gets the value of SUDOKU_CORNER_IS_NULL
+     */
+    fun getSudokuCornerIsNull () : Boolean {
+        return SUDOKU_CORNER_IS_NULL
     }
 
     /**
