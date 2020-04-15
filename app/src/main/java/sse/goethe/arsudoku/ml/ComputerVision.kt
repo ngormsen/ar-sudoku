@@ -283,7 +283,7 @@ class ComputerVision {
      */
     private fun findCorners(frame : Mat): MatOfPoint2f? {
 
-        //var frame = cropImage(input, SCANNERFRAME_CORNERS)
+        //var frame = cropImage(input, SCANNERFRAME_CORNERS) // TODO crop frame mat
 
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.

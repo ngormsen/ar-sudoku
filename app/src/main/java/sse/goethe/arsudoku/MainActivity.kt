@@ -25,9 +25,7 @@ import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Mat
-//import sse.goethe.arsudoku.dlx.NaiveSudokuSolver
 import sse.goethe.arsudoku.ml.Recognition
-import kotlin.system.measureTimeMillis
 
 /**
  * Activity that manages the overall state of the application.
@@ -101,11 +99,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        // Delete the following line later
-        Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
-
-
-        Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
         setGlobalUser(User("Nils", "nils.gormsen@googlemail.com"))
 
         // Create game
@@ -396,11 +389,23 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return if (inputFrame != null) {
             recognition.run(inputFrame)
 
-            val aSudoku = Sudoku(recognition.sudokuPredictedDigits)
+            val predictedDigits = Sudoku(recognition.sudokuPredictedDigits)
             if(recognition.getStartSolver()) {
-                setGame(aSudoku)
+                setGame(predictedDigits)
             }
-            visualisation.run(inputFrame.rgba(), game.getGamestate().getVisualizeState())
+            val solvable =  game.getGamestate().getSolvable()
+            val outputFrame = visualisation.run(inputFrame.rgba(), game.getGamestate().getVisualizeState())
+
+            val textView : TextView = findViewById(R.id.textView_searching) as TextView
+
+            if (!visualisation.getSudokuCornerIsNull()) {
+                 textView.text = ""
+            }
+            else {
+                textView.text = "Searching for Sudoku ..."
+            }
+
+            outputFrame
         } else {
             Log.e(TAG, "Input frame is null!!")
             Mat()
