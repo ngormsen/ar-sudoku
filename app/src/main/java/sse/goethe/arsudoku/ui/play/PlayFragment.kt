@@ -172,7 +172,8 @@ class PlayFragment : Fragment() {
         // Get current Gamestate from mainactivity
         val activity = activity as MainActivity
         if (activity != null) {
-            activity.stopCamera()
+            activity.stopCamera();
+            activity.saveGame();
         }
 
         gamestate = activity.getGame().getGamestate()
