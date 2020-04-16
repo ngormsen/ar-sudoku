@@ -5,30 +5,20 @@
  *
  */
 package sse.goethe.arsudoku.ml
-import sse.goethe.arsudoku.ml.ComputerVision
-import sse.goethe.arsudoku.ml.DigitClassifier
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Camera
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.get
-import com.google.common.primitives.UnsignedBytes.toInt
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.Utils
 import org.opencv.core.Core.bitwise_not
 import org.opencv.core.Mat
-import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
-import sse.goethe.arsudoku.MainActivity
 import java.io.*
-import java.lang.IllegalStateException
-import kotlin.math.floor
 
 /**
  * The Recognition Class instantiate the DigitClassifier
@@ -39,13 +29,7 @@ class Recognition(context: Context) {
     private var digitClassifier = DigitClassifier(context)
     var computerVision = ComputerVision()
 
-    var sudokuIsExistent: Boolean = false // For Kelvin
-    lateinit var sudokuSquare: Mat // whole sudoku for Kelvin
-
-    var sudokuEdgeCoordinates: Array<Array<Int>> // Sudokus 4 edges
-    var sudokuCellMidCoordinates: Array<Point> // 81 coords
-
-    var sudokuPredictedDigits: Array<Array<Int>>
+    var sudokuPredictedDigits: Array<IntArray>
     var sudokuHandOrMachinePrintedFields: Array<Array<Int>>
 
     lateinit var croppedSudokuMats: Array<Mat>
@@ -54,27 +38,40 @@ class Recognition(context: Context) {
 
     lateinit var testbitmap: Bitmap
 
-    init {
+    var validityCounter = arrayOf<Array<Array<Int>>>()
 
+    // validate interpreted sudokus
+    private var ABS_CHECKED_FRAMES = 10
+    private var TMP_CHECKED_FRAMES = 0
+    private var validationIsFinished = false
+
+    init {
         /** Initialization of the digit classifier */
         digitClassifier.initializeInterpreter()
 
-        // x1 top left corner, x2 top right corner, x3 bottom left ...
-        sudokuEdgeCoordinates = arrayOf(    arrayOf(700, 2000), arrayOf(1200,2000),
-                                            arrayOf(700, 1500), arrayOf(1200, 1500) )
-
-        sudokuCellMidCoordinates = Array(81) { Point(1.0,1.0) }
+        /** Initialize validityCounter */
+        for (i in 0..8) {
+            var row = arrayOf<Array<Int>>()
+            for (j in 0..8) {
+                var col = arrayOf<Int>()
+                for (k in 0..9) { // 10 classes!
+                    col += 0
+                }
+                row += col
+            }
+            validityCounter += row
+        }
 
         sudokuPredictedDigits = arrayOf(
-                                    arrayOf(5, 0, 0, 3, 0, 1, 0, 0, 7),
-                                    arrayOf(0, 1, 0, 4, 0, 6, 0, 9, 0),
-                                    arrayOf(0, 0, 8, 0, 5, 0, 4, 0, 0),
-                                    arrayOf(1, 7, 0, 0, 0, 0, 0, 5, 9),
-                                    arrayOf(0, 0, 6, 0, 0, 0, 7, 0, 0),
-                                    arrayOf(4, 2, 0, 0, 0, 0, 0, 8, 3),
-                                    arrayOf(0, 0, 4, 0, 2, 0, 3, 0, 0),
-                                    arrayOf(0, 8, 0, 7, 0, 5, 0, 2, 0),
-                                    arrayOf(2, 0, 0, 9, 0, 4, 0, 0, 5) )
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0) )
 
         /**
          * -1 = False if it is machine printed,  1 = True if it is hand written
@@ -91,11 +88,6 @@ class Recognition(context: Context) {
                                     arrayOf(0, -1, 0, -1, 0, -1, 0, -1, 0),
                                     arrayOf(-1, 0, 0, -1, 0, -1, 0, 0, -1) )
 
-
-        testbitmap = digitClassifier.getBitmapFromAsset(context, "mnist_self_1.png")
-
-        //var predictedClass: Int = digitClassifier.classify(testbitmap)
-        //Log.d(TAG, "The predicted class is: " + predictedClass)
     }
 
     /**
@@ -111,28 +103,27 @@ class Recognition(context: Context) {
      * If a Sudoku was (presumably) found, we continue to do Character
      * Recognition.
      *
-     *
      * Input: frame of the camera
      *
      * */
     @RequiresApi(Build.VERSION_CODES.Q)
     fun run(frame: CameraBridgeViewBase.CvCameraViewFrame) {
+        START_SOLVER = false
         computerVision.analyzeFrame(frame)
+        computerVision.checkCorners()
 
-        // How to do null-checks:
-        if (computerVision.SudokuBoxesBitmap == null) return
-        else croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
-/*
-        try {
+        if (computerVision.SudokuBoxesBitmap != null && computerVision.getStartDigitClassifier()) {
+
             croppedSudokuBlocks = computerVision.SudokuBoxesBitmap!!
-        } catch (e: IOException)  {
-            Log.d(TAG, "SudokuBoxesBitmap initialized or null ?")
+
+            classifyAll()
+            computerVision.setStartDigitClassifier(false)
+            START_SOLVER = true
+
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
+            sudokuPredictedDigits = rotateCounterClock(sudokuPredictedDigits)
         }
-
-        classifyAll()
-        //Log.d("Recognition:", "test inference: " + digitClassifier.classify( croppedSudokuBlocks[0] ) )
-
- */
     }
 
     /**
@@ -144,67 +135,84 @@ class Recognition(context: Context) {
      * Output: classified digit
      *
      * */
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun classifyAll(threadsafe: Boolean = false) {
         var count = 0
         var blockCoord: Array<Int>
 
         if (!threadsafe) {
             try {
-                for (block in croppedSudokuBlocks!!) {
+                for (block in croppedSudokuBlocks) {
                     var digit = digitClassifier.classify(block)
-                    Log.d(TAG + " - classifyAll()", "digit: " + digit)
+                    // Log.d("$TAG - classifyAll()", " block nr.$count, digit: $digit")
                     blockCoord = calculateSudokuDigitCells(count)
                     addResult(blockCoord, digit)
                     count++
                 }
-            } catch ( e: IOException ) {
-                Log.d(TAG, "Could not classify and add Results. ")
-            }
+            } catch ( e: IOException ) { Log.d(TAG, "Could not classify and add Results. ") } // NICHT NÖTIG
         } else {
-            /* TODO: Is this whole process threadsafe ?! */
-
-            //for (i in 0..80) {
+            for (i in 0..80) {
             /* test of threadsafe classifying  */
-
-            /*
             if ( (croppedSudokuBlocks[i] != null ) && digitClassifier.isInitialized ) {
                 digitClassifier
                     .classifyAsynchronous( croppedSudokuBlocks[i] )
-                    .addOnSuccessListener { Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i])) }
+                    .addOnSuccessListener {
+                        Log.d("Recognition", "inferenced number from "
+                                + "block " + i + ": "
+                                + digitClassifier.classify(croppedSudokuBlocks[i])) }
             }
-            Log.d("Recognition", "Error classifying")
-            */
-
+            // Log.d("Recognition", "Error classifying")
             /* End test of threadsafe classyfying */
-            //Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
-            //}
+            // Log.d("Recognition", "inferenced number from " + "block " + i + ": " + digitClassifier.classify(croppedSudokuBlocks[i]))
+            }
         }
     }
 
-    /** Check if bitmaps are all init or check within convertMatToBitmap != null */
-    private fun atLeastOneBlockIsNull(): Boolean{
-        var itIs: Boolean = true
-        //
-        //
-        //
-        return itIs
+    /** Use this function to validate over multiple frames
+     *  and get the most likely class.
+     * */
+    private fun validateDigitRecognition() {
+        // ...
+        if (TMP_CHECKED_FRAMES < ABS_CHECKED_FRAMES) {
+            for (row in 0..8) {
+                for (col in 0..8) {
+                    var index = sudokuPredictedDigits[row][col]
+                    validityCounter[row][col][index]++
+                }
+            }
+            TMP_CHECKED_FRAMES++
+        } else if (TMP_CHECKED_FRAMES == ABS_CHECKED_FRAMES) {
+            for (row in 0..8) {
+                for (col in 0..8) {
+                    var maxIndex = validityCounter[row][col].indexOf(validityCounter[row][col].max())
+                    sudokuPredictedDigits[row][col] = maxIndex
+                }
+            }
+            validationIsFinished = true
+            TMP_CHECKED_FRAMES++
+        } else {
+            TMP_CHECKED_FRAMES = 0
+        }
     }
 
-    /** Use this function to validate over multiple frames
-     *  if the inference is correct.
-     *
-     *  Input: Optional parameter of frames which has to be compared
-     *  Output:
+    /**
      *
      * */
-    private fun digitRecognitionIsValid(nFrames: Int = 5): Boolean {
-        // This function has to validate the classification.
-        // Take another x frames and
-        // run the inference again
-        // Only if all x frames inferred the same classification
-        // provide the data to AR and solver
-        return false
+    private fun rotateCounterClock(matrix: Array<IntArray>): Array<IntArray> {
+        // Log.d("rotateClockwise", "started this function")
+        val n = 9
+        for (i in 0 until n/2) {
+            for (j in i until n-i-1) {
+                var tmp = matrix[i][j]
+                matrix[i][j] = matrix[j][n-i-1]
+                matrix[j][n-i-1] = matrix[n-i-1][n-j-1]
+                matrix[n-i-1][n-j-1] = matrix[n-j-1][i]
+                matrix[n-j-1][i] = tmp
+            }
+        }
+        return matrix
     }
+
 
     /**
      * The addResult add a class infered by classify()
@@ -227,12 +235,15 @@ class Recognition(context: Context) {
                 machineHandOrNothing = 1
                 digit = result % 10
             }
-            /* empty field */
+            /* anything else */
             0 -> {
                 machineHandOrNothing = 0
                 digit = 0
             }
-            //10 -> ...
+            10 -> { // empty field
+                machineHandOrNothing = 0
+                digit = 0
+            }
         }
         sudokuPredictedDigits[coordinate[0]][coordinate[1]] = digit
         sudokuHandOrMachinePrintedFields[coordinate[0]][coordinate[1]] = machineHandOrNothing
@@ -250,11 +261,14 @@ class Recognition(context: Context) {
      *
      * */
     private fun calculateSudokuDigitCells(index: Int): Array<Int> {
+        // Log.d("calculateSudokuDigitCells:", " given index: " + index)
         val SIZE = 9
         var row: Int = 0
         var column: Int = 0
-        row = (index / SIZE)
+        row = (index / SIZE) // passt
+        //Log.d("calculateSudokuDigitCells:", " row:" + row)
         column = index % SIZE
+        //Log.d("calculateSudokuDigitCells:", " col:" + column)
         return arrayOf(row, column)
     }
 
@@ -266,7 +280,7 @@ class Recognition(context: Context) {
     }
 
     private fun saveBitmapPng(context: Context, bitmap: Bitmap, name: String): Uri{
-        Log.d(TAG, "saveBitmapPng()")
+        // Log.d(TAG, "saveBitmapPng()")
 
         var filename = "output_" + name + ".png"
         //var sudokuDirectory = File("/DCIM/sudoku/")
@@ -327,5 +341,14 @@ class Recognition(context: Context) {
 
     companion object {
         private const val TAG = "Recognition"
+    }
+
+    var START_SOLVER : Boolean = true // if true, sudoku solver can start
+
+    /**
+     *  This function gets the value of START_SOLVER
+     */
+    fun getStartSolver () : Boolean {
+        return START_SOLVER
     }
 }

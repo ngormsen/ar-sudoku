@@ -1,34 +1,36 @@
 package sse.goethe.arsudoku
-import android.content.ClipData
 import android.content.ContentValues
-import sse.goethe.arsudoku.ml.Recognition
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.SurfaceView
+import android.view.View
+import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import android.view.Menu
-import android.os.Build
-import android.widget.TextView
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.OnLifecycleEvent
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
-import org.opencv.core.*
 import org.opencv.core.Mat
-import kotlin.collections.ArrayList
+import sse.goethe.arsudoku.ml.Recognition
+
+/**
+ * Activity that manages the overall state of the application.
+ * Serves as the interface between the AR, ML and Data components.
+ */
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -76,7 +78,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             intArrayOf(5, 0, 0, 0, 3, 1, 0, 6, 0),
             intArrayOf(6, 0, 0, 0, 0, 5, 9, 0, 0)
         ))
-        println(solver.solve())
 
         cameraPermission = requestPermission.check()
         initializeCameraView()
@@ -98,16 +99,47 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        // Delete the following line later
-        Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
-
-
-        Log.d(TAG, "SUDOKU-DIGITS: " + recognition.sudokuPredictedDigits[0][0])
         setGlobalUser(User("Nils", "nils.gormsen@googlemail.com"))
 
         // Create game
         setGame(solver)
-        println("document in database:")
+//
+//
+//        val hardest = arrayOf(
+//            intArrayOf(8, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 3, 6, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 7, 0, 0, 9, 0, 2, 0, 0),
+//            intArrayOf(0, 5, 0, 0, 0, 7, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 4, 5, 7, 0, 0),
+//            intArrayOf(0, 0, 0, 1, 0, 0, 0, 3, 0),
+//            intArrayOf(0, 0, 1, 0, 0, 0, 0, 6, 8),
+//            intArrayOf(0, 0, 8, 5, 0, 0, 0, 1, 0),
+//            intArrayOf(0, 9, 0, 0, 0, 0, 4, 0, 0)
+//        )
+//
+//        var empty = arrayOf(
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
+//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
+//        )
+//
+//        SudokuDLX sudoku = new SudokuDLX();
+//        sudoku.solve(hardest);
+
+//        println("debugger1")
+//        val time1 = measureTimeMillis {
+//            setGame(Sudoku(hardest))
+//            println(game.getGamestate().getSolvable())
+//        }
+//        println("time1")
+//        println(time1)
+
     }
 
     /**
@@ -121,7 +153,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 setCvCameraViewListener(this@MainActivity)
             }
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun convertGamestateToFirebase(): ArrayList<Int>{
@@ -243,14 +274,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return game
     }
 
-
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
         return true
     }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle presses on the action bar menu items
@@ -283,7 +311,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         navUserEmail.text = user.getEmail()
     }
 
-    fun stopCamera(){
+    fun stopCamera() {
         mOpenCvCameraView?.disableView()
         println("Camera stopped")
     }
@@ -355,24 +383,40 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     }
 
-
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
-        Log.d("FRAME:", "onCameraFrame() Method")
-        // This method is invoked when delivery of the frame needs to be done.
-        // The returned values - is a modified frame which needs to be displayed on the screen
-        this.frameCounter += 1
+
+        visualisation.startTime()
         return if (inputFrame != null) {
-            var outputFrame: Mat
-            if (this.frameCounter > 0) {
-                recognition.run(inputFrame)
-                outputFrame = visualisation.runVisualisation(inputFrame)
-                this.frameCounter = 0
-                outputFrame
-            } else inputFrame.rgba()
+            recognition.run(inputFrame)
+
+            val predictedDigits = Sudoku(recognition.sudokuPredictedDigits)
+            if(recognition.getStartSolver()) {
+                setGame(predictedDigits)
+            }
+            val outputFrame = visualisation.run(inputFrame.rgba(), game.getGamestate().getVisualizeState())
+
+            /**
+             *  Maybe a problem in future Android versions
+             */
+            val textView : TextView = findViewById(R.id.textView_searching) as TextView
+
+            if (!visualisation.getSudokuCornerIsNull()) {
+                 textView.text = ""
+            }
+            else {
+                textView.text = "Searching for Sudoku ..."
+            }
+            /**
+             *  ========================================================================================
+             */
+
+            visualisation.stopTime()
+            outputFrame
         } else {
             Log.e(TAG, "Input frame is null!!")
             Mat()
         }
     }
+
 }

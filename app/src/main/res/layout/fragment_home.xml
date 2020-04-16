@@ -22,8 +22,24 @@
         android:layout_width="100dp"
         android:layout_height="70dp"
         android:text="Stop Camera"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/text_home"></Button>
+
+    <TextView
+        android:id="@+id/textView_searching"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="200dp"
+        android:text="Searching for Sudoku ..."
+        android:textAlignment="center"
+        android:textColor="#FF0000"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/text_home" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

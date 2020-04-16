@@ -11,9 +11,10 @@ import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.core.Core.BORDER_CONSTANT
-import org.opencv.core.CvType.CV_8UC3
+import org.opencv.core.Core.bitwise_not
+import org.opencv.core.CvType.*
 import org.opencv.imgproc.Imgproc
-import org.opencv.imgproc.Imgproc.INTER_LINEAR
+import org.opencv.imgproc.Imgproc.*
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.tan
@@ -49,14 +50,18 @@ import kotlin.math.tan
  * Manus ding
  * davids ding
  *
+ * Idea: experimentalContouring
+ * crop first, then do contour detection on cropped image again to search for 81 square contours
  *
  */
 class ComputerVision {
 
     /* values and variables */
     private lateinit var bitmap: Bitmap
-    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 32  // the width and height of one Sudoku number square
+    private val SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE = 28.0  // the width and height of one Sudoku number square
     private val CROPPEDSUDOKUSIZE = 9 * SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE
+    private val CROPPEDSUDOKUSIZE_2D = Size(CROPPEDSUDOKUSIZE,CROPPEDSUDOKUSIZE)
+
     /**
      * The following are class properties that are being set by analyzeFrame().
      * They are nullable. You MUST check for null value. If null value is found, that
@@ -68,10 +73,8 @@ class ComputerVision {
     var SudokuBoxes: Array<Mat>? = null
     var SudokuBoxesBitmap: Array<Bitmap>? = null
 
-    /* init is called once if class is instantiated */
-    init {
-        /* don't forgett to init lateinit variables */
-    }
+    private lateinit var SCANNERFRAME_CORNERS : MatOfPoint2f
+
 
     /**###############################################################
      * class functions
@@ -104,6 +107,8 @@ class ComputerVision {
         SudokuBoxes = null
         SudokuBoxesBitmap = null
 
+        SCANNERFRAME_CORNERS =scannerFrameCorners(frame.gray())
+
         // Preprocessing:
         val (img, forML) = preprocessing(frame)
 
@@ -111,7 +116,7 @@ class ComputerVision {
         var corners = findCorners(img)
 
         // experimental box finding:
-        experimentalContouring(img)
+        // experimentalContouring(img)
 
         // corners is a nullable MatOfPoint2f
         // if null, there was no Sudoku in the frame
@@ -127,14 +132,19 @@ class ComputerVision {
 
         // cutting
         val boxes = cutSudoku(croppedImage)
+        var boxesRotate = boxes
+
+        for (i in 0..80) {
+            boxesRotate[i] = rotateMat(boxes[i])
+        }
 
         // ToDo: move this code to the convertMatToBitmap function!
         // convert Mat images to Bitmaps
-        val boxesBitmap: Array<Bitmap> = Array<Bitmap>(81) {
-            createBitmap( boxes[0].width(), boxes[0].height() )
+        val boxesBitmap: Array<Bitmap> = Array(81) {
+            createBitmap( boxesRotate[0].width(), boxesRotate[0].height() )
         }
         for (i in 0..80) {
-            boxesBitmap[i] = convertMatToBitmap(boxes[i])
+            boxesBitmap[i] = convertMatToBitmap(boxesRotate[i])
         }
 
         // In the end, we set all the calculated data as class properties
@@ -143,6 +153,7 @@ class ComputerVision {
         // TransformationMat = ... // setting of this var is handled in cropImage()
         SudokuBoxes = boxes
         SudokuBoxesBitmap = boxesBitmap
+
     }
 
     fun lineDetection(frame: CameraBridgeViewBase.CvCameraViewFrame): Mat {
@@ -234,15 +245,57 @@ class ComputerVision {
         return Pair(dilatedMat, threshMat)
     }
 
+    // ############################################################
+    // New preprocessing bc of classifier performance reasons
+
+    private fun preprocessing_v2(frame: CameraBridgeViewBase.CvCameraViewFrame): Pair<Mat, Mat> {
+        var proc = Mat()
+        Imgproc.GaussianBlur(frame.rgba(), proc, Size(9.0,9.0), 0.0)
+        var tmp = Mat()
+        Imgproc.adaptiveThreshold(proc, tmp, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 2.0)
+        var tmp2 = Mat()
+        bitwise_not(tmp, tmp2)
+        var kernel = Mat.zeros(3,3, CV_8UC1)
+        var dst = Mat()
+        dilate(tmp2, dst, kernel)
+
+        return Pair(dst, tmp)
+    }
+
+    private fun rotateMat (input : Mat, angle : Double = 270.0) : Mat {
+
+        val centerPoint : Point = Point(input.cols()/2.0, input.rows()/2.0)
+        val rotMat : Mat = Imgproc.getRotationMatrix2D(centerPoint, angle, 1.0)
+        var dst : Mat = Mat.zeros(input.cols(), input.rows(), input.type())
+
+        Imgproc.warpAffine(input, dst, rotMat, input.size(), Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT)
+
+        return dst
+    }
+
+    // ############################################################
+
+
     /**
      * Finds the largest contour in the frame
      * and gets the four corners of it, should it be similar to a square.
      *
      */
-    private fun findCorners(frame: Mat): MatOfPoint2f? {
+    private fun findCorners(input : Mat): MatOfPoint2f? {
+
+        /**
+         *  Crop the input mat
+         */
+        var roi = Rect(SCANNERFRAME_CORNERS.toList()[0], SCANNERFRAME_CORNERS.toList()[2])
+        var frame = Mat(input, roi)
+        /**
+         *  ========================================================================================
+         */
 
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.
+
+        // ToDo: Find the first 4 largest contours, check if we can make any of them a square, then rest.
 
         val contours = ArrayList<MatOfPoint>() // destination for findContours()
 
@@ -266,7 +319,7 @@ class ComputerVision {
         if (biggest.toList().size < 4) return null
 
         // convert to MatOfPoint2f from MatOfPoint (which was the result of findContours. But approxDP needs 2f)
-        val approx = MatOfPoint2f()
+        var approx = MatOfPoint2f()
         val x = MatOfPoint2f()
         biggest.convertTo(approx, CvType.CV_32F)
         biggest.convertTo(x, CvType.CV_32F)
@@ -283,6 +336,18 @@ class ComputerVision {
         // this check is necessary, because we might go from >4 points to <4 in a single increment of d
         if (approx.toList().size < 4) return null
 
+        /**
+         *  Adding...
+         */
+        val topRight = SCANNERFRAME_CORNERS.toArray()[0]
+        approx = MatOfPoint2f(  Point(approx.toArray()[0].x + topRight.x, approx.toArray()[0].y + topRight.y),
+                                Point(approx.toArray()[1].x + topRight.x, approx.toArray()[1].y + topRight.y),
+                                Point(approx.toArray()[2].x + topRight.x, approx.toArray()[2].y + topRight.y),
+                                Point(approx.toArray()[3].x + topRight.x, approx.toArray()[3].y + topRight.y))
+        /**
+         *  ========================================================================================
+         */
+
         return approx
     }
 
@@ -293,34 +358,13 @@ class ComputerVision {
      */
     private fun cropImage(image: Mat, srcCoords: MatOfPoint2f): Mat{
         // destination vertices
-        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
+        val dstCoords: MatOfPoint2f = MatOfPoint2f( Point(0.0,0.0), Point(CROPPEDSUDOKUSIZE, 0.0), Point(0.0, CROPPEDSUDOKUSIZE), Point(CROPPEDSUDOKUSIZE, CROPPEDSUDOKUSIZE) )
         // the destination buffer
-        val dst = Mat.zeros(CROPPEDSUDOKUSIZE, CROPPEDSUDOKUSIZE, CV_8UC3) // TODO: not 100% sure about the type here...
+        val dst = Mat.zeros(CROPPEDSUDOKUSIZE_2D, CV_8UC3) // TODO: not 100% sure about the type here...
         // create the perspective transform
         TransformationMat = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
         Imgproc.warpPerspective(image, dst, TransformationMat, dst.size(), INTER_LINEAR, BORDER_CONSTANT) // ToDo: is the zoom problem here, that the warp is too close up
-        return dst
-    }
-    /**
-     * IGNORE this function!
-     * this funtion is similar to the above and to be used for testing purposes
-     */
-    private fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
-        // destination vertices
-        //val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
-        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
-        // the destination buffer
-        val dst = Mat.zeros(image.size(), CV_8UC3)
-        // create the perspective transform
-        val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
-        // apply to the image
-        Imgproc.warpPerspective(image, dst, perspectiveTransform, image.size(), INTER_LINEAR, BORDER_CONSTANT)
-        Log.d("Points", "first x: ${dstCoords.toList()[0].x}, first y: ${dstCoords.toList()[0].y}, second x: ${dstCoords.toList()[3].x}, second y: ${dstCoords.toList()[3].y}")
-        //val r = Rect(dstCoords.toList()[0], dstCoords.toList()[3])
-        //val wowi = Mat(dst, r)
-        //dst = Mat.zeros(dst.size(), CV_8UC3)
-        //Imgproc.resize(wowi, dst, dst.size())
         return dst
     }
 
@@ -333,12 +377,12 @@ class ComputerVision {
      *
      */
     private fun cutSudoku(sudoku: Mat): Array<Mat>{
-        val squares: Array<Mat> = Array(81) { Mat.zeros(Size(SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), sudoku.type())}
+        val squares: Array<Mat> = Array(81) { Mat.zeros(Size(SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE, SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE), sudoku.type())}
 
         for (row in 0..8){ // each row
             for (column in 0..8){ // each column of the current row
                 // make a rectangle from the left upper and the right lower point
-                val r = Rect(Point(column*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), row*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()), Point((column+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble(), (row+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE.toDouble()))
+                val r = Rect(Point(column*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE, row*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE), Point((column+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE, (row+1)*SINGLE_DIM_SIZE_ONE_SUDOKU_SQUARE))
                 // use rect to cut out roi from sudoku
                 val oneSquare = Mat(sudoku, r)
                 squares[row*9+column] = oneSquare
@@ -413,5 +457,49 @@ class ComputerVision {
         val bmp: Bitmap = Bitmap.createBitmap(frameMat.cols(), frameMat.rows(), Bitmap.Config.ARGB_8888)
         Utils.matToBitmap(frameMat, bmp)
         return bmp
+    }
+
+    var START_DIGIT_CLASSIFIER = true // if true, Digit Classifier can start
+
+    /**
+     *  This public funtion set the var DIGIT_CLASSIFIER to true/false.
+     */
+    fun setStartDigitClassifier(bool : Boolean) {
+        START_DIGIT_CLASSIFIER = bool
+    }
+
+    /**
+     *  This public funtion get the value of DIGIT_CLASSIFIER.
+     */
+    fun getStartDigitClassifier() : Boolean {
+        return START_DIGIT_CLASSIFIER
+    }
+
+    /**
+     *  This private function checks if there a sudoku corners.
+     *  If there are not sudoku corner, the next time if it found sudoku corners it start the digit recognition.
+     */
+     fun checkCorners() {
+        if (!START_DIGIT_CLASSIFIER) {
+            START_DIGIT_CLASSIFIER = SudokuCorners == null
+        }
+    }
+
+    /**
+     *  This private function calculates the corners of the scanner frame
+     *  @param input is by default the inputMat
+     *
+     *  @return the four corners of the scanner frame in a array
+     */
+    private fun scannerFrameCorners (input : Mat) : MatOfPoint2f {
+
+        val topRight = Point(input.width()*0.25, input.height()*0.25)
+        val topLeft = Point(topRight.x, input.height()-topRight.y)
+        val buttomLeft = Point(topLeft.x+topLeft.y-topRight.y, topLeft.y)
+        val buttomRight = Point(buttomLeft.x, topRight.y)
+
+        val length = (topLeft.y-topRight.y).toInt().toString()
+
+        return MatOfPoint2f(topRight, topLeft , buttomLeft, buttomRight)
     }
 }

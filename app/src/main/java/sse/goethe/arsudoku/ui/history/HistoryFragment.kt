@@ -30,7 +30,12 @@ import sse.goethe.arsudoku.Sudoku
 import sse.goethe.arsudoku.ui.friends.FriendsViewModel
 import java.util.*
 import kotlin.collections.ArrayList
-
+/**
+ * Implements a fragment that shows all the games scanned by the current user.
+ * The user can delete and play individual game scanned in the past or sent to him by friends.
+ *
+ * @author Nils Gormsen
+ */
 class HistoryFragment : Fragment() {
 
     private lateinit var historyViewModel: HistoryViewModel
@@ -72,13 +77,6 @@ class HistoryFragment : Fragment() {
             val deleteItem = SwipeMenuItem(
                 root.context
             )
-            // set item background
-//            deleteItem.background = ColorDrawable(
-//                Color.rgb(
-//                    0xF9, 0x3F,
-//                    0x25
-//                )
-//            )
             // set item width
             deleteItem.width = 170
             // set item title
@@ -95,16 +93,8 @@ class HistoryFragment : Fragment() {
 
             // create "Play" item
             val sendItem = SwipeMenuItem(
-//                root.getApplicationContext<Context>()
                 root.context
             )
-            // set item background
-//            sendItem.background = ColorDrawable(
-//                Color.rgb(
-//                    75,
-//                    219, 87
-//                )
-//            )
             // set item width
             sendItem.title = "Play"
             sendItem.titleColor = Color.BLACK
@@ -190,9 +180,6 @@ class HistoryFragment : Fragment() {
         val builder = AlertDialog.Builder(context)
         val db = FirebaseFirestore.getInstance()
         val selectedItems = ArrayList<Int>() // Where we track the selected items
-//        var users = ArrayList<String>()
-//        var users = arrayOf("1@gmail.com", "", "", "","", "", "", "","", "", "", "")
-//        var users = arrayOfNulls<String>(10)
 
         db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("friends")
             .get()
@@ -222,13 +209,6 @@ class HistoryFragment : Fragment() {
                         "date" to item
                     )
                     println(gameData["date"])
-//                    db.collection("users").document(users.get(which)).collection("games").document(item)
-//                        .set(gameData)
-//                        .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
-//                        .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
-
-                    // The 'which' argument contains the index position
-                    // of the selected item
                 })
 
 
@@ -237,54 +217,3 @@ class HistoryFragment : Fragment() {
     }
 
 }
-
-
-//        val userArray = arra
-//        val userArray = arrayOfNulls<String>(users.size)
-//        for ((index, value) in someList.withIndex()){
-//            println("$index: $value")
-//            users.add(index, value)
-//        }
-
-//        val array = arrayOfNulls<String>(users.size)
-//        users.toArray(array)
-//        var userArray = arrayOf(Arrays.toString(array))
-
-//        var someList = arrayListOf<String>("Hello", "Again")
-//        var userArray = Array<String>(users.size, )
-//        val array = arrayOfNulls<String>(users.size)
-////        println(users.size)
-////        println(array.size)
-//        println(array.toString())
-//
-//        for ((index, value) in users.withIndex()){
-//            println("$index: $value")
-//            array.set(index, value.toString())
-//        }
-//        println(array.toString())
-//        var userArray = users.toTypedArray()
-//        println(array.toCollection())
-
-
-
-
-
-//            .setCancelable(false)
-//            .setPositiveButton("OK",
-//                DialogInterface.OnClickListener { dialog, which ->
-//
-//                    //                    Toast.makeText(
-////                        context,
-////                        "Selected Option: Continue",
-////                        Toast.LENGTH_SHORT
-////                    ).show()
-//                })
-////                                    .setNegativeButton("No",
-////                                        DialogInterface.OnClickListener { dialog, which ->
-////                                            Toast.makeText(
-////                                                root.context,
-////                                                "Selected Option: No",
-////                                                Toast.LENGTH_SHORT
-////                                            ).show()
-////                                        })
-//        //Creating dialog box
