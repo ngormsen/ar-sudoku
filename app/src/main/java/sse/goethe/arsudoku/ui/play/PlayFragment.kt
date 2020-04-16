@@ -173,7 +173,7 @@ class PlayFragment : Fragment() {
         val activity = activity as MainActivity
         if (activity != null) {
             activity.stopCamera();
-            activity.saveGame();
+//            activity.saveGame();
         }
 
         gamestate = activity.getGame().getGamestate()
