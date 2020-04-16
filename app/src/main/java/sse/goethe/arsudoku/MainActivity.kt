@@ -386,6 +386,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
 
+        visualisation.startTime()
         return if (inputFrame != null) {
             recognition.run(inputFrame)
 
@@ -393,9 +394,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             if(recognition.getStartSolver()) {
                 setGame(predictedDigits)
             }
-            val solvable =  game.getGamestate().getSolvable()
             val outputFrame = visualisation.run(inputFrame.rgba(), game.getGamestate().getVisualizeState())
 
+            /**
+             *  Maybe a problem in future Android versions
+             */
             val textView : TextView = findViewById(R.id.textView_searching) as TextView
 
             if (!visualisation.getSudokuCornerIsNull()) {
@@ -404,7 +407,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             else {
                 textView.text = "Searching for Sudoku ..."
             }
+            /**
+             *  ========================================================================================
+             */
 
+            visualisation.stopTime()
             outputFrame
         } else {
             Log.e(TAG, "Input frame is null!!")

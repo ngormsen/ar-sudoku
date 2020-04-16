@@ -58,7 +58,6 @@ class Visualisation(recognition: Recognition) {
     private lateinit var inputSize : Size // size of the input matrix
 
     private lateinit var sudoku_mask : Mat
-    private lateinit var outputMat_mask : Mat
     private lateinit var outputMat : Mat
 
     private var SUDOKU_CORNER_IS_NULL = true
@@ -267,12 +266,6 @@ class Visualisation(recognition: Recognition) {
         Imgproc.line(mask, corners[3], Point(corners[3].x - length, corners[3].y), WHITE, thickness)
         Imgproc.line(mask, corners[3], Point(corners[3].x, corners[3].y + length), WHITE, thickness)
 
-
-        /*Imgproc.line(mask, corners[0], corners[1], WHITE, thickness)
-        Imgproc.line(mask, corners[1], corners[2], WHITE, thickness)
-        Imgproc.line(mask, corners[2], corners[3], WHITE, thickness)
-        Imgproc.line(mask, corners[3], corners[0], WHITE, thickness)*/
-
         val colouredMat = createColouredMat().setTo(colour, mask)
 
         return mergeMat(inputMat, colouredMat, mask)
@@ -292,15 +285,6 @@ class Visualisation(recognition: Recognition) {
         val buttomRight = Point(buttomLeft.x, topRight.y)
 
         return arrayOf(topRight, topLeft , buttomLeft, buttomRight)
-    }
-
-    /**
-     *  Function TODO not done yet...
-     *
-     */
-    private fun createOutputMask () : Mat {
-        var canvas = createColouredMat(SUDOKU_MAT_SIZE_2D)
-        return resizeMat(canvas)
     }
 
     /**

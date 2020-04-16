@@ -281,9 +281,16 @@ class ComputerVision {
      * and gets the four corners of it, should it be similar to a square.
      *
      */
-    private fun findCorners(frame : Mat): MatOfPoint2f? {
+    private fun findCorners(input : Mat): MatOfPoint2f? {
 
-        //var frame = cropImage(input, SCANNERFRAME_CORNERS) // TODO crop frame mat
+        /**
+         *  Crop the input mat
+         */
+        var roi = Rect(SCANNERFRAME_CORNERS.toList()[0], SCANNERFRAME_CORNERS.toList()[2])
+        var frame = Mat(input, roi)
+        /**
+         *  ========================================================================================
+         */
 
         // We do contour detection in this function. This is the most simple and only works when
         // the Sudoku is the single largest entity on the screen. Has no viability check.
@@ -329,12 +336,17 @@ class ComputerVision {
         // this check is necessary, because we might go from >4 points to <4 in a single increment of d
         if (approx.toList().size < 4) return null
 
-        //val topRight = SCANNERFRAME_CORNERS.toArray()[0]
-        //Log.e("VISUALILKFJSLJD", approx.toArray()[0].toString())
-        /*approx = MatOfPoint2f(  Point(approx.toArray()[0].x + topRight.x, approx.toArray()[0].y + topRight.y),
+        /**
+         *  Adding...
+         */
+        val topRight = SCANNERFRAME_CORNERS.toArray()[0]
+        approx = MatOfPoint2f(  Point(approx.toArray()[0].x + topRight.x, approx.toArray()[0].y + topRight.y),
                                 Point(approx.toArray()[1].x + topRight.x, approx.toArray()[1].y + topRight.y),
                                 Point(approx.toArray()[2].x + topRight.x, approx.toArray()[2].y + topRight.y),
-                                Point(approx.toArray()[3].x + topRight.x, approx.toArray()[3].y + topRight.y))*/
+                                Point(approx.toArray()[3].x + topRight.x, approx.toArray()[3].y + topRight.y))
+        /**
+         *  ========================================================================================
+         */
 
         return approx
     }
