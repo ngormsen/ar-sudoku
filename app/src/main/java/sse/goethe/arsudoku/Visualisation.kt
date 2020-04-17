@@ -72,12 +72,12 @@ class Visualisation(recognition: Recognition) {
      *
      *  @return edit input with rendered digits
      */
-    fun run(inputFrame : Mat, solvedSudoku : Array<IntArray>) : Mat {
+    fun run(inputFrame : Mat, solvedSudoku : Array<IntArray>, solvable : Boolean) : Mat {
 
         inputMat = inputFrame
         inputSize = inputMat.size()
 
-        if (SUDOKU_CORNER_IS_NULL) inputMat = drawScannerFrame()
+        if (SUDOKU_CORNER_IS_NULL || !solvable) inputMat = drawScannerFrame()
 
         outputMat = Mat.zeros(inputSize, matType)
         sudoku_mask = Mat.zeros(inputSize, matType)
@@ -85,7 +85,7 @@ class Visualisation(recognition: Recognition) {
         digits = solvedSudoku
         sudokuCorners = recognition.computerVision.SudokuCorners
 
-        return if (getTransformationMat()) {
+        return if (getTransformationMat() && solvable) {
             createSudokuMask()
             createOutput(digitColour)
             mergeMat()

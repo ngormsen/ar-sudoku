@@ -386,7 +386,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
 
-        visualisation.startTime()
         return if (inputFrame != null) {
             recognition.run(inputFrame)
 
@@ -394,14 +393,16 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             if(recognition.getStartSolver()) {
                 setGame(predictedDigits)
             }
-            val outputFrame = visualisation.run(inputFrame.rgba(), game.getGamestate().getVisualizeState())
+            val solvable : Boolean = game.getGamestate().getSolvable()
+
+            val outputFrame = visualisation.run(inputFrame.rgba(), game.getGamestate().getVisualizeState(), solvable)
 
             /**
              *  Maybe a problem in future Android versions
              */
             val textView : TextView = findViewById(R.id.textView_searching) as TextView
 
-            if (!visualisation.getSudokuCornerIsNull()) {
+            if (!visualisation.getSudokuCornerIsNull() || game.getGamestate().getSolvable()) {
                  textView.text = ""
             }
             else {
@@ -410,8 +411,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             /**
              *  ========================================================================================
              */
-
-            visualisation.stopTime()
             outputFrame
         } else {
             Log.e(TAG, "Input frame is null!!")
