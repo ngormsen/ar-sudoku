@@ -56,7 +56,7 @@ class Recognition(context: Context) {
     var validityCounter = arrayOf<Array<Array<Int>>>()
 
     // parameter for running digit recognition every x frames to reduce lagginess
-    val run_every_x = 30
+    val run_every_x = 2
     var frameCounter = 0
 
     // validate interpreted sudokus

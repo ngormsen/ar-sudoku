@@ -25,12 +25,12 @@ import kotlin.math.tan
  * Use it in MainActivity.kt. Especially in onCameraFrame()
  *
  *
- * todo
- * 1. preprocessing                              Done
+ *
+ * 1. preprocessing
  * 2. finding corners/intersections
  * 2.1 sudokuCellMidCoordinates (+ the current tilt of sudoku maybe?) -> do the perspective transform inversely
  * 2.2 sudokuEdgeCoordinates
- * 3. cropping
+ * 3. cropping/cutting
  * 3.1 croppedSudokuBlocks: Array<Bitmap>
  * 4. Miscellaneous
  * 4.1 convertMatToBitmap
@@ -39,21 +39,12 @@ import kotlin.math.tan
  * sudoku contour to 4 points. If the currently needed number greatly exceeds this,
  * it's probably not a sudoku.
  * 5. Known Bugs
- * 5.1 With completely black picture, no contour can be found, results in null array and crash
- * 5.2 Kelvin fragen nach Kamera Auflösung
  * 6. Documentation
  * 6.1 Class diagram
  * 6.2
  *
- * 25.03.
- * Integration in MainActivity
- * Manus ding
- * davids ding
  *
- * Idea: experimentalContouring
- * crop first, then do contour detection on cropped image again to search for 81 square contours
- *
- * What eats time: Adaptive Threshold, Gaussian Blur ( ~18ms / ~30ms total)
+ * What eats time: Adaptive Threshold, Gaussian Blur ( ~18ms for both; ~30ms total for entire analyzeFrame())
  *
  */
 class ComputerVision {
@@ -100,7 +91,6 @@ class ComputerVision {
      *
      * */
     fun analyzeFrame( frame: CameraBridgeViewBase.CvCameraViewFrame ) {
-        // ToDo: create more Sudoku viability checks
 
         // reset everything to null, because it's at this point not clear if there is a sudoku
         SudokuCorners = null
@@ -132,13 +122,12 @@ class ComputerVision {
 
         // cutting
         val boxes = cutSudoku(croppedImage)
-        var boxesRotate = boxes
+        val boxesRotate = boxes
 
         for (i in 0..80) {
             boxesRotate[i] = rotateMat(boxes[i])
         }
 
-        // ToDo: move this code to the convertMatToBitmap function!
         // convert Mat images to Bitmaps
         val boxesBitmap: Array<Bitmap> = Array(81) {
             createBitmap( boxesRotate[0].width(), boxesRotate[0].height() )
@@ -264,14 +253,9 @@ class ComputerVision {
      */
     private fun findCorners(frame: Mat): MatOfPoint2f? {
 
-        // We do contour detection in this function. This is the most simple and only works when
-        // the Sudoku is the single largest entity on the screen. Has no viability check.
-
-        // ToDo: Find the first 4 largest contours, check if we can make any of them a square, then rest.
+        // We do contour detection in this function.
 
         val contours = ArrayList<MatOfPoint>() // destination for findContours()
-
-        // TODO: WHAT IF IT IS NOT POSSIBLE TO FIND A CONTOUR? -> Use try, catch
         val hierarchy = Mat()
         Imgproc.findContours(frame, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
         hierarchy.release()
@@ -302,7 +286,7 @@ class ComputerVision {
             Imgproc.approxPolyDP(x, approx, d,true)
 
             // 4.2.1: if we need too many iterations of this, it's probably not a square/sudoku
-            if (d > 50) return null // ToDo: figure out a reasonable d
+            if (d > 50) return null // d = 50 seems like a reasonable number. This parameter was chosen semi-arbitrarily though, just a little bit of trial and error
         }
 
         // this check is necessary, because we might go from >4 points to <4 in a single increment of d
@@ -320,34 +304,14 @@ class ComputerVision {
         // destination vertices
         val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
         // the destination buffer
-        val dst = Mat.zeros(CROPPEDSUDOKUSIZE, CROPPEDSUDOKUSIZE, CV_8UC3) // TODO: not 100% sure about the type here...
+        val dst = Mat.zeros(CROPPEDSUDOKUSIZE, CROPPEDSUDOKUSIZE, CV_8UC3)
         // create the perspective transform
         TransformationMat = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
         // apply to the image
-        Imgproc.warpPerspective(image, dst, TransformationMat, dst.size(), INTER_LINEAR, BORDER_CONSTANT) // ToDo: is the zoom problem here, that the warp is too close up
+        Imgproc.warpPerspective(image, dst, TransformationMat, dst.size(), INTER_LINEAR, BORDER_CONSTANT)
         return dst
     }
-    /**
-     * IGNORE this function!
-     * this funtion is similar to the above and to be used for testing purposes
-     */
-    private fun cropImageOn(image: Mat, srcCoords: MatOfPoint2f): Mat{
-        // destination vertices
-        //val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f(Point((image.width()/4).toDouble(),(image.height()/4).toDouble()), Point((image.width()/4).toDouble(),(image.height()/4 + DerBreite).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4).toDouble()), Point((image.width()/4 + DerBreite).toDouble(), (image.height()/4 + DerBreite).toDouble())))
-        val dstCoords: MatOfPoint2f = sortPointsArray(MatOfPoint2f( Point(0.0,0.0), Point(0.0, CROPPEDSUDOKUSIZE.toDouble()), Point(CROPPEDSUDOKUSIZE.toDouble(), 0.0), Point(CROPPEDSUDOKUSIZE.toDouble(), CROPPEDSUDOKUSIZE.toDouble()) ))
-        // the destination buffer
-        val dst = Mat.zeros(image.size(), CV_8UC3)
-        // create the perspective transform
-        val perspectiveTransform = Imgproc.getPerspectiveTransform(srcCoords, dstCoords)
-        // apply to the image
-        Imgproc.warpPerspective(image, dst, perspectiveTransform, image.size(), INTER_LINEAR, BORDER_CONSTANT)
-        Log.d("Points", "first x: ${dstCoords.toList()[0].x}, first y: ${dstCoords.toList()[0].y}, second x: ${dstCoords.toList()[3].x}, second y: ${dstCoords.toList()[3].y}")
-        //val r = Rect(dstCoords.toList()[0], dstCoords.toList()[3])
-        //val wowi = Mat(dst, r)
-        //dst = Mat.zeros(dst.size(), CV_8UC3)
-        //Imgproc.resize(wowi, dst, dst.size())
-        return dst
-    }
+
 
     /**
      * Takes the image of a sudoku and cuts it into 81 sub-images,
@@ -381,9 +345,6 @@ class ComputerVision {
      * Third coordinate: Bottom left
      * Fourth coordinate Bottom right
      *
-     * This entire function looks like cancer, because I feel like I'm still doing typing
-     * in kotlin wrong...
-     *
      * Input: MatOfPoint2f
      * Output: MatOfPoint2f // sorted
      *
@@ -409,20 +370,6 @@ class ComputerVision {
         return r
     }
 
-    /**
-     * The calculateCellCoordinates function is a private helper function
-     * which determines/calculates all 81 cell mid points.
-     * The midpoints will be used to render the text/digits exactly
-     * on this coordinates.
-     *
-     * Input: Array of the 4 edge coordinates of the Sudoku
-     * Output: Array of 81 cell mid points
-     *
-     * */
-    private fun calculateCellMidCoordinates(coordArray: Array<Point>): Array<Point> {
-        var cellCoordinates: Array<Point> // exactly 81
-        return coordArray
-    }
 
     /**
      * The convertMatToBitmap function is a private helper function
@@ -431,8 +378,6 @@ class ComputerVision {
      *
      * Input: frame as Mat
      * Output: converted Mat as Bitmap
-     *
-     * Use this function in analyzeFrame()
      * */
     private fun convertMatToBitmap(frameMat: Mat): Bitmap {
         val bmp: Bitmap = Bitmap.createBitmap(frameMat.cols(), frameMat.rows(), Bitmap.Config.ARGB_8888)
