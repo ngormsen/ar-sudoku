@@ -10,11 +10,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import sse.goethe.arsudoku.Gamestate
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
+import sse.goethe.arsudoku.ui.friends.FriendDialog
 import java.lang.Integer.parseInt
 /**
  * Implements a fragment that allows the user to play the game. The user can choose

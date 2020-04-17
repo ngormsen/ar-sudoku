@@ -36,25 +36,44 @@ class Gamestate (sudoku: Sudoku){
         intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
         intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
     )
-
     private lateinit var currentState: Array<IntArray>
     private var historyOfStates: MutableList<Array<IntArray>> = arrayListOf()
     private var historyPointer: Int = 0
     private var solvableState = true;
 
     init {
+
         // Setting current state to inital state
         currentState = createDeepStateClone(sudoku.getCurrentState())
-        // Solve sudoku
-        sudoku.solve()
+
         solvableState = sudoku.getSolvableState();
+
         if(solvableState){
+            println("solvable true")
+            println("solving sudoku etc...")
+            // Solve sudoku
+            sudoku.solve()
             solvedState = createDeepStateClone(sudoku.getCurrentState())
+            printState(solvedState)
+
             // Add inital state to history
             historyOfStates.add(createDeepStateClone(currentState))
             visualizeSate = createVisualizeState(currentState, solvedState);
+
         }
     }
+    fun printState(state: Array<IntArray>){
+        var n = 9
+        for (i in 0 until n) {
+            for (j in 0 until n) {
+                print(state[i][j].toString())
+                if (Math.floorMod(j, 3) == 2 && j < n - 1)
+                    print(" ")
+            }
+            println()
+            if (Math.floorMod(i, 3) == 2 && i < n - 1) println()
+        }
+    };
 
     fun getSolvable(): Boolean{
         return solvableState;

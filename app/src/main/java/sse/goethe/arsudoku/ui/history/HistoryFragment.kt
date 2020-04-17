@@ -180,20 +180,25 @@ class HistoryFragment : Fragment() {
         val builder = AlertDialog.Builder(context)
         val db = FirebaseFirestore.getInstance()
         val selectedItems = ArrayList<Int>() // Where we track the selected items
+        try {
+            db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("friends")
+                .get()
+                .addOnSuccessListener { documents ->
+                    for ((idx, document) in documents.withIndex()) {
+                        Log.d("Data", "${document.id} => ${document.data}")
+                        users.add(idx, document.data.get("email" ).toString())
+                    }
 
-        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("friends")
-            .get()
-            .addOnSuccessListener { documents ->
-                for ((idx, document) in documents.withIndex()) {
-                    Log.d("Data", "${document.id} => ${document.data}")
-                    users.add(idx, document.data.get("email" ).toString())
+
+                }
+                .addOnFailureListener { exception ->
+                    Log.w(TAG, "Error getting documents: ", exception)
                 }
 
-
-            }
-            .addOnFailureListener { exception ->
-                Log.w(TAG, "Error getting documents: ", exception)
-            }
+        }
+        catch (e: IllegalArgumentException){
+            println("No history available.")
+        }
 
         val array = Array(users.size) {
             users[it]

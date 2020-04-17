@@ -22,6 +22,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
+import java.lang.IllegalArgumentException
+
 /**
  * Implements a fragment that shows all the friends of the current user.
  * Allows for adding, deleting friends and sending recently scanned games to them.
@@ -217,11 +219,16 @@ class FriendsFragment : Fragment() {
                     val gameData = hashMapOf(
                         "date" to games.get(which)
                     )
-                    db.collection("users").document(item).collection("games").document(games.get(which))
-                        .set(gameData)
-                        .addOnSuccessListener { Log.d(ContentValues.TAG, "DocumentSnapshot successfully written!") }
-                        .addOnFailureListener { e -> Log.w(ContentValues.TAG, "Error writing document", e) }
+                    try {
+                        db.collection("users").document(item).collection("games").document(games.get(which))
+                            .set(gameData)
+                            .addOnSuccessListener { Log.d(ContentValues.TAG, "DocumentSnapshot successfully written!") }
+                            .addOnFailureListener { e -> Log.w(ContentValues.TAG, "Error writing document", e) }
 
+                    }
+                    catch (e: IllegalArgumentException){
+                        println("No game available.")
+                    }
                     // The 'which' argument contains the index position
                     // of the selected item
                 })

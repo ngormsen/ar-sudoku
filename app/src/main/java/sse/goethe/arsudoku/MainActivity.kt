@@ -67,6 +67,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         visualisation = Visualisation(recognition)
         requestPermission = RequestPermission(this, this)
 
+
+        // Create inital default Sudoku
         val solver = Sudoku( arrayOf(
             intArrayOf(0, 0, 1, 5, 0, 0, 0, 0, 6),
             intArrayOf(0, 6, 0, 2, 1, 0, 0, 0, 4),
@@ -82,9 +84,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cameraPermission = requestPermission.check()
         initializeCameraView()
 
+        // Setting toolbar, drawerlayout and navigation
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
-
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.nav_view)
         val navController = findNavController(R.id.nav_host_fragment)
@@ -99,47 +101,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        setGlobalUser(User("Nils", "nils.gormsen@googlemail.com"))
+        // Set default user
+        setGlobalUser(User("Dummy", "dummy@gmail.com"))
 
-        // Create game
+        // Set default game
         setGame(solver)
-//
-//
-//        val hardest = arrayOf(
-//            intArrayOf(8, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 3, 6, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 7, 0, 0, 9, 0, 2, 0, 0),
-//            intArrayOf(0, 5, 0, 0, 0, 7, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 4, 5, 7, 0, 0),
-//            intArrayOf(0, 0, 0, 1, 0, 0, 0, 3, 0),
-//            intArrayOf(0, 0, 1, 0, 0, 0, 0, 6, 8),
-//            intArrayOf(0, 0, 8, 5, 0, 0, 0, 1, 0),
-//            intArrayOf(0, 9, 0, 0, 0, 0, 4, 0, 0)
-//        )
-//
-//        var empty = arrayOf(
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
-//            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0)
-//        )
-//
-//        SudokuDLX sudoku = new SudokuDLX();
-//        sudoku.solve(hardest);
-
-//        println("debugger1")
-//        val time1 = measureTimeMillis {
-//            setGame(Sudoku(hardest))
-//            println(game.getGamestate().getSolvable())
-//        }
-//        println("time1")
-//        println(time1)
-
     }
 
     /**
@@ -154,6 +120,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             }
     }
 
+    /**
+     *
+     * Functoin that converts the internal sudoku representation to an ArrayList<Int>.
+     * @author Nils Gormsen
+     */
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun convertGamestateToFirebase(): ArrayList<Int>{
         var gamestateForFirebase = ArrayList<Int>()
@@ -165,6 +137,11 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return gamestateForFirebase
     }
 
+    /**
+     * Function that converts the array given by the firebase to the Array<IntArray> type
+     * used internal sudoku representation.
+     * @author Nils Gormsen
+     */
     fun convertFirebaseToGamestate(firebaseGamestate: ArrayList<Int>): Array<IntArray>{
         var newState = arrayOf(
             intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -192,6 +169,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         return game.getGamestate().getSolvedState()
     }
 
+    /**
+     * Helper function that prints the current state of the game.
+     * @author Nils Gormsen
+     */
     fun printState(state: Array<IntArray>){
         var n = 9
         for (i in 0 until n) {
@@ -205,6 +186,10 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         }
     }
 
+    /**
+     * Checks whether two gamestates are the same.
+     * @author Nils Gormsen
+     */
     fun checkEqualGamestate(state1: Array<IntArray>, state2: Array<IntArray>): Boolean{
         for (row in 0..8){
             for (column in 0..8) {
@@ -231,20 +216,31 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                     println("empty")
                     saveGameToDatabase()
                 }
-                for (document in documents) {
-                    Log.d(TAG, "${document.id} => ${document.data}")
-                    var firebaseState = convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>)
-                    if(!checkEqualGamestate(firebaseState, game.getGamestate().getCurrentState())) {
-                        saveGameToDatabase()
-
-                    }
+                else{
+                    saveGameToDatabase()
                 }
-
             }
             .addOnFailureListener { exception ->
                 Log.w(ContentValues.TAG, "Error getting documents: ", exception)
             }
     }
+
+                /**
+                 * Potential check whether the same Sudoku game already exists in the firebase.
+                 */
+//                for (document in documents) {
+//                    Log.d(TAG, "${document.id} => ${document.data}")
+//                    try {
+//                        var firebaseState = convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>)
+//                        if(!checkEqualGamestate(firebaseState, game.getGamestate().getCurrentState())) {
+//                            saveGameToDatabase()
+//                        }
+//                    }
+//                    catch (e: TypeCastException){
+//                        println("No games to compare.")
+//                    }
+//                }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun saveGameToDatabase(){
