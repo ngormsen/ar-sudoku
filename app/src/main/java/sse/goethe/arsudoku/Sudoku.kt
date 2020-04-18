@@ -17,7 +17,7 @@ class Sudoku(private val sudoku: Array<IntArray>) {
     private var time = true;
 
     fun getSolvableState(): Boolean{
-        return solvable;
+        return checkSudokuConstraints(sudoku);
     }
 
     fun getCurrentState(): Array<IntArray>{
@@ -52,18 +52,22 @@ class Sudoku(private val sudoku: Array<IntArray>) {
                         println("number exists already")
                         return false
                     }
-                    exists.add(sudoku[row][column])
-                    nonZeros += 1
+                    if(sudoku[row][column] != 0){
+                        exists.add(sudoku[row][column])
+                        nonZeros += 1
+                    }
+
                 }
             }
         }
+
         return nonZeros > 15
     };
 
 
     /**
      * Solves the given Sudoku using a simple backtracking algorithm.
-     * Credits to: TODO
+     * Credits to: https://www.geeksforgeeks.org/sudoku-backtracking-7/
      *
      * @author Nils Gormsen
      */

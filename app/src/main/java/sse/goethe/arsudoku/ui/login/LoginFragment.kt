@@ -150,10 +150,10 @@ class LoginFragment : Fragment() {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Success")
             .setMessage("Register Successful!")
-            .setCancelable(false)
+            .setCancelable(true)
             .setPositiveButton("Continue",
                 DialogInterface.OnClickListener { dialog, which ->
-
+                    dialog.cancel()
                 })
 
         //Creating dialog box
@@ -168,10 +168,10 @@ class LoginFragment : Fragment() {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Error")
             .setMessage("Register not successful! Please input valid data.")
-            .setCancelable(false)
+            .setCancelable(true)
             .setPositiveButton("OK",
                 DialogInterface.OnClickListener { dialog, which ->
-
+                    dialog.cancel()
                 })
 
         val dialog = builder.create()
@@ -185,9 +185,10 @@ class LoginFragment : Fragment() {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Success")
             .setMessage("Login Successful!")
-            .setCancelable(false)
+            .setCancelable(true)
             .setPositiveButton("Continue",
                 DialogInterface.OnClickListener { dialog, which ->
+                    dialog.cancel()
                 })
         //Creating dialog box
         val dialog = builder.create()
@@ -201,9 +202,10 @@ class LoginFragment : Fragment() {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Error")
             .setMessage("Login not successful! Please input valid data.")
-            .setCancelable(false)
+            .setCancelable(true)
             .setPositiveButton("OK",
                 DialogInterface.OnClickListener { dialog, which ->
+                    dialog.cancel()
 
                     //                    Toast.makeText(
                 })

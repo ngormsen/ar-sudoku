@@ -1,20 +1,26 @@
 package sse.goethe.arsudoku.ui.play
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import sse.goethe.arsudoku.Gamestate
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
+import sse.goethe.arsudoku.ui.friends.FriendDialog
 import java.lang.Integer.parseInt
 /**
  * Implements a fragment that allows the user to play the game. The user can choose
@@ -162,6 +168,12 @@ class PlayFragment : Fragment() {
 
     }
 
+    fun getScreenWidth(context: Context): Int {
+        val displayMetrics = DisplayMetrics()
+        (context as Activity).windowManager.defaultDisplay.getMetrics(displayMetrics)
+        return displayMetrics.widthPixels
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("ResourceType")
     override fun onCreateView(
@@ -199,8 +211,9 @@ class PlayFragment : Fragment() {
                 else{
                     textView.text = ""
                 }
-                textView.width = 110
-                textView.height = 110
+                var width = getScreenWidth(activity)/10
+                textView.width = width
+                textView.height = width
                 textView.textSize = 30F
                 textView.gravity = 11
                 textView.id = displayNumber.toInt() // TODO umbauen zu string
@@ -258,7 +271,7 @@ class PlayFragment : Fragment() {
         // Create hint button
         val textViewHint = TextView(context)
         textViewHint.text = "HINT"
-        textViewHint.width = 110
+        textViewHint.width = getScreenWidth(activity)/4
         textViewHint.height = 110
         textViewHint.textSize = 20F
         textViewHint.gravity = Gravity.CENTER_VERTICAL
@@ -277,7 +290,7 @@ class PlayFragment : Fragment() {
         // Create undo button
         val textViewUndo = TextView(context)
         textViewUndo.text = "UNDO"
-        textViewUndo.width = 110
+        textViewUndo.width = getScreenWidth(activity)/4
         textViewUndo.height = 110
         textViewUndo.textSize = 20F
 
@@ -296,7 +309,7 @@ class PlayFragment : Fragment() {
         // Create redo button
         val textViewRedo = TextView(context)
         textViewRedo.text = "REDO"
-        textViewRedo.width = 110
+        textViewRedo.width = getScreenWidth(activity)/4
         textViewRedo.height = 110
         textViewRedo.textSize = 20F
         textViewRedo.gravity = Gravity.CENTER_VERTICAL
@@ -314,7 +327,7 @@ class PlayFragment : Fragment() {
         // Create delete button
         val textViewDelete = TextView(context)
         textViewDelete.text = "DELETE"
-        textViewDelete.width = 110
+        textViewDelete.width = getScreenWidth(activity)/4
         textViewDelete.height = 110
         textViewDelete.textSize = 20F
         textViewDelete.gravity = Gravity.CENTER_VERTICAL
@@ -345,8 +358,8 @@ class PlayFragment : Fragment() {
         for(column in 0..8){
             val textView = TextView(context)
             textView.text = (column+1).toString()
-            textView.width = 110
-            textView.height = 110
+            textView.width = getScreenWidth(activity)/10
+            textView.height = getScreenWidth(activity)/10
             textView.textSize = 30F
             textView.gravity = 11
             textView.gravity = Gravity.CENTER_VERTICAL
