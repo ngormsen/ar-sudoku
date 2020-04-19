@@ -2,6 +2,7 @@ package sse.goethe.arsudoku.ui.friends
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.DialogInterface
 import android.os.Bundle
@@ -23,7 +24,6 @@ import sse.goethe.arsudoku.R
 class FriendDialog : DialogFragment() {
 
     val db = FirebaseFirestore.getInstance()
-
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         if (arguments != null)
@@ -63,10 +63,14 @@ class FriendDialog : DialogFragment() {
 //                val dialogListener = activity as DialogListener
 //                dialogListener.onFinishEditDialog(editText.text.toString())
                 System.out.println(editText.text.toString())
+                val activity = activity as MainActivity?
+
+
+
+
                 val game = hashMapOf(
                     "email" to editText.text.toString()
                 )
-                val activity = activity as MainActivity?
 
                 db.collection("users")
                     .whereEqualTo("email", editText.text.toString())

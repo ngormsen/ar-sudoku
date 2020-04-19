@@ -20,8 +20,10 @@ import com.baoyz.swipemenulistview.SwipeMenuItem
 import com.baoyz.swipemenulistview.SwipeMenuListView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
+import sse.goethe.arsudoku.Gamestate
 import sse.goethe.arsudoku.MainActivity
 import sse.goethe.arsudoku.R
+import java.io.Serializable
 import java.lang.IllegalArgumentException
 
 /**
@@ -45,6 +47,7 @@ class FriendsFragment : Fragment() {
         "", "","", "", "","","", "", "","", "", "","", "", "","","",
         "", "","", "", "","", "", "","","", "", "","", "", "","", "", "","")  // TODO: fix array problem
     val db = FirebaseFirestore.getInstance()
+//    lateinit var gamestate: ArrayList<Int>;
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -216,19 +219,44 @@ class FriendsFragment : Fragment() {
                 DialogInterface.OnClickListener { dialog, which ->
                     // Updates database
                     System.out.println("Send " + item + " the game: " + games.get(which))
-                    val gameData = hashMapOf(
-                        "date" to games.get(which)
-                    )
+                    val activity = activity as MainActivity?
+                    var gamestate: ArrayList<Int>;
                     try {
-                        db.collection("users").document(item).collection("games").document(games.get(which))
-                            .set(gameData)
-                            .addOnSuccessListener { Log.d(ContentValues.TAG, "DocumentSnapshot successfully written!") }
-                            .addOnFailureListener { e -> Log.w(ContentValues.TAG, "Error writing document", e) }
+                        db.collection("users").document(activity!!.getGlobalUser().getEmail()).collection("games").document(
+                            games.get(which)
+                        )
+                            .get()
+                            .addOnSuccessListener { document ->
+                                println(games.get(which))
+                                activity.printState(activity.convertFirebaseToGamestate(document.data?.get("gamestate") as ArrayList<Int>))
+                                gamestate = document.data?.get("gamestate") as ArrayList<Int>
+                                val gameData = hashMapOf(
+                                    "date" to games.get(which),
+                                    "gamestate" to gamestate
+                                )
+                                try {
+                                    db.collection("users").document(item).collection("games").document(games.get(which))
+                                        .set(gameData)
+                                        .addOnSuccessListener { Log.d(ContentValues.TAG, "DocumentSnapshot successfully written!") }
+                                        .addOnFailureListener { e -> Log.w(ContentValues.TAG, "Error writing document", e) }
 
+                                }
+                                catch (e: IllegalArgumentException){
+                                    println("No game available.")
+                                }
+
+                            }
+                            .addOnFailureListener { exception ->
+                                Log.w(ContentValues.TAG, "Error getting documents: ", exception)
+                            }
                     }
                     catch (e: IllegalArgumentException){
-                        println("No game available.")
+                        println(e)
                     }
+
+
+//                    activity.printState(activity.convertFirebaseToGamestate(gamestate as ArrayList<Int>))
+//                    println(gamestate)
                     // The 'which' argument contains the index position
                     // of the selected item
                 })
